@@ -18,8 +18,8 @@ parser.add_argument(
     "--disable_fabric", action="store_true", default=False, help="Disable fabric and use USD I/O operations."
 )
 parser.add_argument("--num_envs", type=int, default=1, help="Number of environments to simulate.")
-parser.add_argument("--task", type=str, default="Isaac-Reach-Dual-PSM-IK-Rel-v0", help="Name of the task.")
-parser.add_argument("--sensitivity", type=float, default=1.0, help="Sensitivity factor.")
+parser.add_argument("--task", type=str, default="Isaac-MTM-Teleop-v0", help="Name of the task.")
+parser.add_argument("--sensitivity", type=float, default=0.4, help="Sensitivity factor.")
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
 # parse the arguments
@@ -37,17 +37,21 @@ import torch
 
 import carb
 
-from omni.isaac.lab.devices import Se3Gamepad, Se3Keyboard, Se3SpaceMouse
 import omni.isaac.lab_tasks  # noqa: F401
 from omni.isaac.lab_tasks.utils import parse_env_cfg
 
-from orbit.surgical.ext.devices.MTM import MTMTeleop
 import orbit.surgical.tasks  # noqa: F401
 import matplotlib.pyplot as plt
 import cv2
 from scipy.spatial.transform import Rotation as R
 import numpy as np
 import time
+
+import sys
+import os
+sys.path.append(os.path.abspath("."))
+from teleop_interface.MTM.se3_mtm import MTMTeleop
+import custom_envs
 
 
 def transformation_matrix_to_pose(transformation_matrix):
@@ -118,7 +122,6 @@ def process_actions(cam_T_psm1, w_T_psm1base, cam_T_psm2, w_T_psm2base, w_T_cam,
 
 
 def main():
-    """Running keyboard teleoperation with Isaac Lab manipulation environment."""
     # parse configuration
     env_cfg = parse_env_cfg(
         args_cli.task, device=args_cli.device, num_envs=args_cli.num_envs, use_fabric=not args_cli.disable_fabric
@@ -130,7 +133,7 @@ def main():
     env = gym.make(args_cli.task, cfg=env_cfg)
     env.reset()
 
-    teleop_interface = MTMTeleop(pos_sensitivity=1.0, rot_sensitivity=1.0)
+    teleop_interface = MTMTeleop(pos_sensitivity=args_cli.sensitivity, rot_sensitivity=1.0)
     teleop_interface.reset()
 
     camera_l = env.unwrapped.scene["camera_left"]

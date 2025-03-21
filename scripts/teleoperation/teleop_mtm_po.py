@@ -18,7 +18,7 @@ parser.add_argument(
     "--disable_fabric", action="store_true", default=False, help="Disable fabric and use USD I/O operations."
 )
 parser.add_argument("--num_envs", type=int, default=1, help="Number of environments to simulate.")
-parser.add_argument("--task", type=str, default="Isaac-Reach-Dual-PSM-v0", help="Name of the task.")
+parser.add_argument("--task", type=str, default="Isaac-MTM-PO-Teleop-v0", help="Name of the task.")
 parser.add_argument("--sensitivity", type=float, default=1.0, help="Sensitivity factor.")
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
@@ -41,15 +41,19 @@ from omni.isaac.lab.devices import Se3Gamepad, Se3Keyboard, Se3SpaceMouse
 import omni.isaac.lab_tasks  # noqa: F401
 from omni.isaac.lab_tasks.utils import parse_env_cfg
 
-from orbit.surgical.ext.devices import Se3KeyboardDualArm
-from orbit.surgical.ext.devices.MTM import MTMTeleop
-from orbit.surgical.ext.devices.phantomomni import PhantomOmniTeleop
 import orbit.surgical.tasks  # noqa: F401
 import matplotlib.pyplot as plt
 import cv2
 from scipy.spatial.transform import Rotation as R
 import numpy as np
 import time
+
+import sys
+import os
+sys.path.append(os.path.abspath("."))
+from teleop_interface.phantomomni.se3_phantomomni import PhantomOmniTeleop
+from teleop_interface.MTM.se3_mtm import MTMTeleop
+import custom_envs
 
 
 def transformation_matrix_to_pose(transformation_matrix):
