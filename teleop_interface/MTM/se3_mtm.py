@@ -83,22 +83,26 @@ class MTMTeleop(DeviceBase):
         self.l_jaw_angle = None
         self.r_jaw_angle = None
 
-        # Naive Assumption on watching angle
-        self.eye_theta = 45 * np.pi / 180
-        self.eye_T_hrsv = np.linalg.inv(np.array([[0, 1, 0, 0], [0, 0, 1, 0], [1, 0, 0, 0], [0, 0, 0, 1]]) @ 
-        np.array(
-            [
-                [np.cos(self.eye_theta), 0, np.sin(self.eye_theta), 0],
-                [0, 1, 0, 0],
-                [-np.sin(self.eye_theta), 0, np.cos(self.eye_theta), 0],
-                [0, 0, 0, 1],
-            ]
-        ))
+        # self.eye_theta = 45 * np.pi / 180
+        # self.eye_T_hrsv = np.linalg.inv(np.array([[0, 1, 0, 0], [0, 0, 1, 0], [1, 0, 0, 0], [0, 0, 0, 1]]) @ 
+        # np.array(
+        #     [
+        #         [np.cos(self.eye_theta), 0, np.sin(self.eye_theta), 0],
+        #         [0, 1, 0, 0],
+        #         [-np.sin(self.eye_theta), 0, np.cos(self.eye_theta), 0],
+        #         [0, 0, 0, 1],
+        #     ]
+        # ))
 
         # Transformation matrices to align orientation with the simulation
-        self.mtm_T_mtm_sim = np.array([[0, 0, 1, 0], 
+        self.hrsv_T_hrsv_sim = np.array([[0, 1, 0, 0],
+                                         [0, 0, 1, 0],
+                                         [1, 0, 0, 0],
+                                         [0, 0, 0, 1]])
+        self.hrsv_sim_T_hrsv = np.linalg.inv(self.hrsv_T_hrsv_sim)
+        self.mtm_T_mtm_sim = np.array([[0, -1, 0, 0], 
                                        [-1, 0, 0, 0],
-                                       [0, -1, 0, 0],
+                                       [0, 0, -1, 0],
                                        [0, 0, 0, 1]])
 
         # Set the rate at which to check for the transform
@@ -142,21 +146,22 @@ class MTMTeleop(DeviceBase):
         hrsv_q_mtml = self.mtml_pose.orientation
         hrsv_T_mtml = pose_to_transformation_matrix(np.array([hrsv_p_mtml.x, hrsv_p_mtml.y, hrsv_p_mtml.z]), 
                                                     np.array([hrsv_q_mtml.w, hrsv_q_mtml.x, hrsv_q_mtml.y, hrsv_q_mtml.z]))
-        eye_T_mtml_sim = self.eye_T_hrsv @ hrsv_T_mtml @ self.mtm_T_mtm_sim
-        eye_p_mtml_sim, eye_q_mtml_sim = transformation_matrix_to_pose(eye_T_mtml_sim)
-        target_mtml_rot = Rotation.from_quat(np.concatenate([[eye_q_mtml_sim[3]], eye_q_mtml_sim[:3]])).as_rotvec()
+        hrsv_sim_T_mtml_sim = self.hrsv_sim_T_hrsv @ hrsv_T_mtml @ self.mtm_T_mtm_sim
+        hrsv_sim_p_mtml_sim, hrsv_sim_q_mtml_sim = transformation_matrix_to_pose(hrsv_sim_T_mtml_sim)
+        target_mtml_rot = Rotation.from_quat(np.concatenate([[hrsv_sim_q_mtml_sim[3]], hrsv_sim_q_mtml_sim[:3]])).as_rotvec()
         target_mtml_rot = np.array(target_mtml_rot) * self.rot_sensitivity
+
 
         hrsv_p_mtmr = self.mtmr_pose.position
         hrsv_q_mtmr = self.mtmr_pose.orientation
         hrsv_T_mtmr = pose_to_transformation_matrix(np.array([hrsv_p_mtmr.x, hrsv_p_mtmr.y, hrsv_p_mtmr.z]), 
                                                     np.array([hrsv_q_mtmr.w, hrsv_q_mtmr.x, hrsv_q_mtmr.y, hrsv_q_mtmr.z]))
-        eye_T_mtmr_sim = self.eye_T_hrsv @ hrsv_T_mtmr @ self.mtm_T_mtm_sim
-        eye_p_mtmr_sim, eye_q_mtmr_sim = transformation_matrix_to_pose(eye_T_mtmr_sim)
-        target_mtmr_rot = Rotation.from_quat(np.concatenate([[eye_q_mtmr_sim[3]], eye_q_mtmr_sim[:3]])).as_rotvec()
+        hrsv_sim_T_mtmr_sim = self.hrsv_sim_T_hrsv @ hrsv_T_mtmr @ self.mtm_T_mtm_sim
+        hrsv_sim_p_mtmr_sim, hrsv_sim_q_mtmr_sim = transformation_matrix_to_pose(hrsv_sim_T_mtmr_sim)
+        target_mtmr_rot = Rotation.from_quat(np.concatenate([[hrsv_sim_q_mtmr_sim[3]], hrsv_sim_q_mtmr_sim[:3]])).as_rotvec()
         target_mtmr_rot = np.array(target_mtmr_rot) * self.rot_sensitivity
 
-        return eye_p_mtml_sim * self.pos_sensitivity, target_mtml_rot, self.l_jaw_angle, eye_p_mtmr_sim * self.pos_sensitivity, target_mtmr_rot, self.r_jaw_angle, self.clutch
+        return hrsv_sim_p_mtml_sim * self.pos_sensitivity, target_mtml_rot, self.l_jaw_angle, hrsv_sim_p_mtmr_sim * self.pos_sensitivity, target_mtmr_rot, self.r_jaw_angle, self.clutch
 
     def reset(self):
         """Reset the teleoperation state."""

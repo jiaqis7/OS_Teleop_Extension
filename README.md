@@ -1,7 +1,7 @@
 Requirements
 1. dVRK
 2. ORBIT-Surgical
-+) run conda install conda-forge::rospkg if it shows a 'module not found error' for the rospkg
++) run conda install conda-forge::rospkg if you encounter an issue related to rospkg
 
 If all requirements were installed properly, there should be no additional errors you have to resolve when running scripts.
 Test the connection with existing packages by running the line below in the orbitsurgical conda environment.

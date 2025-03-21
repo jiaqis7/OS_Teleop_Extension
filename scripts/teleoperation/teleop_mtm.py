@@ -53,6 +53,9 @@ sys.path.append(os.path.abspath("."))
 from teleop_interface.MTM.se3_mtm import MTMTeleop
 import custom_envs
 
+import crtk
+import dvrk
+
 
 def transformation_matrix_to_pose(transformation_matrix):
     """
@@ -147,6 +150,14 @@ def main():
     init_psm1_tip_position = None
     init_mtmr_position = None
     init_psm2_tip_position = None
+
+    ral = crtk.ral('mtm_teleop')
+    mtml = dvrk.mtm(ral = ral, arm_name = 'MTML', expected_interval = 0.01)
+    mtml.use_gravity_compensation(True)
+    mtml.body.servo_cf(np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
+    mtmr = dvrk.mtm(ral = ral, arm_name = 'MTMR', expected_interval = 0.01)
+    mtmr.use_gravity_compensation(True)
+    mtmr.body.servo_cf(np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
 
     print("Press the clutch button and release to start teleoperation.")
     # simulate environment
