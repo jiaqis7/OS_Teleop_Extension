@@ -6,9 +6,6 @@ from omni.isaac.lab.devices import DeviceBase
 from scipy.spatial.transform.rotation import Rotation
 from sensor_msgs.msg import JointState, Joy
 from geometry_msgs.msg import PoseStamped
-import os
-os.environ['ROS_MASTER_URI'] = 'http://172.24.95.120:11311'
-os.environ['ROS_IP'] = '10.34.166.95'
 
 def transformation_matrix_to_pose(transformation_matrix):
     """
