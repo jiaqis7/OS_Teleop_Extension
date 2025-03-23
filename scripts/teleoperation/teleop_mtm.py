@@ -37,6 +37,7 @@ from scipy.spatial.transform import Rotation as R
 import numpy as np
 import time
 
+import omni.kit.viewport.utility as vp_utils
 from tf_utils import pose_to_transformation_matrix, transformation_matrix_to_pose
 
 import sys
@@ -85,6 +86,14 @@ def main():
 
     camera_l = env.unwrapped.scene["camera_left"]
     camera_r = env.unwrapped.scene["camera_right"]
+
+    view_port_l = vp_utils.create_viewport_window("Left Camera", width = 700, height = 500)
+    view_port_l.viewport_api.camera_path = '/World/envs/env_0/Robot_4/ecm_end_link/camera_left' #camera_l.cfg.prim_path
+    view_port_l.viewport_api.resolution = (camera_l.cfg.width, camera_l.cfg.height)
+
+    view_port_r = vp_utils.create_viewport_window("Right Camera", width = 700, height = 500)
+    view_port_r.viewport_api.camera_path = '/World/envs/env_0/Robot_4/ecm_end_link/camera_right' #camera_r.cfg.prim_path
+    view_port_r.viewport_api.resolution = (camera_r.cfg.width, camera_r.cfg.height)
 
     psm1 = env.unwrapped.scene["robot_1"]
     psm2 = env.unwrapped.scene["robot_2"]
