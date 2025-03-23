@@ -64,7 +64,8 @@ class MTMTeleop(DeviceBase):
         self.rot_sensitivity = rot_sensitivity
 
         # ROS node initialization
-        rospy.init_node("phantom_omni_teleop", anonymous=True)
+        if not rospy.core.is_initialized():
+            rospy.init_node("mtm_teleop", anonymous=True)
 
         rospy.Subscriber("/MTML/measured_cp", PoseStamped, self.mtml_callback)
         rospy.Subscriber("/MTMR/measured_cp", PoseStamped, self.mtmr_callback)
@@ -101,6 +102,7 @@ class MTMTeleop(DeviceBase):
                                        [-1, 0, 0, 0],
                                        [0, 0, -1, 0],
                                        [0, 0, 0, 1]])
+        self.mtm_sim_T_mtm = np.linalg.inv(self.mtm_T_mtm_sim)
 
         # Set the rate at which to check for the transform
         self.rate = rospy.Rate(10.0)  # 10 Hz
@@ -165,6 +167,9 @@ class MTMTeleop(DeviceBase):
         self.clutch = True
         self.gripper_open = False
 
+    def simpose2hrsvpose(self, cam_T_psm):
+        return self.hrsv_T_hrsv_sim @ cam_T_psm @ self.mtm_sim_T_mtm
+        
     def add_callback(self, key, func):
         """
         Adds a callback function triggered by a specific key input.

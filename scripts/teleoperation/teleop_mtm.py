@@ -1,13 +1,3 @@
-# Copyright (c) 2022-2024, The Isaac Lab Project Developers.
-# All rights reserved.
-#
-# SPDX-License-Identifier: BSD-3-Clause
-
-"""Script to run a keyboard teleoperation with Isaac Lab manipulation environments."""
-
-"""Launch Isaac Sim Simulator first."""
-
-"""python source/standalone/environments/teleoperation/teleop_phantomomni.py --task Isaac-Reach-Dual-PSM-IK-Abs-v0 --num_envs 1 --teleop_device po"""
 import argparse
 
 from omni.isaac.lab.app import AppLauncher
@@ -53,10 +43,8 @@ import sys
 import os
 sys.path.append(os.path.abspath("."))
 from teleop_interface.MTM.se3_mtm import MTMTeleop
+from teleop_interface.MTM.mtm_manipulator import MTMManipulator
 import custom_envs
-
-import crtk
-import dvrk
 
 # map mtm gripper joint angle to psm jaw gripper angles in simulation
 def get_jaw_gripper_angles(gripper_command):
@@ -76,8 +64,11 @@ def process_actions(cam_T_psm1, w_T_psm1base, cam_T_psm2, w_T_psm2base, w_T_cam,
     actions = torch.tensor(actions, device=env.unwrapped.device).repeat(env.unwrapped.num_envs, 1)
     return actions
 
-
 def main():
+    # Setup the MTM in the real world
+    mtm_manipulator = MTMManipulator()
+    mtm_manipulator.prepare_teleop()
+
     # parse configuration
     env_cfg = parse_env_cfg(
         args_cli.task, device=args_cli.device, num_envs=args_cli.num_envs, use_fabric=not args_cli.disable_fabric
@@ -98,21 +89,13 @@ def main():
     psm1 = env.unwrapped.scene["robot_1"]
     psm2 = env.unwrapped.scene["robot_2"]
 
-    was_in_clutch = True
+    mtm_orientation_matched = False
+    was_in_clutch = False
     init_mtml_position = None
     init_psm1_tip_position = None
     init_mtmr_position = None
     init_psm2_tip_position = None
 
-    ral = crtk.ral('mtm_teleop')
-    mtml = dvrk.mtm(ral = ral, arm_name = 'MTML', expected_interval = 0.01)
-    mtml.use_gravity_compensation(True)
-    mtml.body.servo_cf(np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
-    mtmr = dvrk.mtm(ral = ral, arm_name = 'MTMR', expected_interval = 0.01)
-    mtmr.use_gravity_compensation(True)
-    mtmr.body.servo_cf(np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
-
-    print("Press the clutch button and release to start teleoperation.")
     # simulate environment
     while simulation_app.is_running():
         # process actions
@@ -122,7 +105,25 @@ def main():
         str_camera_pos = (camera_l_pos + camera_r_pos) / 2
         camera_quat = camera_l.data.quat_w_world  # forward x, up z
         world_T_cam = pose_to_transformation_matrix(str_camera_pos.cpu().numpy()[0], camera_quat.cpu().numpy()[0])
+        print(world_T_cam)
         cam_T_world = np.linalg.inv(world_T_cam)
+
+        if not mtm_orientation_matched:
+            print("Start matching orientation of MTM with the PSMs in the simulation. May take a few seconds.")
+            mtm_orientation_matched = True
+            psm1_tip_pose_w = psm1.data.body_link_pos_w[0][-1].cpu().numpy()
+            psm1_tip_quat_w = psm1.data.body_link_quat_w[0][-1].cpu().numpy()
+            world_T_psm1tip = pose_to_transformation_matrix(psm1_tip_pose_w, psm1_tip_quat_w)
+            hrsv_T_mtml = teleop_interface.simpose2hrsvpose(cam_T_world @ world_T_psm1tip)
+
+            psm2_tip_pose_w = psm2.data.body_link_pos_w[0][-1].cpu().numpy()
+            psm2_tip_quat_w = psm2.data.body_link_quat_w[0][-1].cpu().numpy()
+            world_T_psm2tip = pose_to_transformation_matrix(psm2_tip_pose_w, psm2_tip_quat_w)
+            hrsv_T_mtmr = teleop_interface.simpose2hrsvpose(cam_T_world @ world_T_psm2tip)
+
+            mtm_manipulator.adjust_orientation(hrsv_T_mtml, hrsv_T_mtmr)
+            print("Initial orientation matched. Start teleoperation by pressing and releasing the clutch button.")
+            continue
 
         psm1_base_link_pos = psm1.data.body_link_pos_w[0][0].cpu().numpy()
         psm1_base_link_quat = psm1.data.body_link_quat_w[0][0].cpu().numpy()
