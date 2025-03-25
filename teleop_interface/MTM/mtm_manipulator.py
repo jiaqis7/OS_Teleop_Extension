@@ -40,6 +40,7 @@ class MTMManipulator:
         goal = numpy.copy(self.mtml.setpoint_jp())
         goal.fill(0)
         self.mtml.move_jp(goal).wait()
+        self.mtmr.move_jp(goal).wait()
 
     def release_force(self):
         self.mtml.use_gravity_compensation(True)

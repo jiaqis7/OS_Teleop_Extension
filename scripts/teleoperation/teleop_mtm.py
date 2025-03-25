@@ -87,11 +87,11 @@ def main():
     camera_l = env.unwrapped.scene["camera_left"]
     camera_r = env.unwrapped.scene["camera_right"]
 
-    view_port_l = vp_utils.create_viewport_window("Left Camera", width = 700, height = 500)
+    view_port_l = vp_utils.create_viewport_window("Left Camera", width = 800, height = 600)
     view_port_l.viewport_api.camera_path = '/World/envs/env_0/Robot_4/ecm_end_link/camera_left' #camera_l.cfg.prim_path
     view_port_l.viewport_api.resolution = (camera_l.cfg.width, camera_l.cfg.height)
 
-    view_port_r = vp_utils.create_viewport_window("Right Camera", width = 700, height = 500)
+    view_port_r = vp_utils.create_viewport_window("Right Camera", width = 800, height = 600)
     view_port_r.viewport_api.camera_path = '/World/envs/env_0/Robot_4/ecm_end_link/camera_right' #camera_r.cfg.prim_path
     view_port_r.viewport_api.resolution = (camera_r.cfg.width, camera_r.cfg.height)
 
@@ -99,7 +99,7 @@ def main():
     psm2 = env.unwrapped.scene["robot_2"]
 
     mtm_orientation_matched = False
-    was_in_clutch = False
+    was_in_clutch = True
     init_mtml_position = None
     init_psm1_tip_position = None
     init_mtmr_position = None
@@ -114,25 +114,25 @@ def main():
         str_camera_pos = (camera_l_pos + camera_r_pos) / 2
         camera_quat = camera_l.data.quat_w_world  # forward x, up z
         world_T_cam = pose_to_transformation_matrix(str_camera_pos.cpu().numpy()[0], camera_quat.cpu().numpy()[0])
-        print(world_T_cam)
         cam_T_world = np.linalg.inv(world_T_cam)
 
-        if not mtm_orientation_matched:
-            print("Start matching orientation of MTM with the PSMs in the simulation. May take a few seconds.")
-            mtm_orientation_matched = True
-            psm1_tip_pose_w = psm1.data.body_link_pos_w[0][-1].cpu().numpy()
-            psm1_tip_quat_w = psm1.data.body_link_quat_w[0][-1].cpu().numpy()
-            world_T_psm1tip = pose_to_transformation_matrix(psm1_tip_pose_w, psm1_tip_quat_w)
-            hrsv_T_mtml = teleop_interface.simpose2hrsvpose(cam_T_world @ world_T_psm1tip)
+        # if not mtm_orientation_matched:
+        #     print("Start matching orientation of MTM with the PSMs in the simulation. May take a few seconds.")
+        #     mtm_orientation_matched = True
+        #     psm1_tip_pose_w = psm1.data.body_link_pos_w[0][-1].cpu().numpy()
+        #     psm1_tip_quat_w = psm1.data.body_link_quat_w[0][-1].cpu().numpy()
+        #     world_T_psm1tip = pose_to_transformation_matrix(psm1_tip_pose_w, psm1_tip_quat_w)
+        #     hrsv_T_mtml = teleop_interface.simpose2hrsvpose(cam_T_world @ world_T_psm1tip)
 
-            psm2_tip_pose_w = psm2.data.body_link_pos_w[0][-1].cpu().numpy()
-            psm2_tip_quat_w = psm2.data.body_link_quat_w[0][-1].cpu().numpy()
-            world_T_psm2tip = pose_to_transformation_matrix(psm2_tip_pose_w, psm2_tip_quat_w)
-            hrsv_T_mtmr = teleop_interface.simpose2hrsvpose(cam_T_world @ world_T_psm2tip)
+        #     psm2_tip_pose_w = psm2.data.body_link_pos_w[0][-1].cpu().numpy()
+        #     psm2_tip_quat_w = psm2.data.body_link_quat_w[0][-1].cpu().numpy()
+        #     world_T_psm2tip = pose_to_transformation_matrix(psm2_tip_pose_w, psm2_tip_quat_w)
+        #     hrsv_T_mtmr = teleop_interface.simpose2hrsvpose(cam_T_world @ world_T_psm2tip)
 
-            mtm_manipulator.adjust_orientation(hrsv_T_mtml, hrsv_T_mtmr)
-            print("Initial orientation matched. Start teleoperation by pressing and releasing the clutch button.")
-            continue
+        #     mtm_manipulator.adjust_orientation(hrsv_T_mtml, hrsv_T_mtmr)
+        #     # mtm_manipulator.release_force()
+        #     print("Initial orientation matched. Start teleoperation by pressing and releasing the clutch button.")
+        #     continue
 
         psm1_base_link_pos = psm1.data.body_link_pos_w[0][0].cpu().numpy()
         psm1_base_link_quat = psm1.data.body_link_quat_w[0][0].cpu().numpy()
