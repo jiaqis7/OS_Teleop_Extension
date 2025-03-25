@@ -39,6 +39,7 @@ class MTMManipulator:
 
         goal = numpy.copy(self.mtml.setpoint_jp())
         goal.fill(0)
+        goal[-3]=1.55
         self.mtml.move_jp(goal).wait()
         self.mtmr.move_jp(goal).wait()
 

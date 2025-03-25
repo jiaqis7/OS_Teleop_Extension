@@ -38,6 +38,7 @@ import numpy as np
 import time
 
 import omni.kit.viewport.utility as vp_utils
+import omni.kit.commands
 from tf_utils import pose_to_transformation_matrix, transformation_matrix_to_pose
 
 import sys
@@ -48,7 +49,11 @@ from teleop_interface.MTM.mtm_manipulator import MTMManipulator
 import custom_envs
 
 # map mtm gripper joint angle to psm jaw gripper angles in simulation
-def get_jaw_gripper_angles(gripper_command):
+def get_jaw_gripper_angles(gripper_command, env, robot_name="robot_1"):
+    if gripper_command is None:
+        gripper1_joint_angle = env.unwrapped[robot_name].data.joint_pos[0][-2].cpu().numpy()
+        gripper2_joint_angle = env.unwrapped[robot_name].data.joint_pos[0][-1].cpu().numpy()
+        return np.array([gripper1_joint_angle, gripper2_joint_angle])
     # input: -1.72 (closed), 1.06 (opened)
     # output: 0,0 (closed), -0.52359, 0.52359 (opened)
     gripper2_angle = 0.52359 / (1.06 + 1.72) * (gripper_command + 1.72)
@@ -61,7 +66,8 @@ def process_actions(cam_T_psm1, w_T_psm1base, cam_T_psm2, w_T_psm2base, w_T_cam,
     psm2base_T_psm2 = np.linalg.inv(w_T_psm2base)@w_T_cam@cam_T_psm2
     psm1_rel_pos, psm1_rel_quat = transformation_matrix_to_pose(psm1base_T_psm1)
     psm2_rel_pos, psm2_rel_quat = transformation_matrix_to_pose(psm2base_T_psm2)
-    actions = np.concatenate([psm1_rel_pos, psm1_rel_quat, get_jaw_gripper_angles(gripper1_command), psm2_rel_pos, psm2_rel_quat, get_jaw_gripper_angles(gripper2_command),])
+    actions = np.concatenate([psm1_rel_pos, psm1_rel_quat, get_jaw_gripper_angles(gripper1_command, env, 'robot_1'),
+                              psm2_rel_pos, psm2_rel_quat, get_jaw_gripper_angles(gripper2_command, env, 'robot_2')])
     actions = torch.tensor(actions, device=env.unwrapped.device).repeat(env.unwrapped.num_envs, 1)
     return actions
 
@@ -81,24 +87,24 @@ def main():
     env = gym.make(args_cli.task, cfg=env_cfg)
     env.reset()
 
-    teleop_interface = MTMTeleop(pos_sensitivity=args_cli.sensitivity, rot_sensitivity=1.0)
+    teleop_interface = MTMTeleop(pos_sensitivity=args_cli.sensitivity, rot_sensitivity=1.0, is_simulated=True)
     teleop_interface.reset()
 
     camera_l = env.unwrapped.scene["camera_left"]
     camera_r = env.unwrapped.scene["camera_right"]
 
-    view_port_l = vp_utils.create_viewport_window("Left Camera", width = 800, height = 600)
-    view_port_l.viewport_api.camera_path = '/World/envs/env_0/Robot_4/ecm_end_link/camera_left' #camera_l.cfg.prim_path
-    view_port_l.viewport_api.resolution = (camera_l.cfg.width, camera_l.cfg.height)
+    # view_port_l = vp_utils.create_viewport_window("Left Camera", width = 800, height = 600)
+    # view_port_l.viewport_api.camera_path = '/World/envs/env_0/Robot_4/ecm_end_link/camera_left' #camera_l.cfg.prim_path
+    # view_port_l.viewport_api.resolution = (camera_l.cfg.width, camera_l.cfg.height)
 
-    view_port_r = vp_utils.create_viewport_window("Right Camera", width = 800, height = 600)
-    view_port_r.viewport_api.camera_path = '/World/envs/env_0/Robot_4/ecm_end_link/camera_right' #camera_r.cfg.prim_path
-    view_port_r.viewport_api.resolution = (camera_r.cfg.width, camera_r.cfg.height)
+    # view_port_r = vp_utils.create_viewport_window("Right Camera", width = 800, height = 600)
+    # view_port_r.viewport_api.camera_path = '/World/envs/env_0/Robot_4/ecm_end_link/camera_right' #camera_r.cfg.prim_path
+    # view_port_r.viewport_api.resolution = (camera_r.cfg.width, camera_r.cfg.height)
 
     psm1 = env.unwrapped.scene["robot_1"]
     psm2 = env.unwrapped.scene["robot_2"]
 
-    mtm_orientation_matched = False
+    # mtm_orientation_matched = False
     was_in_clutch = True
     init_mtml_position = None
     init_psm1_tip_position = None

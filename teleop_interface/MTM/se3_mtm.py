@@ -56,12 +56,13 @@ def pose_to_transformation_matrix(position, quaternion):
     return transformation_matrix
 
 class MTMTeleop(DeviceBase):
-    def __init__(self, pos_sensitivity=1.0, rot_sensitivity=1.0):
+    def __init__(self, pos_sensitivity=1.0, rot_sensitivity=1.0, is_simulated=False):
         super().__init__()
 
         # Sensitivity scaling
         self.pos_sensitivity = pos_sensitivity
         self.rot_sensitivity = rot_sensitivity
+        self.simulated = is_simulated
 
         # ROS node initialization
         if not rospy.core.is_initialized():
@@ -71,26 +72,15 @@ class MTMTeleop(DeviceBase):
         rospy.Subscriber("/MTMR/measured_cp", PoseStamped, self.mtmr_callback)
         rospy.Subscriber("/MTML/gripper/measured_js", JointState, self.mtml_gripper_callback)
         rospy.Subscriber("/MTMR/gripper/measured_js", JointState, self.mtmr_gripper_callback)
-        rospy.Subscriber("/footpedals/clutch", Joy, self.clutch_callback)
+        rospy.Subscriber("/footpedals/clutch" if not self.simulated else "/console/clutch", Joy, self.clutch_callback)
 
         # State variables
         self.enabled = False
         self.clutch = True
         self.mtml_pose = None
         self.mtmr_pose = None
-        self.l_jaw_angle = None
-        self.r_jaw_angle = None
-
-        # self.eye_theta = 45 * np.pi / 180
-        # self.eye_T_hrsv = np.linalg.inv(np.array([[0, 1, 0, 0], [0, 0, 1, 0], [1, 0, 0, 0], [0, 0, 0, 1]]) @ 
-        # np.array(
-        #     [
-        #         [np.cos(self.eye_theta), 0, np.sin(self.eye_theta), 0],
-        #         [0, 1, 0, 0],
-        #         [-np.sin(self.eye_theta), 0, np.cos(self.eye_theta), 0],
-        #         [0, 0, 0, 1],
-        #     ]
-        # ))
+        self.l_jaw_angle = None if not self.simulated else 0.5
+        self.r_jaw_angle = None if not self.simulated else 0.5
 
         # Transformation matrices to align orientation with the simulation
         self.hrsv_T_hrsv_sim = np.array([[0, 1, 0, 0],
@@ -102,10 +92,11 @@ class MTMTeleop(DeviceBase):
                                        [-1, 0, 0, 0],
                                        [0, 0, -1, 0],
                                        [0, 0, 0, 1]])
+        # self.mtm_T_mtm_sim = np.array([[0, 0, -1, 0], 
+        #                                [-1, 0, 0, 0],
+        #                                [0, 1, 0, 0],
+        #                                [0, 0, 0, 1]])
         self.mtm_sim_T_mtm = np.linalg.inv(self.mtm_T_mtm_sim)
-
-        # Set the rate at which to check for the transform
-        self.rate = rospy.Rate(10.0)  # 10 Hz
 
     def mtml_callback(self, msg):
         self.mtml_pose = msg.pose

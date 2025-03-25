@@ -158,3 +158,19 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
             open_command_expr={"psm_tool_gripper1_joint": -0.5, "psm_tool_gripper2_joint": 0.5},
             close_command_expr={"psm_tool_gripper1_joint": -0.15, "psm_tool_gripper2_joint": 0.15},
         )
+
+        marker_cfg = FRAME_MARKER_CFG.copy()
+        marker_cfg.markers["frame"].scale = (0.01, 0.01, 0.01)
+        marker_cfg.prim_path = "/Visuals/FrameTransformer"
+        self.scene.ee_1_frame = FrameTransformerCfg(
+            prim_path="{ENV_REGEX_NS}/Robot_1/psm_base_link",
+            debug_vis=True,
+            visualizer_cfg=marker_cfg,
+            target_frames=[
+                FrameTransformerCfg.FrameCfg(
+                    prim_path="{ENV_REGEX_NS}/Robot_1/psm_tool_tip_link",
+                    name="end_effector",
+                ),
+            ],
+        )
+

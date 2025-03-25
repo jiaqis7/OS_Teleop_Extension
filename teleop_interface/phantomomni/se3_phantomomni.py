@@ -40,7 +40,7 @@ class PhantomOmniTeleop(DeviceBase):
         self.clutch = True
 
         # Set the rate at which to check for the transform
-        self.rate = rospy.Rate(30.0)  # 10 Hz
+        self.rate = rospy.Rate(50.0)  # 50 Hz
 
     def button_callback(self, msg):
         # As long as the grey button is pressed continuously, self.clutch will be true

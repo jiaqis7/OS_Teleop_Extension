@@ -48,7 +48,9 @@ from scipy.spatial.transform import Rotation as R
 import numpy as np
 import time
 
-from utils.tf_utils import pose_to_transformation_matrix, transformation_matrix_to_pose
+import omni.kit.viewport.utility as vp_utils
+from tf_utils import pose_to_transformation_matrix, transformation_matrix_to_pose
+from teleop_mtm import get_jaw_gripper_angles
 
 import sys
 import os
@@ -56,17 +58,6 @@ sys.path.append(os.path.abspath("."))
 from teleop_interface.phantomomni.se3_phantomomni import PhantomOmniTeleop
 from teleop_interface.MTM.se3_mtm import MTMTeleop
 import custom_envs
-
-# map mtm gripper joint angle to psm jaw gripper angles in simulation
-def get_jaw_gripper_angles(gripper_command, env, robot_name = "robot_1"):
-    if gripper_command is None:
-        psm1_gripper1_joint_angle = env.unwrapped[robot_name].data.joint_pos[0][-2].cpu().numpy()
-        psm1_gripper2_joint_angle = env.unwrapped[robot_name].data.joint_pos[0][-1].cpu().numpy()
-        return np.array([psm1_gripper1_joint_angle, psm1_gripper2_joint_angle])
-    # input: -1.72 (closed), 1.06 (opened)
-    # output: 0,0 (closed), -0.52359, 0.52359 (opened)
-    gripper2_angle = 0.52359 / (1.06 + 1.72) * (gripper_command + 1.72)
-    return np.array([-gripper2_angle, gripper2_angle])
 
 # process cam_T_psmtip to psmbase_T_psmtip and make usuable action input
 def process_actions(cam_T_psm1, w_T_psm1base, cam_T_psm2, w_T_psm2base, cam_T_psm3, w_T_psm3base, w_T_cam, env, gripper1_command, gripper2_command, gripper3_command) -> torch.Tensor:
@@ -84,7 +75,6 @@ def process_actions(cam_T_psm1, w_T_psm1base, cam_T_psm2, w_T_psm2base, cam_T_ps
                               psm3_rel_pos, psm3_rel_quat, [1.0 if gripper3_command else -1.0]])
     actions = torch.tensor(actions, device=env.unwrapped.device).repeat(env.unwrapped.num_envs, 1)
     return actions
-
 
 def main():
     """Running keyboard teleoperation with Isaac Lab manipulation environment."""
@@ -107,6 +97,14 @@ def main():
 
     camera_l = env.unwrapped.scene["camera_left"]
     camera_r = env.unwrapped.scene["camera_right"]
+
+    view_port_l = vp_utils.create_viewport_window("Left Camera", width = 800, height = 600)
+    view_port_l.viewport_api.camera_path = '/World/envs/env_0/Robot_4/ecm_end_link/camera_left' #camera_l.cfg.prim_path
+    view_port_l.viewport_api.resolution = (camera_l.cfg.width, camera_l.cfg.height)
+
+    view_port_r = vp_utils.create_viewport_window("Right Camera", width = 800, height = 600)
+    view_port_r.viewport_api.camera_path = '/World/envs/env_0/Robot_4/ecm_end_link/camera_right' #camera_r.cfg.prim_path
+    view_port_r.viewport_api.resolution = (camera_r.cfg.width, camera_r.cfg.height)
 
     psm1 = env.unwrapped.scene["robot_1"]
     psm2 = env.unwrapped.scene["robot_2"]
