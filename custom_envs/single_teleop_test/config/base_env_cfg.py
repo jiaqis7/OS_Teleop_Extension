@@ -124,13 +124,7 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
         self.scene.robot_4 = ECM_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot_4")
         self.scene.robot_4.init_state.pos = (0.0, 0.6, 0.7)
         self.scene.robot_4.init_state.rot = (0.9238795, -0.3826834, 0, 0)
-        # override rewards
-        # self.rewards.end_effector_1_position_tracking.params["asset_cfg"].body_names = ["psm_tool_tip_link"]
-        # self.rewards.end_effector_1_orientation_tracking.params["asset_cfg"].body_names = ["psm_tool_tip_link"]
-        # self.rewards.end_effector_2_position_tracking.params["asset_cfg"].body_names = ["psm_tool_tip_link"]
-        # self.rewards.end_effector_2_orientation_tracking.params["asset_cfg"].body_names = ["psm_tool_tip_link"]
-        # self.rewards.end_effector_3_position_tracking.params["asset_cfg"].body_names = ["ecm_end_link"]
-        # self.rewards.end_effector_3_orientation_tracking.params["asset_cfg"].body_names = ["ecm_end_link"]
+
         # override actions
         self.actions.arm_1_action = mdp.JointPositionActionCfg(
             asset_name="robot_1",

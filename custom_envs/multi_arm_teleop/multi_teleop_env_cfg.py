@@ -63,12 +63,6 @@ class CommandsCfg:
     """Command terms for the MDP."""
     pass
 
-    # ee_1_pose: mdp.UniformPoseCommandCfg = MISSING
-
-    # ee_2_pose: mdp.UniformPoseCommandCfg = MISSING
-
-    # ee_3_pose: mdp.UniformPoseCommandCfg = MISSING
-
 
 @configclass
 class ActionsCfg:
@@ -91,43 +85,6 @@ class ObservationsCfg:
     @configclass
     class PolicyCfg(ObsGroup):
         """Observations for policy group."""
-
-        # observation terms (order preserved)
-        # joint_1_pos = ObsTerm(
-        #     func=mdp.joint_pos_rel,
-        #     noise=Unoise(n_min=-0.01, n_max=0.01),
-        #     params={"asset_cfg": SceneEntityCfg("robot_1")},
-        # )
-        # joint_1_vel = ObsTerm(
-        #     func=mdp.joint_vel_rel,
-        #     noise=Unoise(n_min=-0.01, n_max=0.01),
-        #     params={"asset_cfg": SceneEntityCfg("robot_1")},
-        # )
-        # joint_2_pos = ObsTerm(
-        #     func=mdp.joint_pos_rel,
-        #     noise=Unoise(n_min=-0.01, n_max=0.01),
-        #     params={"asset_cfg": SceneEntityCfg("robot_2")},
-        # )
-        # joint_2_vel = ObsTerm(
-        #     func=mdp.joint_vel_rel,
-        #     noise=Unoise(n_min=-0.01, n_max=0.01),
-        #     params={"asset_cfg": SceneEntityCfg("robot_2")},
-        # )
-        # joint_3_pos = ObsTerm(
-        #     func=mdp.joint_pos_rel,
-        #     noise=Unoise(n_min=-0.01, n_max=0.01),
-        #     params={"asset_cfg": SceneEntityCfg("robot_3")},
-        # )
-        # joint_3_vel = ObsTerm(
-        #     func=mdp.joint_vel_rel,
-        #     noise=Unoise(n_min=-0.01, n_max=0.01),
-        #     params={"asset_cfg": SceneEntityCfg("robot_3")},
-        # )
-
-        # pose_1_command = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_1_pose"})
-        # pose_2_command = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_2_pose"})
-        # pose_3_command = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_3_pose"})
-
         actions = ObsTerm(func=mdp.last_action)
 
         def __post_init__(self):
@@ -141,86 +98,29 @@ class ObservationsCfg:
 @configclass
 class EventCfg:
     """Configuration for events."""
+    reset_robot_1_joints: EventTerm = MISSING
 
-    # reset_robot_1_joints: EventTerm = MISSING
+    reset_robot_2_joints: EventTerm = MISSING
 
-    # reset_robot_2_joints: EventTerm = MISSING
-
-    # reset_robot_3_joints: EventTerm = MISSING
+    reset_robot_3_joints: EventTerm = MISSING
 
 
 @configclass
 class RewardsCfg:
     """Reward terms for the MDP."""
-
-    # task terms
-    # end_effector_1_position_tracking = RewTerm(
-    #     func=mdp.position_command_error,
-    #     weight=-0.2,
-    #     params={"asset_cfg": SceneEntityCfg("robot_1", body_names=MISSING), "command_name": "ee_1_pose"},
-    # )
-    # end_effector_1_orientation_tracking = RewTerm(
-    #     func=mdp.orientation_command_error,
-    #     weight=-0.05,
-    #     params={"asset_cfg": SceneEntityCfg("robot_1", body_names=MISSING), "command_name": "ee_1_pose"},
-    # )
-
-    # end_effector_2_position_tracking = RewTerm(
-    #     func=mdp.position_command_error,
-    #     weight=-0.2,
-    #     params={"asset_cfg": SceneEntityCfg("robot_2", body_names=MISSING), "command_name": "ee_2_pose"},
-    # )
-    # end_effector_2_orientation_tracking = RewTerm(
-    #     func=mdp.orientation_command_error,
-    #     weight=-0.05,
-    #     params={"asset_cfg": SceneEntityCfg("robot_2", body_names=MISSING), "command_name": "ee_2_pose"},
-    # )
-
-    # end_effector_3_position_tracking = RewTerm(
-    #     func=mdp.position_command_error,
-    #     weight=-0.2,
-    #     params={"asset_cfg": SceneEntityCfg("robot_3", body_names=MISSING), "command_name": "ee_3_pose"},
-    # )
-    # end_effector_3_orientation_tracking = RewTerm(
-    #     func=mdp.orientation_command_error,
-    #     weight=-0.05,
-    #     params={"asset_cfg": SceneEntityCfg("robot_3", body_names=MISSING), "command_name": "ee_3_pose"},
-    # )
-
-    # action penalty
-    action_rate = RewTerm(func=mdp.action_rate_l2, weight=-0.0001)
-
-    joint_1_vel = RewTerm(
-        func=mdp.joint_vel_l2,
-        weight=-0.0001,
-        params={"asset_cfg": SceneEntityCfg("robot_1")},
-    )
-    joint_2_vel = RewTerm(
-        func=mdp.joint_vel_l2,
-        weight=-0.0001,
-        params={"asset_cfg": SceneEntityCfg("robot_2")},
-    )
-    # joint_3_vel = RewTerm(
-    #     func=mdp.joint_vel_l2,
-    #     weight=-0.0001,
-    #     params={"asset_cfg": SceneEntityCfg("robot_3")},
-    # )
+    pass
 
 
 @configclass
 class TerminationsCfg:
     """Termination terms for the MDP."""
-
-    # time_out = DoneTerm(func=mdp.time_out, time_out=True)
+    pass
 
 
 @configclass
 class CurriculumCfg:
     """Curriculum terms for the MDP."""
-
-    action_rate = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "action_rate", "weight": -0.005, "num_steps": 4500}
-    )
+    pass
 
 
 ##

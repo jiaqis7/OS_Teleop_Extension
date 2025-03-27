@@ -88,10 +88,6 @@ class MTMTeleop(DeviceBase):
                                        [-1, 0, 0, 0],
                                        [0, 0, -1, 0],
                                        [0, 0, 0, 1]])
-        # self.mtm_T_mtm_sim = np.array([[0, 0, -1, 0], 
-        #                                [-1, 0, 0, 0],
-        #                                [0, 1, 0, 0],
-        #                                [0, 0, 0, 1]])
         self.mtm_sim_T_mtm = np.linalg.inv(self.mtm_T_mtm_sim)
 
     def mtml_callback(self, msg):

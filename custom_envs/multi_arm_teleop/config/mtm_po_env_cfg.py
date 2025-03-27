@@ -220,17 +220,6 @@ class MTMPOTeleopEnvCfg(MultiTeleopEnvCfg):
             open_command_expr={"psm_tool_gripper1_joint": -0.55, "psm_tool_gripper2_joint": 0.55},
             close_command_expr={"psm_tool_gripper1_joint": -0.1, "psm_tool_gripper2_joint": 0.1},
         )
-        # self.actions.arm_4_action = mdp.JointPositionActionCfg(
-        #     asset_name="robot_4",
-        #     joint_names=[
-        #         "ecm_yaw_joint",
-        #         "ecm_pitch_end_joint",
-        #         "ecm_main_insertion_joint",
-        #         "ecm_tool_joint",
-        #     ],
-        #     scale=1.0,
-        #     use_default_offset=True,
-        # )
 
         self.events.reset_robot_1_joints = EventTerm(
             func=mdp.reset_joints_by_scale,
@@ -261,55 +250,3 @@ class MTMPOTeleopEnvCfg(MultiTeleopEnvCfg):
                 "velocity_range": (0.0, 0.0),
             },
         )
-
-        # Listens to the required transforms
-        # marker_cfg = FRAME_MARKER_CFG.copy()
-        # marker_cfg.markers["frame"].scale = (0.01, 0.01, 0.01)
-        # marker_cfg.prim_path = "/Visuals/FrameTransformer"
-        # self.scene.ee_1_frame = FrameTransformerCfg(
-        #     prim_path="{ENV_REGEX_NS}/Robot_1/psm_base_link",
-        #     debug_vis=False,
-        #     visualizer_cfg=marker_cfg,
-        #     target_frames=[
-        #         FrameTransformerCfg.FrameCfg(
-        #             prim_path="{ENV_REGEX_NS}/Robot_1/psm_tool_tip_link",
-        #             name="end_effector",
-        #         ),
-        #     ],
-        # )
-
-        # self.scene.ee_2_frame = FrameTransformerCfg(
-        #     prim_path="{ENV_REGEX_NS}/Robot_2/psm_base_link",
-        #     debug_vis=False,
-        #     visualizer_cfg=marker_cfg,
-        #     target_frames=[
-        #         FrameTransformerCfg.FrameCfg(
-        #             prim_path="{ENV_REGEX_NS}/Robot_2/psm_tool_tip_link",
-        #             name="end_effector",
-        #         ),
-        #     ],
-        # )
-
-        # self.scene.ee_3_frame = FrameTransformerCfg(
-        #     prim_path="{ENV_REGEX_NS}/Robot_3/psm_base_link",
-        #     debug_vis=False,
-        #     visualizer_cfg=marker_cfg,
-        #     target_frames=[
-        #         FrameTransformerCfg.FrameCfg(
-        #             prim_path="{ENV_REGEX_NS}/Robot_3/psm_tool_tip_link",
-        #             name="end_effector",
-        #         ),
-        #     ],
-        # )
-
-        # self.scene.ee_4_frame = FrameTransformerCfg(
-        #     prim_path="{ENV_REGEX_NS}/Robot_4/ecm_base_link",
-        #     debug_vis=False,
-        #     visualizer_cfg=marker_cfg,
-        #     target_frames=[
-        #         FrameTransformerCfg.FrameCfg(
-        #             prim_path="{ENV_REGEX_NS}/Robot_4/ecm_end_link",
-        #             name="end_effector",
-        #         ),
-        #     ],
-        # )
