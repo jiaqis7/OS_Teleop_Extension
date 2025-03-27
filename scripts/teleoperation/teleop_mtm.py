@@ -3,13 +3,15 @@ import argparse
 from omni.isaac.lab.app import AppLauncher
 
 # add argparse arguments
-parser = argparse.ArgumentParser(description="Keyboard teleoperation for Isaac Lab environments.")
+parser = argparse.ArgumentParser(description="MTM teleoperation for Custom MultiArm dVRK environments.")
 parser.add_argument(
     "--disable_fabric", action="store_true", default=False, help="Disable fabric and use USD I/O operations."
 )
 parser.add_argument("--num_envs", type=int, default=1, help="Number of environments to simulate.")
 parser.add_argument("--task", type=str, default="Isaac-MTM-Teleop-v0", help="Name of the task.")
-parser.add_argument("--sensitivity", type=float, default=0.4, help="Sensitivity factor.")
+parser.add_argument("--scale", type=float, default=0.4, help="Teleop scaling factor.")
+parser.add_argument("--is_simulated", type=bool, default=False, help="Whether the MTM input is from the simulated model or not.")
+
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
 # parse the arguments
@@ -27,11 +29,8 @@ import torch
 
 import carb
 
-import omni.isaac.lab_tasks  # noqa: F401
 from omni.isaac.lab_tasks.utils import parse_env_cfg
 
-import orbit.surgical.tasks  # noqa: F401
-import matplotlib.pyplot as plt
 import cv2
 from scipy.spatial.transform import Rotation as R
 import numpy as np
@@ -65,6 +64,7 @@ def process_actions(cam_T_psm1, w_T_psm1base, cam_T_psm2, w_T_psm2base, w_T_cam,
     psm1base_T_psm1 = np.linalg.inv(w_T_psm1base)@w_T_cam@cam_T_psm1
     psm2base_T_psm2 = np.linalg.inv(w_T_psm2base)@w_T_cam@cam_T_psm2
     psm1_rel_pos, psm1_rel_quat = transformation_matrix_to_pose(psm1base_T_psm1)
+    print('psm1_rel_qut to the base link: ', psm1_rel_quat)
     psm2_rel_pos, psm2_rel_quat = transformation_matrix_to_pose(psm2base_T_psm2)
     actions = np.concatenate([psm1_rel_pos, psm1_rel_quat, get_jaw_gripper_angles(gripper1_command, env, 'robot_1'),
                               psm2_rel_pos, psm2_rel_quat, get_jaw_gripper_angles(gripper2_command, env, 'robot_2')])
@@ -72,6 +72,9 @@ def process_actions(cam_T_psm1, w_T_psm1base, cam_T_psm2, w_T_psm2base, w_T_cam,
     return actions
 
 def main():
+    is_simulated = args_cli.is_simulated
+    scale=args_cli.scale
+
     # Setup the MTM in the real world
     mtm_manipulator = MTMManipulator()
     mtm_manipulator.prepare_teleop()
@@ -87,19 +90,20 @@ def main():
     env = gym.make(args_cli.task, cfg=env_cfg)
     env.reset()
 
-    teleop_interface = MTMTeleop(pos_sensitivity=args_cli.sensitivity, rot_sensitivity=1.0, is_simulated=True)
+    teleop_interface = MTMTeleop(is_simulated=is_simulated)
     teleop_interface.reset()
 
     camera_l = env.unwrapped.scene["camera_left"]
     camera_r = env.unwrapped.scene["camera_right"]
 
-    # view_port_l = vp_utils.create_viewport_window("Left Camera", width = 800, height = 600)
-    # view_port_l.viewport_api.camera_path = '/World/envs/env_0/Robot_4/ecm_end_link/camera_left' #camera_l.cfg.prim_path
-    # view_port_l.viewport_api.resolution = (camera_l.cfg.width, camera_l.cfg.height)
+    if not is_simulated:
+        view_port_l = vp_utils.create_viewport_window("Left Camera", width = 800, height = 600)
+        view_port_l.viewport_api.camera_path = '/World/envs/env_0/Robot_4/ecm_end_link/camera_left' #camera_l.cfg.prim_path
+        view_port_l.viewport_api.resolution = (camera_l.cfg.width, camera_l.cfg.height)
 
-    # view_port_r = vp_utils.create_viewport_window("Right Camera", width = 800, height = 600)
-    # view_port_r.viewport_api.camera_path = '/World/envs/env_0/Robot_4/ecm_end_link/camera_right' #camera_r.cfg.prim_path
-    # view_port_r.viewport_api.resolution = (camera_r.cfg.width, camera_r.cfg.height)
+        view_port_r = vp_utils.create_viewport_window("Right Camera", width = 800, height = 600)
+        view_port_r.viewport_api.camera_path = '/World/envs/env_0/Robot_4/ecm_end_link/camera_right' #camera_r.cfg.prim_path
+        view_port_r.viewport_api.resolution = (camera_r.cfg.width, camera_r.cfg.height)
 
     psm1 = env.unwrapped.scene["robot_1"]
     psm2 = env.unwrapped.scene["robot_2"]
@@ -180,10 +184,10 @@ def main():
                 actions = process_actions(cam_T_psm1tip, world_T_psm1_base, cam_T_psm2tip, world_T_psm2_base, world_T_cam, env, l_gripper_joint, r_gripper_joint)
             else:
                 # normal operation
-                psm1_target_position = init_psm1_tip_position + (mtml_pos - init_mtml_position)
+                psm1_target_position = init_psm1_tip_position + (mtml_pos - init_mtml_position) * scale
                 cam_T_psm1tip = pose_to_transformation_matrix(psm1_target_position, mtml_orientation)
 
-                psm2_target_position = init_psm2_tip_position + (mtmr_pos - init_mtmr_position)
+                psm2_target_position = init_psm2_tip_position + (mtmr_pos - init_mtmr_position) * scale
                 cam_T_psm2tip = pose_to_transformation_matrix(psm2_target_position, mtmr_orientation)
                 
                 actions = process_actions(cam_T_psm1tip, world_T_psm1_base, cam_T_psm2tip, world_T_psm2_base, world_T_cam, env, l_gripper_joint, r_gripper_joint)

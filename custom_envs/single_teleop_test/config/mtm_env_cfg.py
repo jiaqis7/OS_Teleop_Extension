@@ -43,16 +43,6 @@ class MTMTeleopEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
             ],
             body_name="psm_tool_tip_link",
             controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=False, ik_method="dls"),
-            scale=1.0,
-        )
-        self.actions.gripper_1_action = mdp.JointPositionActionCfg(
-            asset_name="robot_1",
-            joint_names=[
-                "psm_tool_gripper1_joint",
-                "psm_tool_gripper2_joint",
-            ],
-            scale=1.0,
-            use_default_offset=False,
         )
         self.actions.arm_2_action = DifferentialInverseKinematicsActionCfg(
             asset_name="robot_2",
@@ -66,7 +56,16 @@ class MTMTeleopEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
             ],
             body_name="psm_tool_tip_link",
             controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=False, ik_method="dls"),
+        )
+
+        self.actions.gripper_1_action = mdp.JointPositionActionCfg(
+            asset_name="robot_1",
+            joint_names=[
+                "psm_tool_gripper1_joint",
+                "psm_tool_gripper2_joint",
+            ],
             scale=1.0,
+            use_default_offset=False,
         )
         self.actions.gripper_2_action = mdp.JointPositionActionCfg(
             asset_name="robot_2",

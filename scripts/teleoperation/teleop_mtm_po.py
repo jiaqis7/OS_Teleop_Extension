@@ -1,13 +1,3 @@
-# Copyright (c) 2022-2024, The Isaac Lab Project Developers.
-# All rights reserved.
-#
-# SPDX-License-Identifier: BSD-3-Clause
-
-"""Script to run a keyboard teleoperation with Isaac Lab manipulation environments."""
-
-"""Launch Isaac Sim Simulator first."""
-
-"""python source/standalone/environments/teleoperation/teleop_phantomomni.py --task Isaac-Reach-Dual-PSM-IK-Abs-v0 --num_envs 1 --teleop_device po"""
 import argparse
 
 from omni.isaac.lab.app import AppLauncher
@@ -37,7 +27,6 @@ import torch
 
 import carb
 
-from omni.isaac.lab.devices import Se3Gamepad, Se3Keyboard, Se3SpaceMouse
 import omni.isaac.lab_tasks  # noqa: F401
 from omni.isaac.lab_tasks.utils import parse_env_cfg
 
@@ -57,6 +46,7 @@ import os
 sys.path.append(os.path.abspath("."))
 from teleop_interface.phantomomni.se3_phantomomni import PhantomOmniTeleop
 from teleop_interface.MTM.se3_mtm import MTMTeleop
+from teleop_interface.MTM.mtm_manipulator import MTMManipulator
 import custom_envs
 
 # process cam_T_psmtip to psmbase_T_psmtip and make usuable action input
@@ -77,7 +67,10 @@ def process_actions(cam_T_psm1, w_T_psm1base, cam_T_psm2, w_T_psm2base, cam_T_ps
     return actions
 
 def main():
-    """Running keyboard teleoperation with Isaac Lab manipulation environment."""
+    # Setup the MTM in the real world
+    mtm_manipulator = MTMManipulator()
+    mtm_manipulator.prepare_teleop()
+
     # parse configuration
     env_cfg = parse_env_cfg(
         args_cli.task, device=args_cli.device, num_envs=args_cli.num_envs, use_fabric=not args_cli.disable_fabric

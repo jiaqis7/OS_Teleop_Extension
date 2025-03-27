@@ -98,6 +98,18 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
             ),
             offset=CameraCfg.OffsetCfg(pos=(0.0, 2.75e-3, 0.0), rot=(0.7071068, 0.0, 0.0, 0.7071068), convention="ros"),
         )
+
+        self.scene.camera_center = CameraCfg(
+            prim_path="{ENV_REGEX_NS}/Robot_4/ecm_end_link/camera_center",
+            update_period=0.1,
+            height=480,
+            width=640,
+            data_types=["rgb", "distance_to_image_plane", "semantic_segmentation"],
+            spawn=sim_utils.PinholeCameraCfg(
+                focal_length=24.0, focus_distance=400.0, horizontal_aperture=20.955, clipping_range=(0.1, 1.0e5)
+            ),
+            offset=CameraCfg.OffsetCfg(pos=(0.0, 0.0, 0.0), rot=(0.7071068, 0.0, 0.0, 0.7071068), convention="ros"),
+        )
         
         # switch robot to PSM
         self.scene.robot_1 = PSM_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot_1")
@@ -157,20 +169,5 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
             joint_names=["psm_tool_gripper.*_joint"],
             open_command_expr={"psm_tool_gripper1_joint": -0.5, "psm_tool_gripper2_joint": 0.5},
             close_command_expr={"psm_tool_gripper1_joint": -0.15, "psm_tool_gripper2_joint": 0.15},
-        )
-
-        marker_cfg = FRAME_MARKER_CFG.copy()
-        marker_cfg.markers["frame"].scale = (0.01, 0.01, 0.01)
-        marker_cfg.prim_path = "/Visuals/FrameTransformer"
-        self.scene.ee_1_frame = FrameTransformerCfg(
-            prim_path="{ENV_REGEX_NS}/Robot_1/psm_base_link",
-            debug_vis=True,
-            visualizer_cfg=marker_cfg,
-            target_frames=[
-                FrameTransformerCfg.FrameCfg(
-                    prim_path="{ENV_REGEX_NS}/Robot_1/psm_tool_tip_link",
-                    name="end_effector",
-                ),
-            ],
         )
 

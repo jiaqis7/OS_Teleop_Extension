@@ -56,12 +56,8 @@ def pose_to_transformation_matrix(position, quaternion):
     return transformation_matrix
 
 class MTMTeleop(DeviceBase):
-    def __init__(self, pos_sensitivity=1.0, rot_sensitivity=1.0, is_simulated=False):
+    def __init__(self, is_simulated=False):
         super().__init__()
-
-        # Sensitivity scaling
-        self.pos_sensitivity = pos_sensitivity
-        self.rot_sensitivity = rot_sensitivity
         self.simulated = is_simulated
 
         # ROS node initialization
@@ -138,8 +134,8 @@ class MTMTeleop(DeviceBase):
                                                     np.array([hrsv_q_mtml.w, hrsv_q_mtml.x, hrsv_q_mtml.y, hrsv_q_mtml.z]))
         hrsv_sim_T_mtml_sim = self.hrsv_sim_T_hrsv @ hrsv_T_mtml @ self.mtm_T_mtm_sim
         hrsv_sim_p_mtml_sim, hrsv_sim_q_mtml_sim = transformation_matrix_to_pose(hrsv_sim_T_mtml_sim)
-        target_mtml_rot = Rotation.from_quat(np.concatenate([[hrsv_sim_q_mtml_sim[3]], hrsv_sim_q_mtml_sim[:3]])).as_rotvec()
-        target_mtml_rot = np.array(target_mtml_rot) * self.rot_sensitivity
+        target_mtml_rot = Rotation.from_quat(np.concatenate([hrsv_sim_q_mtml_sim[1:], [hrsv_sim_q_mtml_sim[0]]])).as_rotvec()
+        target_mtml_rot = np.array(target_mtml_rot)
 
 
         hrsv_p_mtmr = self.mtmr_pose.position
@@ -148,10 +144,10 @@ class MTMTeleop(DeviceBase):
                                                     np.array([hrsv_q_mtmr.w, hrsv_q_mtmr.x, hrsv_q_mtmr.y, hrsv_q_mtmr.z]))
         hrsv_sim_T_mtmr_sim = self.hrsv_sim_T_hrsv @ hrsv_T_mtmr @ self.mtm_T_mtm_sim
         hrsv_sim_p_mtmr_sim, hrsv_sim_q_mtmr_sim = transformation_matrix_to_pose(hrsv_sim_T_mtmr_sim)
-        target_mtmr_rot = Rotation.from_quat(np.concatenate([[hrsv_sim_q_mtmr_sim[3]], hrsv_sim_q_mtmr_sim[:3]])).as_rotvec()
-        target_mtmr_rot = np.array(target_mtmr_rot) * self.rot_sensitivity
+        target_mtmr_rot = Rotation.from_quat(np.concatenate([hrsv_sim_q_mtmr_sim[1:], [hrsv_sim_q_mtmr_sim[0]]])).as_rotvec()
+        target_mtmr_rot = np.array(target_mtmr_rot)
 
-        return hrsv_sim_p_mtml_sim * self.pos_sensitivity, target_mtml_rot, self.l_jaw_angle, hrsv_sim_p_mtmr_sim * self.pos_sensitivity, target_mtmr_rot, self.r_jaw_angle, self.clutch
+        return hrsv_sim_p_mtml_sim, target_mtml_rot, self.l_jaw_angle, hrsv_sim_p_mtmr_sim, target_mtmr_rot, self.r_jaw_angle, self.clutch
 
     def reset(self):
         """Reset the teleoperation state."""
