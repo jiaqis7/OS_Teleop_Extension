@@ -8,12 +8,8 @@ from scipy.spatial.transform.rotation import Rotation
 
 
 class PhantomOmniTeleop(DeviceBase):
-    def __init__(self, pos_sensitivity=1.0, rot_sensitivity=1.0):
+    def __init__(self):
         super().__init__()
-
-        # Sensitivity scaling
-        self.pos_sensitivity = pos_sensitivity
-        self.rot_sensitivity = rot_sensitivity
 
         self.eye_theta = 30 * np.pi / 180
         self.eye_T_po = np.array(
@@ -24,7 +20,6 @@ class PhantomOmniTeleop(DeviceBase):
                 [0, 0, 0, 1],
             ]
         )
-        # self.pose_to_psm_frame_orientation = np.array([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]])
         self.pose_to_psm_frame_orientation = np.array([[-1, 0, 0, 0], [0, 0, -1, 0], [0, -1, 0, 0], [0, 0, 0, 1]])
 
         # ROS node initialization
@@ -35,7 +30,6 @@ class PhantomOmniTeleop(DeviceBase):
         rospy.Subscriber("phantom/button", OmniButtonEvent, self.button_callback)
 
         # State variables
-        self.previous_pose = None
         self.gripper_command = False
         self.clutch = True
 
@@ -79,14 +73,11 @@ class PhantomOmniTeleop(DeviceBase):
         eye_T_stylus = self.eye_T_po @ current_pose
 
         # Extract translation (position delta)
-        target_pos = eye_T_stylus[:3, 3] * self.pos_sensitivity
+        target_pos = eye_T_stylus[:3, 3]
 
         # Extract rotation (Rotation vector)
         target_rot = Rotation.from_matrix(eye_T_stylus[:3, :3]).as_rotvec()
-        target_rot = np.array(target_rot) * self.rot_sensitivity
-
-        # Update previous pose if not clutched
-        self.previous_pose = current_pose
+        target_rot = np.array(target_rot)
 
         return (np.concatenate([target_pos, target_rot]), self.gripper_command, self.clutch)
 

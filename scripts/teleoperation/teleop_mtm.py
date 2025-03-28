@@ -70,9 +70,6 @@ def process_actions(cam_T_psm1, w_T_psm1base, cam_T_psm2, w_T_psm2base, w_T_cam,
     actions = torch.tensor(actions, device=env.unwrapped.device).repeat(env.unwrapped.num_envs, 1)
     return actions
 
-import cProfile
-import pstats
-import io
 
 def main():
     is_simulated = args_cli.is_simulated
@@ -118,16 +115,11 @@ def main():
     init_mtmr_position = None
     init_psm2_tip_position = None
 
-    global_stats = None
-    num_count = 1
-
     # simulate environment
     while simulation_app.is_running():
-        print("-------------------------------------------")
-        current_sim_time = env.sim.current_time
-        print(f"Current simulation time: {current_sim_time:.2f} seconds")
         start_time = time.time()
 
+        # get camera images
         # cam_l_input = camera_l.data.output["rgb"][0].cpu().numpy()
         # cam_r_input = camera_r.data.output["rgb"][0].cpu().numpy()
 
@@ -158,14 +150,6 @@ def main():
             print("Initial orientation matched. Start teleoperation by pressing and releasing the clutch button.")
             continue
 
-        psm1_base_link_pos = psm1.data.body_link_pos_w[0][0].cpu().numpy()
-        psm1_base_link_quat = psm1.data.body_link_quat_w[0][0].cpu().numpy()
-        world_T_psm1_base = pose_to_transformation_matrix(psm1_base_link_pos, psm1_base_link_quat)
-
-        psm2_base_link_pos = psm2.data.body_link_pos_w[0][0].cpu().numpy()
-        psm2_base_link_quat = psm2.data.body_link_quat_w[0][0].cpu().numpy()
-        world_T_psm2_base = pose_to_transformation_matrix(psm2_base_link_pos, psm2_base_link_quat)
-
         # get target pos, rot in camera view with joint and clutch commands
         mtml_pos, mtml_rot, l_gripper_joint, mtmr_pos, mtmr_rot, r_gripper_joint, clutch = teleop_interface.advance()
         if not l_gripper_joint:
@@ -175,6 +159,14 @@ def main():
         mtml_orientation = np.concatenate([[mtml_orientation[3]], mtml_orientation[:3]])
         mtmr_orientation = R.from_rotvec(mtmr_rot).as_quat()
         mtmr_orientation = np.concatenate([[mtmr_orientation[3]], mtmr_orientation[:3]])
+
+        psm1_base_link_pos = psm1.data.body_link_pos_w[0][0].cpu().numpy()
+        psm1_base_link_quat = psm1.data.body_link_quat_w[0][0].cpu().numpy()
+        world_T_psm1_base = pose_to_transformation_matrix(psm1_base_link_pos, psm1_base_link_quat)
+
+        psm2_base_link_pos = psm2.data.body_link_pos_w[0][0].cpu().numpy()
+        psm2_base_link_quat = psm2.data.body_link_quat_w[0][0].cpu().numpy()
+        world_T_psm2_base = pose_to_transformation_matrix(psm2_base_link_pos, psm2_base_link_quat)
 
         if not clutch:
             if was_in_clutch:
@@ -234,34 +226,8 @@ def main():
                                       psm2_rel_pos, psm2_rel_quat, [psm2_gripper1_joint_angle, psm2_gripper2_joint_angle]])
             actions = torch.tensor(actions, device=env.unwrapped.device).repeat(env.unwrapped.num_envs, 1)
 
-        processing_time = time.time() - start_time
-        print(f"Processing time: {processing_time:.4f} seconds")
-        pr = cProfile.Profile()
-        pr.enable()
         env.step(actions)
-        pr.disable()
-
-        # Merge the current profiling results into the global stats
-        if global_stats is None:
-            global_stats = pstats.Stats(pr)
-        else:
-            global_stats.add(pstats.Stats(pr))
-        
-        s = io.StringIO()
-        ps = pstats.Stats(pr, stream=s)
-        ps.strip_dirs()
-        ps.sort_stats("tottime")  # Sort by cumulative time
-        ps.print_stats(15)  # Print the top 10 time-consuming functions
-        print(s.getvalue())
-
-        num_count += 1
-
-        # Print the accumulated profiling results after the simulation ends
-        if global_stats and num_count % 100 == 0:
-            print("\n=== Accumulated Profiling Results ===")
-            global_stats.strip_dirs()
-            global_stats.sort_stats("tottime")  # Sort by total time
-            global_stats.print_stats(15)  # Print the top 15 time-consuming functions
+        time.sleep(max(0.0, 1/30.0 - time.time() + start_time))
 
     # close the simulator
     env.close()

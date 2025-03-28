@@ -9,7 +9,7 @@ parser.add_argument(
 )
 parser.add_argument("--num_envs", type=int, default=1, help="Number of environments to simulate.")
 parser.add_argument("--task", type=str, default="Isaac-PO-Teleop-v0", help="Name of the task.")
-parser.add_argument("--sensitivity", type=float, default=1.0, help="Sensitivity factor.")
+parser.add_argument("--scale", type=float, default=0.4, help="Teleop scaling factor.")
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
 # parse the arguments
@@ -59,6 +59,8 @@ def process_actions(cam_T_psm1, w_T_psm1base, cam_T_psm2, w_T_psm2base, w_T_cam,
 
 
 def main():
+    scale=args_cli.scale
+
     # parse configuration
     env_cfg = parse_env_cfg(
         args_cli.task, device=args_cli.device, num_envs=args_cli.num_envs, use_fabric=not args_cli.disable_fabric
@@ -70,7 +72,7 @@ def main():
     env = gym.make(args_cli.task, cfg=env_cfg)
     env.reset()
 
-    teleop_interface = PhantomOmniTeleop(pos_sensitivity=0.4, rot_sensitivity=1.0)
+    teleop_interface = PhantomOmniTeleop()
     teleop_interface.reset()
 
     camera_l = env.unwrapped.scene["camera_left"]
@@ -81,9 +83,16 @@ def main():
 
     was_in_clutch = True
     init_stylus_position = None
+
     print("Press the grey button and release to start teleoperation.")
     # simulate environment
     while simulation_app.is_running():
+        start_time = time.time()
+
+        # get camera images
+        # cam_l_input = camera_l.data.output["rgb"][0].cpu().numpy()
+        # cam_r_input = camera_r.data.output["rgb"][0].cpu().numpy()
+
         # get 6D transform vector, gripper command, clutch from teleop interface
         stylus_pose, gripper_command, clutch = teleop_interface.advance()
         if clutch is None:
@@ -95,6 +104,7 @@ def main():
 
         camera_l_pos = camera_l.data.pos_w
         camera_r_pos = camera_r.data.pos_w
+        
         # get center of both cameras
         str_camera_pos = (camera_l_pos + camera_r_pos) / 2
         camera_quat = camera_l.data.quat_w_world  # forward x, up z
@@ -129,7 +139,7 @@ def main():
                 actions = process_actions(cam_T_psm1tip, world_T_psm1_base, cam_T_psm2tip, world_T_psm2_base, world_T_cam, env, gripper_command, False)
             else:
                 # normal operation
-                target_position = init_psm1_tip_position + (stylus_pose[:3] - init_stylus_position)
+                target_position = init_psm1_tip_position + (stylus_pose[:3] - init_stylus_position) * scale
                 cam_T_psm1tip = pose_to_transformation_matrix(target_position, stylus_orientation)
 
                 psm2_cur_eef_pos = psm2.data.body_link_pos_w[0][-1].cpu().numpy()
@@ -161,10 +171,8 @@ def main():
             actions = torch.tensor(actions, device=env.unwrapped.device).repeat(env.unwrapped.num_envs, 1)
 
         env.step(actions)
-        # cam_l_input = camera_l.data.output["rgb"][0].cpu().numpy()
-        # cam_r_input = camera_r.data.output["rgb"][0].cpu().numpy()
-        # # Update displayed images
-        # update_images(cam_l_input, cam_r_input)
+
+        time.sleep(max(0.0, 1/30.0 - time.time() + start_time))
 
     # close the simulator
     env.close()

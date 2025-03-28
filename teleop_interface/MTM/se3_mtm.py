@@ -64,12 +64,6 @@ class MTMTeleop(DeviceBase):
         if not rospy.core.is_initialized():
             rospy.init_node("mtm_teleop", anonymous=True)
 
-        rospy.Subscriber("/MTML/measured_cp", PoseStamped, self.mtml_callback)
-        rospy.Subscriber("/MTMR/measured_cp", PoseStamped, self.mtmr_callback)
-        rospy.Subscriber("/MTML/gripper/measured_js", JointState, self.mtml_gripper_callback)
-        rospy.Subscriber("/MTMR/gripper/measured_js", JointState, self.mtmr_gripper_callback)
-        rospy.Subscriber("/footpedals/clutch" if not self.simulated else "/console/clutch", Joy, self.clutch_callback)
-
         # State variables
         self.enabled = False
         self.clutch = True
@@ -89,6 +83,12 @@ class MTMTeleop(DeviceBase):
                                        [0, 0, -1, 0],
                                        [0, 0, 0, 1]])
         self.mtm_sim_T_mtm = np.linalg.inv(self.mtm_T_mtm_sim)
+
+        rospy.Subscriber("/MTML/measured_cp", PoseStamped, self.mtml_callback)
+        rospy.Subscriber("/MTMR/measured_cp", PoseStamped, self.mtmr_callback)
+        rospy.Subscriber("/MTML/gripper/measured_js", JointState, self.mtml_gripper_callback)
+        rospy.Subscriber("/MTMR/gripper/measured_js", JointState, self.mtmr_gripper_callback)
+        rospy.Subscriber("/footpedals/clutch" if not self.simulated else "/console/clutch", Joy, self.clutch_callback)
 
     def mtml_callback(self, msg):
         self.mtml_pose = msg.pose

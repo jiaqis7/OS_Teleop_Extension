@@ -9,6 +9,8 @@ import dvrk
 import numpy
 import sys
 import PyKDL
+import rospy
+from sensor_msgs.msg import Joy
 
 class MTMManipulator:
     def __init__(self, expected_interval=0.01):
@@ -21,7 +23,37 @@ class MTMManipulator:
         self.mtmr= dvrk.mtm(ral = self.ral,
                             arm_name = 'MTMR',
                             expected_interval = expected_interval)
+        
+        # To lock and unlock the orientation of the MTM
+        self.teleop_ready = False
+        self.enabled = False
+        rospy.Subscriber("/footpedals/clutch", Joy, self.clutch_callback)
+    
+    def clutch_callback(self, msg):
+        if not self.teleop_ready:
+            return
+         
+        if msg.buttons[0] == 1:
+            if not self.enabled:
+                self.enabled = True
+            print("Lock Orientation due to clutch pressed")
+            self.mtml.lock_orientation_as_is()
+            self.mtmr.lock_orientation_as_is()
+            return
 
+        elif msg.buttons[0] == 0:
+            if not self.enabled:
+                print("Ignoring the clutch releasing output before the first clutch press. Lock Orientation")
+                self.mtml.lock_orientation_as_is()
+                self.mtmr.lock_orientation_as_is()
+                return
+            print("Unlock Orientation due to clutch released")
+            self.mtml.unlock_orientation()
+            self.mtml.body.servo_cf(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
+            self.mtmr.unlock_orientation()
+            self.mtmr.body.servo_cf(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
+            
+    
     def home(self):
         self.ral.check_connections()
 
@@ -39,8 +71,19 @@ class MTMManipulator:
 
         goal = numpy.copy(self.mtml.setpoint_jp())
         goal.fill(0)
+
         self.mtml.move_jp(goal).wait()
+        # try to move again to make sure waiting is working fine, i.e. not blocking
+        move_mtml = self.mtml.move_jp(goal)
+        move_mtml.wait()
+
         self.mtmr.move_jp(goal).wait()
+        # try to move again to make sure waiting is working fine, i.e. not blocking
+        move_mtmr = self.mtml.move_jp(goal)
+        move_mtmr.wait()
+
+        print('home complete')
+
 
     def release_force(self):
         self.mtml.use_gravity_compensation(True)
@@ -48,9 +91,12 @@ class MTMManipulator:
         self.mtml.body.servo_cf(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
         self.mtmr.body.servo_cf(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
 
+
     def prepare_teleop(self):
         self.home()
         self.release_force()
+        self.teleop_ready = True
+
 
     def adjust_orientation(self, hrsv_T_mtml, hrsv_T_mtmr):
         mtml_goal = PyKDL.Frame()

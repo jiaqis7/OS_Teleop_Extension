@@ -3,7 +3,7 @@ import argparse
 from omni.isaac.lab.app import AppLauncher
 
 # add argparse arguments
-parser = argparse.ArgumentParser(description="Keyboard teleoperation for Isaac Lab environments.")
+parser = argparse.ArgumentParser(description="Simultaneous MTM + PO teleoperation for Isaac Lab environments.")
 parser.add_argument(
     "--disable_fabric", action="store_true", default=False, help="Disable fabric and use USD I/O operations."
 )
@@ -124,6 +124,12 @@ def main():
     print("Press the clutch button and release to start teleoperation.")
     # simulate environment
     while simulation_app.is_running():
+        start_time = time.time()
+
+        # get camera images
+        # cam_l_input = camera_l.data.output["rgb"][0].cpu().numpy()
+        # cam_r_input = camera_r.data.output["rgb"][0].cpu().numpy()
+
         # process actions
         camera_l_pos = camera_l.data.pos_w
         camera_r_pos = camera_r.data.pos_w
@@ -257,10 +263,7 @@ def main():
 
         actions = process_actions(cam_T_psm1tip, world_T_psm1_base, cam_T_psm2tip, world_T_psm2_base, cam_T_psm3tip, world_T_psm3_base, world_T_cam, env, l_gripper_joint, r_gripper_joint, po_gripper)
         env.step(actions)
-        # cam_l_input = camera_l.data.output["rgb"][0].cpu().numpy()
-        # cam_r_input = camera_r.data.output["rgb"][0].cpu().numpy()
-        # # Update displayed images
-        # update_images(cam_l_input, cam_r_input)
+        time.sleep(max(0.0, 1/30.0 - time.time() + start_time))
 
     # close the simulator
     env.close()
