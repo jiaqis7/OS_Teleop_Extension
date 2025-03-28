@@ -19,10 +19,41 @@ python scripts/zero_agent.py --task Isaac-CustomTest-v1
 It should show a simulation window with two PSMs and one needle without any movements.
 
 ## Running Teleoperations
-When running custom environments with cameras, you have to add --enable_cameras.
+All teleoperation environments and interfaces were developed to match hand-eye coordination. Therefore, they use additional cameras in the scene, and it is required to add --enable_cameras when running teleoperation environments.
+### MTM Teleoperation
+If you are using the real MTMs for teleoperation, run
+```bash
+python scripts/teleoperation/teleop_mtm.py --enable_cameras
+```
 
-For example, to run the teleoperation script for a PhantomOmni device, use
+It is also available to mimic the output from MTMs using the dvrk_model ROS package, through
+```bash
+roslaunch dvrk_model surgeon_console.launch
+```
+To output the clutch signal, you can use 
+```bash
+#clutch released
+rostopic pub /console/clutch sensor_msgs/Joy '{header: {stamp: {secs: 0, nsecs: 0}, frame_id: ""}, axes: [0.0, 0.0], buttons: [0]}'
+#clutch pressed
+rostopic pub /console/clutch sensor_msgs/Joy '{header: {stamp: {secs: 0, nsecs: 0}, frame_id: ""}, axes: [0.0, 0.0], buttons: [1]}' 
+```
+
+In this case, you have to run
+```bash
+python scripts/teleoperation/teleop_mtm.py --is_simulated True --enable_cameras
+```
+
+### PhantomOmni Teleoperation
+To run the teleoperation script for a PhantomOmni device, use
 
 ```bash
 python scripts/teleoperation/teleop_po.py --enable_cameras
 ```
+
+### MTM + PhantomOmni Teleoperation
+To run the script for the teleoperation using both MTM and PhantomOmni simultaneously, run
+
+```bash
+python scripts/teleoperation/teleop_mtm_po.py --enable_cameras
+```
+
