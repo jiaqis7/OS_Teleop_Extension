@@ -116,6 +116,10 @@ def main():
 
     # simulate environment
     while simulation_app.is_running():
+        print("-------------------------------------------")
+        current_sim_time = env.sim.current_time
+        print(f"Current simulation time: {current_sim_time:.2f} seconds")
+        start_time = time.time()
         # process actions
         camera_l_pos = camera_l.data.pos_w
         camera_r_pos = camera_r.data.pos_w
@@ -219,11 +223,12 @@ def main():
                                       psm2_rel_pos, psm2_rel_quat, [psm2_gripper1_joint_angle, psm2_gripper2_joint_angle]])
             actions = torch.tensor(actions, device=env.unwrapped.device).repeat(env.unwrapped.num_envs, 1)
 
+        processing_time = time.time() - start_time
+        print(f"Processing time: {processing_time:.4f} seconds")
         env.step(actions)
+        print(f"Required step time: {time.time() - start_time - processing_time:.4f} seconds")
         # cam_l_input = camera_l.data.output["rgb"][0].cpu().numpy()
         # cam_r_input = camera_r.data.output["rgb"][0].cpu().numpy()
-        # # Update displayed images
-        # update_images(cam_l_input, cam_r_input)
 
     # close the simulator
     env.close()

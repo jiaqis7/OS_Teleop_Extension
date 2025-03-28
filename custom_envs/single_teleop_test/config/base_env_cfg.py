@@ -98,18 +98,6 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
             ),
             offset=CameraCfg.OffsetCfg(pos=(0.0, 2.75e-3, 0.0), rot=(0.7071068, 0.0, 0.0, 0.7071068), convention="ros"),
         )
-
-        self.scene.camera_center = CameraCfg(
-            prim_path="{ENV_REGEX_NS}/Robot_4/ecm_end_link/camera_center",
-            update_period=0.1,
-            height=480,
-            width=640,
-            data_types=["rgb", "distance_to_image_plane", "semantic_segmentation"],
-            spawn=sim_utils.PinholeCameraCfg(
-                focal_length=24.0, focus_distance=400.0, horizontal_aperture=20.955, clipping_range=(0.1, 1.0e5)
-            ),
-            offset=CameraCfg.OffsetCfg(pos=(0.0, 0.0, 0.0), rot=(0.7071068, 0.0, 0.0, 0.7071068), convention="ros"),
-        )
         
         # switch robot to PSM
         self.scene.robot_1 = PSM_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot_1")
