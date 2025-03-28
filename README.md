@@ -25,6 +25,11 @@ If you are using the real MTMs for teleoperation, run
 ```bash
 python scripts/teleoperation/teleop_mtm.py --enable_cameras
 ```
+By default, it uses teleoperation scaling of 0.4. You can change it by adding the argument. For example, if you want to run the teleoperation with the scale of 1.0, run
+```bash
+python scripts/teleoperation/teleop_mtm.py --scale 1.0 --enable_cameras
+```
+
 
 It is also available to mimic the output from MTMs using the dvrk_model ROS package, through
 ```bash
