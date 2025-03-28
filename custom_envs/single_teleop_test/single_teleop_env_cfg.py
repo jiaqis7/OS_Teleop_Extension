@@ -63,12 +63,6 @@ class CommandsCfg:
     """Command terms for the MDP."""
     pass
 
-    # ee_1_pose: mdp.UniformPoseCommandCfg = MISSING
-
-    # ee_2_pose: mdp.UniformPoseCommandCfg = MISSING
-
-    # ee_3_pose: mdp.UniformPoseCommandCfg = MISSING
-
 
 @configclass
 class ActionsCfg:
@@ -80,11 +74,6 @@ class ActionsCfg:
     arm_2_action: ActionTerm = MISSING
     gripper_2_action: ActionTerm | None = None
 
-    # arm_3_action: ActionTerm = MISSING
-    # gripper_3_action: ActionTerm | None = None
-
-    # arm_4_action: ActionTerm = MISSING
-
 
 @configclass
 class ObservationsCfg:
@@ -93,43 +82,6 @@ class ObservationsCfg:
     @configclass
     class PolicyCfg(ObsGroup):
         """Observations for policy group."""
-
-        # observation terms (order preserved)
-        # joint_1_pos = ObsTerm(
-        #     func=mdp.joint_pos_rel,
-        #     noise=Unoise(n_min=-0.01, n_max=0.01),
-        #     params={"asset_cfg": SceneEntityCfg("robot_1")},
-        # )
-        # joint_1_vel = ObsTerm(
-        #     func=mdp.joint_vel_rel,
-        #     noise=Unoise(n_min=-0.01, n_max=0.01),
-        #     params={"asset_cfg": SceneEntityCfg("robot_1")},
-        # )
-        # joint_2_pos = ObsTerm(
-        #     func=mdp.joint_pos_rel,
-        #     noise=Unoise(n_min=-0.01, n_max=0.01),
-        #     params={"asset_cfg": SceneEntityCfg("robot_2")},
-        # )
-        # joint_2_vel = ObsTerm(
-        #     func=mdp.joint_vel_rel,
-        #     noise=Unoise(n_min=-0.01, n_max=0.01),
-        #     params={"asset_cfg": SceneEntityCfg("robot_2")},
-        # )
-        # joint_3_pos = ObsTerm(
-        #     func=mdp.joint_pos_rel,
-        #     noise=Unoise(n_min=-0.01, n_max=0.01),
-        #     params={"asset_cfg": SceneEntityCfg("robot_3")},
-        # )
-        # joint_3_vel = ObsTerm(
-        #     func=mdp.joint_vel_rel,
-        #     noise=Unoise(n_min=-0.01, n_max=0.01),
-        #     params={"asset_cfg": SceneEntityCfg("robot_3")},
-        # )
-
-        # pose_1_command = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_1_pose"})
-        # pose_2_command = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_2_pose"})
-        # pose_3_command = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_3_pose"})
-
         actions = ObsTerm(func=mdp.last_action)
 
         def __post_init__(self):
@@ -250,7 +202,7 @@ class SingleTeleopEnvCfg(ManagerBasedRLEnvCfg):
         """Post initialization."""
         # general settings
         self.decimation = 2
-        self.sim.render_interval = self.decimation
+        self.sim.render_interval = self.decimation * 2
         self.episode_length_s = 5.0
         # simulation settings
-        self.sim.dt = 1.0 / 30.0
+        self.sim.dt = 1.0 / 60.0

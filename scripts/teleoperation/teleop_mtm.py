@@ -70,6 +70,10 @@ def process_actions(cam_T_psm1, w_T_psm1base, cam_T_psm2, w_T_psm2base, w_T_cam,
     actions = torch.tensor(actions, device=env.unwrapped.device).repeat(env.unwrapped.num_envs, 1)
     return actions
 
+import cProfile
+import pstats
+import io
+
 def main():
     is_simulated = args_cli.is_simulated
     scale=args_cli.scale
@@ -114,12 +118,19 @@ def main():
     init_mtmr_position = None
     init_psm2_tip_position = None
 
+    global_stats = None
+    num_count = 1
+
     # simulate environment
     while simulation_app.is_running():
         print("-------------------------------------------")
         current_sim_time = env.sim.current_time
         print(f"Current simulation time: {current_sim_time:.2f} seconds")
         start_time = time.time()
+
+        # cam_l_input = camera_l.data.output["rgb"][0].cpu().numpy()
+        # cam_r_input = camera_r.data.output["rgb"][0].cpu().numpy()
+
         # process actions
         camera_l_pos = camera_l.data.pos_w
         camera_r_pos = camera_r.data.pos_w
@@ -225,10 +236,32 @@ def main():
 
         processing_time = time.time() - start_time
         print(f"Processing time: {processing_time:.4f} seconds")
+        pr = cProfile.Profile()
+        pr.enable()
         env.step(actions)
-        print(f"Required step time: {time.time() - start_time - processing_time:.4f} seconds")
-        # cam_l_input = camera_l.data.output["rgb"][0].cpu().numpy()
-        # cam_r_input = camera_r.data.output["rgb"][0].cpu().numpy()
+        pr.disable()
+
+        # Merge the current profiling results into the global stats
+        if global_stats is None:
+            global_stats = pstats.Stats(pr)
+        else:
+            global_stats.add(pstats.Stats(pr))
+        
+        s = io.StringIO()
+        ps = pstats.Stats(pr, stream=s)
+        ps.strip_dirs()
+        ps.sort_stats("tottime")  # Sort by cumulative time
+        ps.print_stats(15)  # Print the top 10 time-consuming functions
+        print(s.getvalue())
+
+        num_count += 1
+
+        # Print the accumulated profiling results after the simulation ends
+        if global_stats and num_count % 100 == 0:
+            print("\n=== Accumulated Profiling Results ===")
+            global_stats.strip_dirs()
+            global_stats.sort_stats("tottime")  # Sort by total time
+            global_stats.print_stats(15)  # Print the top 15 time-consuming functions
 
     # close the simulator
     env.close()

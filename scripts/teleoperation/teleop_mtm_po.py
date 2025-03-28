@@ -9,7 +9,7 @@ parser.add_argument(
 )
 parser.add_argument("--num_envs", type=int, default=1, help="Number of environments to simulate.")
 parser.add_argument("--task", type=str, default="Isaac-MTM-PO-Teleop-v0", help="Name of the task.")
-parser.add_argument("--sensitivity", type=float, default=1.0, help="Sensitivity factor.")
+parser.add_argument("--scale", type=float, default=0.4, help="Teleop scaling factor.")
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
 # parse the arguments
@@ -25,12 +25,8 @@ simulation_app = app_launcher.app
 import gymnasium as gym
 import torch
 
-import carb
-
-import omni.isaac.lab_tasks  # noqa: F401
 from omni.isaac.lab_tasks.utils import parse_env_cfg
 
-import orbit.surgical.tasks  # noqa: F401
 import matplotlib.pyplot as plt
 import cv2
 from scipy.spatial.transform import Rotation as R
@@ -39,7 +35,6 @@ import time
 
 import omni.kit.viewport.utility as vp_utils
 from tf_utils import pose_to_transformation_matrix, transformation_matrix_to_pose
-from teleop_mtm import get_jaw_gripper_angles
 
 import sys
 import os
@@ -48,6 +43,17 @@ from teleop_interface.phantomomni.se3_phantomomni import PhantomOmniTeleop
 from teleop_interface.MTM.se3_mtm import MTMTeleop
 from teleop_interface.MTM.mtm_manipulator import MTMManipulator
 import custom_envs
+
+# map mtm gripper joint angle to psm jaw gripper angles in simulation
+def get_jaw_gripper_angles(gripper_command, env, robot_name="robot_1"):
+    if gripper_command is None:
+        gripper1_joint_angle = env.unwrapped[robot_name].data.joint_pos[0][-2].cpu().numpy()
+        gripper2_joint_angle = env.unwrapped[robot_name].data.joint_pos[0][-1].cpu().numpy()
+        return np.array([gripper1_joint_angle, gripper2_joint_angle])
+    # input: -1.72 (closed), 1.06 (opened)
+    # output: 0,0 (closed), -0.52359, 0.52359 (opened)
+    gripper2_angle = 0.52359 / (1.06 + 1.72) * (gripper_command + 1.72)
+    return np.array([-gripper2_angle, gripper2_angle])
 
 # process cam_T_psmtip to psmbase_T_psmtip and make usuable action input
 def process_actions(cam_T_psm1, w_T_psm1base, cam_T_psm2, w_T_psm2base, cam_T_psm3, w_T_psm3base, w_T_cam, env, gripper1_command, gripper2_command, gripper3_command) -> torch.Tensor:
@@ -67,6 +73,8 @@ def process_actions(cam_T_psm1, w_T_psm1base, cam_T_psm2, w_T_psm2base, cam_T_ps
     return actions
 
 def main():
+    scale=args_cli.scale
+
     # Setup the MTM in the real world
     mtm_manipulator = MTMManipulator()
     mtm_manipulator.prepare_teleop()
@@ -82,10 +90,10 @@ def main():
     env = gym.make(args_cli.task, cfg=env_cfg)
     env.reset()
 
-    mtm_interface = MTMTeleop(pos_sensitivity=0.6, rot_sensitivity=1.0)
+    mtm_interface = MTMTeleop()
     mtm_interface.reset()
 
-    po_interface = PhantomOmniTeleop(pos_sensitivity=0.6, rot_sensitivity=1.0)
+    po_interface = PhantomOmniTeleop()
     po_interface.reset()
 
     camera_l = env.unwrapped.scene["camera_left"]
@@ -103,6 +111,7 @@ def main():
     psm2 = env.unwrapped.scene["robot_2"]
     psm3 = env.unwrapped.scene["robot_3"]
 
+    mtm_orientation_matched = False
     was_in_mtm_clutch = True
     was_in_po_clutch = True
     init_mtml_position = None
@@ -123,6 +132,24 @@ def main():
         camera_quat = camera_l.data.quat_w_world  # forward x, up z
         world_T_cam = pose_to_transformation_matrix(str_camera_pos.cpu().numpy()[0], camera_quat.cpu().numpy()[0])
         cam_T_world = np.linalg.inv(world_T_cam)
+
+        if not mtm_orientation_matched:
+            print("Start matching orientation of MTM with the PSMs in the simulation. May take a few seconds.")
+            mtm_orientation_matched = True
+            psm1_tip_pose_w = psm1.data.body_link_pos_w[0][-1].cpu().numpy()
+            psm1_tip_quat_w = psm1.data.body_link_quat_w[0][-1].cpu().numpy()
+            world_T_psm1tip = pose_to_transformation_matrix(psm1_tip_pose_w, psm1_tip_quat_w)
+            hrsv_T_mtml = mtm_interface.simpose2hrsvpose(cam_T_world @ world_T_psm1tip)
+
+            psm2_tip_pose_w = psm2.data.body_link_pos_w[0][-1].cpu().numpy()
+            psm2_tip_quat_w = psm2.data.body_link_quat_w[0][-1].cpu().numpy()
+            world_T_psm2tip = pose_to_transformation_matrix(psm2_tip_pose_w, psm2_tip_quat_w)
+            hrsv_T_mtmr = mtm_interface.simpose2hrsvpose(cam_T_world @ world_T_psm2tip)
+
+            mtm_manipulator.adjust_orientation(hrsv_T_mtml, hrsv_T_mtmr)
+            # mtm_manipulator.release_force()
+            print("Initial orientation matched. Start teleoperation by pressing and releasing the clutch button.")
+            continue
 
         psm1_base_link_pos = psm1.data.body_link_pos_w[0][0].cpu().numpy()
         psm1_base_link_quat = psm1.data.body_link_quat_w[0][0].cpu().numpy()
@@ -181,15 +208,14 @@ def main():
 
             else:
                 # normal operation
-                psm1_target_position = init_psm1_tip_position + (mtml_pos - init_mtml_position)
+                psm1_target_position = init_psm1_tip_position + (mtml_pos - init_mtml_position) * scale
                 cam_T_psm1tip = pose_to_transformation_matrix(psm1_target_position, mtml_orientation)
-                # psm1_gripper_angle = l_gripper_joint
 
-                psm2_target_position = init_psm2_tip_position + (mtmr_pos - init_mtmr_position)
+                psm2_target_position = init_psm2_tip_position + (mtmr_pos - init_mtmr_position) * scale
                 cam_T_psm2tip = pose_to_transformation_matrix(psm2_target_position, mtmr_orientation)
-                # psm1_gripper_angle = l_gripper_joint
 
             was_in_mtm_clutch = False
+
         else:  # clutch pressed: stop moving, set was_in_clutch to True
             was_in_mtm_clutch = True
 
@@ -219,7 +245,7 @@ def main():
                 cam_T_psm3tip = pose_to_transformation_matrix(init_cam_T_psm3tip[:3, 3], stylus_orientation)
             else:
                 # normal operation
-                target_position = init_psm3_tip_position + (stylus_pose[:3] - init_stylus_position)
+                target_position = init_psm3_tip_position + (stylus_pose[:3] - init_stylus_position) * scale
                 cam_T_psm3tip = pose_to_transformation_matrix(target_position, stylus_orientation)
             was_in_po_clutch = False
         else:  # clutch pressed: stop moving, set was_in_po_clutch to True

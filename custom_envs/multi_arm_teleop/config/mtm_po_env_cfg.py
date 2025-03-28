@@ -140,13 +140,13 @@ class MTMPOTeleopEnvCfg(MultiTeleopEnvCfg):
 
         # switch robot to PSM
         self.scene.robot_1 = PSM_HIGH_PD_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot_1")
-        self.scene.robot_1.init_state.pos = (0.1, 0.0, 0.15)
-        self.scene.robot_1.init_state.rot = (1.0, 0.0, 0.0, 0.0)
+        self.scene.robot_1.init_state.pos = (0.08, 0.0, 0.12)
+        self.scene.robot_1.init_state.rot = (0.9848078, 0.0, 0.1736482, 0.0)
         self.scene.robot_2 = PSM_HIGH_PD_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot_2")
-        self.scene.robot_2.init_state.pos = (-0.1, 0.0, 0.15)
-        self.scene.robot_2.init_state.rot = (1.0, 0.0, 0.0, 0.0)
+        self.scene.robot_2.init_state.pos = (-0.08, 0.0, 0.12)
+        self.scene.robot_2.init_state.rot = (0.9848078, 0.0, -0.1736482, 0.0)
         self.scene.robot_3 = PSM_HIGH_PD_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot_3")
-        self.scene.robot_3.init_state.pos = (0.0, -0.10, 0.15)
+        self.scene.robot_3.init_state.pos = (0.0, -0.08, 0.12)
         self.scene.robot_3.init_state.rot = (1.0, 0.0, 0.0, 0.0)
         # Set actions for the specific robot type (PSM)
         self.scene.robot_4 = ECM_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot_4")
