@@ -44,7 +44,7 @@ class NeedleHandoverEnvCfg(HandoverEnvCfg):
                 "psm_tool_yaw_joint",
             ],
             scale=0.5,
-            use_default_offset=True,
+            use_default_offset=False,
         )
         self.actions.body_2_joint_pos = mdp.JointPositionActionCfg(
             asset_name="robot_2",
@@ -57,7 +57,7 @@ class NeedleHandoverEnvCfg(HandoverEnvCfg):
                 "psm_tool_yaw_joint",
             ],
             scale=0.5,
-            use_default_offset=True,
+            use_default_offset=False,
         )
         self.actions.finger_1_joint_pos = mdp.BinaryJointPositionActionCfg(
             asset_name="robot_1",
