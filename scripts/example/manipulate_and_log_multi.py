@@ -12,8 +12,8 @@ parser = argparse.ArgumentParser(description="Random agent for Isaac Lab environ
 parser.add_argument(
     "--disable_fabric", action="store_true", default=False, help="Disable fabric and use USD I/O operations."
 )
-parser.add_argument("--num_envs", type=int, default=None, help="Number of environments to simulate.")
-parser.add_argument("--task", type=str, default=None, help="Name of the task.")
+parser.add_argument("--num_envs", type=int, default=1, help="Number of environments to simulate.")
+parser.add_argument("--task", type=str, default="Isaac-MultiArm-dVRK-v0", help="Name of the task.")
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
 # parse the arguments
@@ -28,16 +28,18 @@ simulation_app = app_launcher.app
 import gymnasium as gym
 import torch
 
-import omni.isaac.lab_tasks  # noqa: F401
 from omni.isaac.lab_tasks.utils import parse_env_cfg
 
-import orbit.surgical.tasks  # noqa: F401
 import csv
 import os
 import numpy as np
 
+import sys
+import os
+sys.path.append(os.path.abspath("."))
+import custom_envs
 
-def get_end_effector_pose(env, robot_name):
+def get_robot_states(env, robot_name):
     sim_env = env.unwrapped
     # Get the robot from the scene configuration
     robot = sim_env.scene[robot_name]  # This should be directly accessible
@@ -49,7 +51,6 @@ def get_end_effector_pose(env, robot_name):
 
 
 def main():
-    """Random actions agent with Isaac Lab environment."""
     # create environment configuration
     env_cfg = parse_env_cfg(
         args_cli.task, device=args_cli.device, num_envs=args_cli.num_envs, use_fabric=not args_cli.disable_fabric
@@ -74,24 +75,26 @@ def main():
     with open(log_file_path, mode="w", newline="") as log_file:
         csv_writer = csv.writer(log_file)
         # Write header
-        csv_writer.writerow(
-            ["Timestep", "Simulation Time"]
-            + [f"{robot}_Joint_Pos_{j}" for robot, limits in zip(robots, joint_limits) for j in range(limits.shape[0])]
-            + [f"{robot}_End_Effector_Pos_X" for robot in robots]
-            + [f"{robot}_End_Effector_Pos_Y" for robot in robots]
-            + [f"{robot}_End_Effector_Pos_Z" for robot in robots]
-            + [f"{robot}_End_Effector_Quat_W" for robot in robots]
-            + [f"{robot}_End_Effector_Quat_X" for robot in robots]
-            + [f"{robot}_End_Effector_Quat_Y" for robot in robots]
-            + [f"{robot}_End_Effector_Quat_Z" for robot in robots]
-        )
+        header = ["Timestep", "Simulation Time"]
+        for robot, limits in zip(robots, joint_limits):
+            header += [f"{robot}_Joint_Pos_{j}" for j in range(1, limits.shape[0] + 1)]
+            header += [
+                f"{robot}_End_Effector_Pos_X",
+                f"{robot}_End_Effector_Pos_Y",
+                f"{robot}_End_Effector_Pos_Z",
+                f"{robot}_End_Effector_Quat_W",
+                f"{robot}_End_Effector_Quat_X",
+                f"{robot}_End_Effector_Quat_Y",
+                f"{robot}_End_Effector_Quat_Z",
+            ]
+        csv_writer.writerow(header)
 
         steps = 500
         count = 0
 
         for i in range(steps):
             with torch.inference_mode():
-                actions = np.zeros((1, 16))  # 1 by 16 action space
+                actions = np.zeros(env.action_space.shape)
                 # Move the first joint of robot_1 from 0 to min, back to 0, to max, and back to 0
                 if i < steps / 4:
                     actions[0][0] = 0 + (joint_min[0][0] - 0) * (i / (steps / 4))
@@ -104,20 +107,15 @@ def main():
 
                 actions = torch.tensor(actions, device=env.unwrapped.device)
                 env.step(actions)
-                states = [get_end_effector_pose(env, robot) for robot in robots]
+                states = [get_robot_states(env, robot) for robot in robots]
 
-                # Write timestep, simulation time, joint positions, and end effector pose to CSV
-                csv_writer.writerow(
-                    [count, env.sim.current_time]
-                    + [pos for state in states for pos in state[0]]
-                    + [state[1][0] for state in states]
-                    + [state[1][1] for state in states]
-                    + [state[1][2] for state in states]
-                    + [state[2][0] for state in states]
-                    + [state[2][1] for state in states]
-                    + [state[2][2] for state in states]
-                    + [state[2][3] for state in states]
-                )
+                # Write data grouped by robot
+                row = [count, env.sim.current_time]
+                for state in states:
+                    row += list(state[0])  # Joint positions
+                    row += list(state[1])  # End effector positions (x, y, z)
+                    row += list(state[2])  # End effector quaternion (w, x, y, z)
+                csv_writer.writerow(row)
 
                 count += 1
 

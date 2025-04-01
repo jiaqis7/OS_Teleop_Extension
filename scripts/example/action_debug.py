@@ -30,7 +30,7 @@ import os
 sys.path.append(os.path.abspath("."))
 import custom_envs
 
-def get_end_effector_pose(env, robot_name, end_effector_name):
+def print_states(env, robot_name):
     sim_env = env.unwrapped
     # Get the robot from the scene configuration
     robot = sim_env.scene[robot_name] 
@@ -91,7 +91,7 @@ def main():
 
                 actions = torch.tensor(actions, device=env.unwrapped.device)
                 env.step(actions)
-                get_end_effector_pose(env, "robot_1", "psm_tool_tip_link")
+                print_states(env, "robot_1")
 
     # close the simulator
     env.close()
