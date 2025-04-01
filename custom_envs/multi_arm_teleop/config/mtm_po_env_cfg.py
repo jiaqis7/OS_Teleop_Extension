@@ -1,8 +1,3 @@
-# Copyright (c) 2024, The ORBIT-Surgical Project Developers.
-# All rights reserved.
-#
-# SPDX-License-Identifier: BSD-3-Clause
-
 from __future__ import annotations
 
 import math
@@ -28,10 +23,8 @@ from omni.isaac.lab.envs.mdp.actions.actions_cfg import DifferentialInverseKinem
 ##
 # Pre-defined configs
 ##
-from omni.isaac.lab.markers.config import FRAME_MARKER_CFG  # isort: skip
-from orbit.surgical.assets.psm import PSM_CFG  # isort: skip
 from orbit.surgical.assets.ecm import ECM_CFG  # isort: skip
-from orbit.surgical.assets.psm import PSM_HIGH_PD_CFG  # isort: skip
+from custom_assets.psm_fast import PSM_FAST_CFG
 
 
 ##
@@ -138,17 +131,17 @@ class MTMPOTeleopEnvCfg(MultiTeleopEnvCfg):
             ),
         )
 
-        # switch robot to PSM
-        self.scene.robot_1 = PSM_HIGH_PD_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot_1")
+        # switch robot to PSM with faster joint velocity
+        self.scene.robot_1 = PSM_FAST_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot_1")
         self.scene.robot_1.init_state.pos = (0.08, 0.0, 0.12)
         self.scene.robot_1.init_state.rot = (0.9848078, 0.0, 0.1736482, 0.0)
-        self.scene.robot_2 = PSM_HIGH_PD_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot_2")
+        self.scene.robot_2 = PSM_FAST_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot_2")
         self.scene.robot_2.init_state.pos = (-0.08, 0.0, 0.12)
         self.scene.robot_2.init_state.rot = (0.9848078, 0.0, -0.1736482, 0.0)
-        self.scene.robot_3 = PSM_HIGH_PD_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot_3")
+        self.scene.robot_3 = PSM_FAST_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot_3")
         self.scene.robot_3.init_state.pos = (0.0, -0.08, 0.12)
         self.scene.robot_3.init_state.rot = (1.0, 0.0, 0.0, 0.0)
-        # Set actions for the specific robot type (PSM)
+
         self.scene.robot_4 = ECM_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot_4")
         self.scene.robot_4.init_state.pos = (0.0, 0.45, 0.55)
         self.scene.robot_4.init_state.rot = (0.9238795, -0.3826834, 0, 0)

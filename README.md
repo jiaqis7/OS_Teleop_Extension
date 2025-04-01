@@ -13,7 +13,7 @@ If all requirements were installed properly, you should not have to resolve any 
 Test the connection with existing packages by running the line below in the orbitsurgical conda environment.
 
 ```bash
-python scripts/zero_agent.py --task Isaac-CustomTest-v1
+python scripts/example/zero_agent.py --task Isaac-CustomTest-v1
 ```
 
 It should show a simulation window with two PSMs and one needle without any movements.
