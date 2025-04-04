@@ -25,9 +25,11 @@ If you are using the real MTMs for teleoperation, run
 ```bash
 python scripts/teleoperation/teleop_mtm.py --enable_cameras
 ```
-To terminate teleoperation, press MONO button or simply use keyboard interrupt by Ctrl + C
+MTM will automatically move to match the orientation of PSMs in the simulation. After that, you can press and release the clutch button for the first time to start teleoperation.
 
-By default, it uses teleoperation scaling of 0.4. You can change it by adding the argument. For example, if you want to run the teleoperation with the scale of 1.0, run
+To terminate teleoperation, press the MONO button or simply use the keyboard interrupt by Ctrl + C.
+
+By default, it uses a teleoperation scaling of 0.4. You can change it by adding the argument. For example, if you want to run the teleoperation with a scale of 1.0, run
 ```bash
 python scripts/teleoperation/teleop_mtm.py --scale 1.0 --enable_cameras
 ```
