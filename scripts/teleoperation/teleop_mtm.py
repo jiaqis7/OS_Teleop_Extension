@@ -75,6 +75,11 @@ def main():
     is_simulated = args_cli.is_simulated
     scale=args_cli.scale
 
+    psm_name_dict = {
+        "PSM1": "robot_1",
+        "PSM2": "robot_2"
+    }
+
     # Setup the MTM in the real world
     mtm_manipulator = MTMManipulator()
     mtm_manipulator.home()
@@ -103,8 +108,8 @@ def main():
         view_port_r = vp_utils.create_viewport_window("Right Camera", width = 800, height = 600)
         view_port_r.viewport_api.camera_path = '/World/envs/env_0/Robot_4/ecm_end_link/camera_right' #camera_r.cfg.prim_path
 
-    psm1 = env.unwrapped.scene["robot_1"]
-    psm2 = env.unwrapped.scene["robot_2"]
+    psm1 = env.unwrapped.scene[psm_name_dict["PSM1"]]
+    psm2 = env.unwrapped.scene[psm_name_dict["PSM2"]]
 
     mtm_orientation_matched = False
     was_in_clutch = True
