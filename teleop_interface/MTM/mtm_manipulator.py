@@ -82,6 +82,8 @@ class MTMManipulator:
         move_mtmr = self.mtml.move_jp(goal)
         move_mtmr.wait()
 
+        self.teleop_ready = True
+
         print('home complete')
 
 
@@ -90,12 +92,6 @@ class MTMManipulator:
         self.mtmr.use_gravity_compensation(True)
         self.mtml.body.servo_cf(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
         self.mtmr.body.servo_cf(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
-
-
-    def prepare_teleop(self):
-        self.home()
-        self.release_force()
-        self.teleop_ready = True
 
 
     def adjust_orientation(self, hrsv_T_mtml, hrsv_T_mtmr):

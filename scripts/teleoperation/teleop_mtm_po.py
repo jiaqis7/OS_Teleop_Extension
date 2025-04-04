@@ -77,7 +77,7 @@ def main():
 
     # Setup the MTM in the real world
     mtm_manipulator = MTMManipulator()
-    mtm_manipulator.prepare_teleop()
+    mtm_manipulator.home()
 
     # parse configuration
     env_cfg = parse_env_cfg(
@@ -123,10 +123,6 @@ def main():
     # simulate environment
     while simulation_app.is_running():
         start_time = time.time()
-
-        # get camera images
-        # cam_l_input = camera_l.data.output["rgb"][0].cpu().numpy()
-        # cam_r_input = camera_r.data.output["rgb"][0].cpu().numpy()
 
         # process actions
         camera_l_pos = camera_l.data.pos_w

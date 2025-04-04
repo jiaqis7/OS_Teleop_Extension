@@ -35,10 +35,12 @@ import cv2
 from scipy.spatial.transform import Rotation as R
 import numpy as np
 import time
+from datetime import datetime
 
 import omni.kit.viewport.utility as vp_utils
 import omni.kit.commands
 from tf_utils import pose_to_transformation_matrix, transformation_matrix_to_pose
+from logger_utils import CSVLogger
 
 import sys
 import os
@@ -74,6 +76,20 @@ def process_actions(cam_T_psm1, w_T_psm1base, cam_T_psm2, w_T_psm2base, w_T_cam,
 def main():
     is_simulated = args_cli.is_simulated
     scale=args_cli.scale
+
+    psm_name_dict = {
+        "PSM1": "robot_1",
+        "PSM2": "robot_2"
+    }
+
+    # Create a unique folder for this run
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    run_folder = os.path.join(os.getcwd(), f"teleop_logs_{timestamp}")
+    os.makedirs(run_folder, exist_ok=True)
+
+    # Initialize logger
+    log_file_path = os.path.join(run_folder, "teleop_log.csv")
+    logger = CSVLogger(log_file_path, psm_name_dict)
 
     # Setup the MTM in the real world
     mtm_manipulator = MTMManipulator()
@@ -113,11 +129,12 @@ def main():
     init_mtmr_position = None
     init_psm2_tip_position = None
 
+    frame_num = 0
+
     # simulate environment
     while simulation_app.is_running():
         start_time = time.time()
-
-        # process actions
+        
         camera_l_pos = camera_l.data.pos_w
         camera_r_pos = camera_r.data.pos_w
         # get center of both cameras
@@ -220,6 +237,36 @@ def main():
             actions = torch.tensor(actions, device=env.unwrapped.device).repeat(env.unwrapped.num_envs, 1)
 
         env.step(actions)
+
+        # For Logging
+        frame_num += 1
+        robot_states = {}
+        for psm, robot_name in psm_name_dict.items():
+            robot = env.unwrapped.scene[robot_name]
+            joint_positions = robot.data.joint_pos[0][:6].cpu().numpy()
+            jaw_angle = abs(robot.data.joint_pos[0][-2].cpu().numpy()) + abs(robot.data.joint_pos[0][-1].cpu().numpy())
+            ee_position = robot.data.body_link_pos_w[0][-1].cpu().numpy()
+            ee_quat = robot.data.body_link_quat_w[0][-1].cpu().numpy()
+            orientation_matrix = R.from_quat(np.concatenate([ee_quat[1:], [ee_quat[0]]])).as_matrix()
+
+            robot_states[psm] = {
+                "joint_positions": joint_positions,
+                "jaw_angle": jaw_angle,
+                "ee_position": ee_position,
+                "orientation_matrix": orientation_matrix,
+            }
+
+        # Save camera images
+        cam_l_input = camera_l.data.output["rgb"][0].cpu().numpy()
+        cam_r_input = camera_r.data.output["rgb"][0].cpu().numpy()
+        camera_left_path = os.path.join(run_folder, f"camera_left_{frame_num}.png")
+        camera_right_path = os.path.join(run_folder, f"camera_right_{frame_num}.png")
+        cv2.imwrite(camera_left_path, cam_l_input)
+        cv2.imwrite(camera_right_path, cam_r_input)
+
+        # Log data
+        logger.log(frame_num, env.sim.current_time, robot_states, camera_left_path, camera_right_path)
+
         time.sleep(max(0.0, 1/30.0 - time.time() + start_time))
 
     # close the simulator
