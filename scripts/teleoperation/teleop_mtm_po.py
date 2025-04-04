@@ -164,7 +164,7 @@ def main():
         world_T_psm3_base = pose_to_transformation_matrix(psm3_base_link_pos, psm3_base_link_quat)
 
         # get target pos, rot in camera view with joint and clutch commands
-        mtml_pos, mtml_rot, l_gripper_joint, mtmr_pos, mtmr_rot, r_gripper_joint, mtm_clutch = mtm_interface.advance()
+        mtml_pos, mtml_rot, l_gripper_joint, mtmr_pos, mtmr_rot, r_gripper_joint, mtm_clutch, mono = mtm_interface.advance()
         if not l_gripper_joint:
             print("Waiting for the MTM topic subscription...")
             time.sleep(0.05)
