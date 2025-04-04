@@ -67,6 +67,7 @@ class MTMTeleop(DeviceBase):
         # State variables
         self.enabled = False
         self.clutch = True
+        self.mono = False
         self.mtml_pose = None
         self.mtmr_pose = None
         self.l_jaw_angle = None if not self.simulated else 0.5
@@ -89,6 +90,7 @@ class MTMTeleop(DeviceBase):
         rospy.Subscriber("/MTML/gripper/measured_js", JointState, self.mtml_gripper_callback)
         rospy.Subscriber("/MTMR/gripper/measured_js", JointState, self.mtmr_gripper_callback)
         rospy.Subscriber("/footpedals/clutch" if not self.simulated else "/console/clutch", Joy, self.clutch_callback)
+        rospy.Subscriber("/footpedals/coag", Joy, self.mono_callback)
 
     def mtml_callback(self, msg):
         self.mtml_pose = msg.pose
@@ -118,6 +120,13 @@ class MTMTeleop(DeviceBase):
             self.clutch = False
             print("Clutch Released")
 
+    def mono_callback(self, msg):
+        if msg.buttons[0] == 1:
+            self.mono = True
+
+        elif msg.buttons[0] == 0:
+            self.mono = False
+
     def advance(self):
         """Retrieve the latest teleoperation command."""
         if not self.mtml_pose or not self.mtmr_pose or not self.l_jaw_angle or not self.r_jaw_angle:
@@ -143,7 +152,7 @@ class MTMTeleop(DeviceBase):
         target_mtmr_rot = Rotation.from_quat(np.concatenate([hrsv_sim_q_mtmr_sim[1:], [hrsv_sim_q_mtmr_sim[0]]])).as_rotvec()
         target_mtmr_rot = np.array(target_mtmr_rot)
 
-        return hrsv_sim_p_mtml_sim, target_mtml_rot, self.l_jaw_angle, hrsv_sim_p_mtmr_sim, target_mtmr_rot, self.r_jaw_angle, self.clutch
+        return hrsv_sim_p_mtml_sim, target_mtml_rot, self.l_jaw_angle, hrsv_sim_p_mtmr_sim, target_mtmr_rot, self.r_jaw_angle, self.clutch, self.mono
 
     def reset(self):
         """Reset the teleoperation state."""

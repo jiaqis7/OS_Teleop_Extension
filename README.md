@@ -25,12 +25,14 @@ If you are using the real MTMs for teleoperation, run
 ```bash
 python scripts/teleoperation/teleop_mtm.py --enable_cameras
 ```
+To terminate teleoperation, press MONO button or simply use keyboard interrupt by Ctrl + C
+
 By default, it uses teleoperation scaling of 0.4. You can change it by adding the argument. For example, if you want to run the teleoperation with the scale of 1.0, run
 ```bash
 python scripts/teleoperation/teleop_mtm.py --scale 1.0 --enable_cameras
 ```
 
-
+#### Using Simulated MTM Inputs
 It is also available to mimic the output from MTMs using the dvrk_model ROS package, through
 ```bash
 roslaunch dvrk_model surgeon_console.launch
@@ -46,6 +48,12 @@ rostopic pub /console/clutch sensor_msgs/Joy '{header: {stamp: {secs: 0, nsecs: 
 In this case, you have to run
 ```bash
 python scripts/teleoperation/teleop_mtm.py --is_simulated True --enable_cameras
+```
+
+#### Enable Logging
+To enable logging, run 
+```bash
+python scripts/teleoperation/teleop_mtm.py --enable_logging True --enable_cameras
 ```
 
 ### PhantomOmni Teleoperation

@@ -53,7 +53,6 @@ class MTMManipulator:
             self.mtmr.unlock_orientation()
             self.mtmr.body.servo_cf(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
             
-    
     def home(self):
         self.ral.check_connections()
 
@@ -86,13 +85,11 @@ class MTMManipulator:
 
         print('home complete')
 
-
     def release_force(self):
         self.mtml.use_gravity_compensation(True)
         self.mtmr.use_gravity_compensation(True)
         self.mtml.body.servo_cf(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
         self.mtmr.body.servo_cf(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
-
 
     def adjust_orientation(self, hrsv_T_mtml, hrsv_T_mtmr):
         mtml_goal = PyKDL.Frame()
@@ -110,6 +107,10 @@ class MTMManipulator:
 
         self.mtml.move_cp(mtml_goal).wait()
         self.mtmr.move_cp(mtmr_goal).wait()
+
+    def hold_position(self):
+        self.mtml.hold()
+        self.mtmr.hold()     
 
     # tests
     def tests(self):
@@ -153,31 +154,6 @@ class MTMManipulator:
         # back to initial position
         goal.p[2] =  initial_cartesian_position.p[2]
         self.mtml.move_cp(goal).wait()
-
-        # print('a force in body frame will be applied (direction depends on wrist orientation)')
-        # self.coag.wait(value = 0)
-        # self.arm.body_set_cf_orientation_absolute(False)
-        # self.arm.body.servo_cf(numpy.array([0.0, 0.0, -3.0, 0.0, 0.0, 0.0]))
-
-        # print('a force in world frame will be applied (fixed direction)')
-        # self.coag.wait(value = 0)
-        # self.arm.body_set_cf_orientation_absolute(True)
-        # self.arm.body.servo_cf(numpy.array([0.0, 0.0, -3.0, 0.0, 0.0, 0.0]))
-
-        # print('orientation will be locked')
-        # self.coag.wait(value = 0)
-        # self.arm.lock_orientation_as_is()
-
-        # print('force will be removed')
-        # self.coag.wait(value = 0)
-        # self.arm.body.servo_cf(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
-
-        # print('orientation will be unlocked')
-        # self.coag.wait(value = 0)
-        # self.arm.unlock_orientation()
-
-        # print('press and release coag to end')
-        # self.coag.wait(value = 0)
 
     # main method
     def run(self):

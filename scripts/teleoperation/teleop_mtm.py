@@ -11,6 +11,7 @@ parser.add_argument("--num_envs", type=int, default=1, help="Number of environme
 parser.add_argument("--task", type=str, default="Isaac-MTM-Teleop-v0", help="Name of the task.")
 parser.add_argument("--scale", type=float, default=0.4, help="Teleop scaling factor.")
 parser.add_argument("--is_simulated", type=bool, default=False, help="Whether the MTM input is from the simulated model or not.")
+parser.add_argument("--enable_logging", type=bool, default=False, help="Whether to log the teleoperation output or not.")
 
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
@@ -35,10 +36,12 @@ import cv2
 from scipy.spatial.transform import Rotation as R
 import numpy as np
 import time
+from datetime import datetime
 
 import omni.kit.viewport.utility as vp_utils
 import omni.kit.commands
 from tf_utils import pose_to_transformation_matrix, transformation_matrix_to_pose
+from logger_utils import CSVLogger
 
 import sys
 import os
@@ -58,6 +61,7 @@ def get_jaw_gripper_angles(gripper_command, env, robot_name="robot_1"):
     gripper2_angle = 0.52359 / (1.06 + 1.72) * (gripper_command + 1.72)
     return np.array([-gripper2_angle, gripper2_angle])
 
+
 # process cam_T_psmtip to psmbase_T_psmtip and make usuable action input
 def process_actions(cam_T_psm1, w_T_psm1base, cam_T_psm2, w_T_psm2base, w_T_cam, env, gripper1_command, gripper2_command) -> torch.Tensor:
     """Process actions for the environment."""
@@ -74,11 +78,25 @@ def process_actions(cam_T_psm1, w_T_psm1base, cam_T_psm2, w_T_psm2base, w_T_cam,
 def main():
     is_simulated = args_cli.is_simulated
     scale=args_cli.scale
+    enable_logging = args_cli.enable_logging
 
     psm_name_dict = {
         "PSM1": "robot_1",
         "PSM2": "robot_2"
     }
+
+    if enable_logging:
+        # Create a unique folder for this run
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        run_folder = os.path.join(os.getcwd(), f"teleop_logs_{timestamp}")
+        os.makedirs(run_folder, exist_ok=True)
+
+        # Initialize logger
+        log_file_path = os.path.join(run_folder, "teleop_log.csv")
+        logger = CSVLogger(log_file_path, psm_name_dict)
+
+        frame_num = 0
+        cam_stabilized = False
 
     # Setup the MTM in the real world
     mtm_manipulator = MTMManipulator()
@@ -149,10 +167,17 @@ def main():
             continue
 
         # get target pos, rot in camera view with joint and clutch commands
-        mtml_pos, mtml_rot, l_gripper_joint, mtmr_pos, mtmr_rot, r_gripper_joint, clutch = teleop_interface.advance()
+        mtml_pos, mtml_rot, l_gripper_joint, mtmr_pos, mtmr_rot, r_gripper_joint, clutch, mono = teleop_interface.advance()
         if not l_gripper_joint:
             time.sleep(0.05)
             continue
+
+        # stop teleoperation if mono button is pressed
+        if mono:
+            print("Mono button pressed. Stopping teleoperation.")
+            mtm_manipulator.hold_position()
+            break
+
         mtml_orientation = R.from_rotvec(mtml_rot).as_quat()
         mtml_orientation = np.concatenate([[mtml_orientation[3]], mtml_orientation[:3]])
         mtmr_orientation = R.from_rotvec(mtmr_rot).as_quat()
@@ -225,6 +250,45 @@ def main():
             actions = torch.tensor(actions, device=env.unwrapped.device).repeat(env.unwrapped.num_envs, 1)
 
         env.step(actions)
+
+        if enable_logging:
+            # For Logging
+            frame_num += 1
+            if not cam_stabilized:
+                if frame_num > 60:
+                    # wait for 60 frames to stabilize the camera
+                    cam_stabilized = True
+                    frame_num = 0
+                    print("Camera stabilized. Logging will start from the next frame.")
+                continue
+
+            robot_states = {}
+            for psm, robot_name in psm_name_dict.items():
+                robot = env.unwrapped.scene[robot_name]
+                joint_positions = robot.data.joint_pos[0][:6].cpu().numpy()
+                jaw_angle = abs(robot.data.joint_pos[0][-2].cpu().numpy()) + abs(robot.data.joint_pos[0][-1].cpu().numpy())
+                ee_position = robot.data.body_link_pos_w[0][-1].cpu().numpy()
+                ee_quat = robot.data.body_link_quat_w[0][-1].cpu().numpy()
+                orientation_matrix = R.from_quat(np.concatenate([ee_quat[1:], [ee_quat[0]]])).as_matrix()
+
+                robot_states[psm] = {
+                    "joint_positions": joint_positions,
+                    "jaw_angle": jaw_angle,
+                    "ee_position": ee_position,
+                    "orientation_matrix": orientation_matrix,
+                }
+
+            # Save camera images
+            cam_l_input = camera_l.data.output["rgb"][0].cpu().numpy()
+            cam_r_input = camera_r.data.output["rgb"][0].cpu().numpy()
+            camera_left_path = os.path.join(run_folder, f"camera_left_{frame_num}.png")
+            camera_right_path = os.path.join(run_folder, f"camera_right_{frame_num}.png")
+            cv2.imwrite(camera_left_path, cam_l_input)
+            cv2.imwrite(camera_right_path, cam_r_input)
+
+            # Log data
+            logger.log(frame_num, env.sim.current_time, robot_states, camera_left_path, camera_right_path)
+
         time.sleep(max(0.0, 1/30.0 - time.time() + start_time))
 
     # close the simulator
