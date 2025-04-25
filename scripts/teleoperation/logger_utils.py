@@ -10,6 +10,8 @@ class CSVLogger:
         """
         self.log_file_path = log_file_path
         self.psm_name_dict = psm_name_dict
+        self.start_time = None  # Track first time
+
 
         # Create the CSV file and write the header
         with open(self.log_file_path, mode="w", newline="") as log_file:
@@ -38,9 +40,15 @@ class CSVLogger:
         :param camera_left_path: Path to the left camera image
         :param camera_right_path: Path to the right camera image
         """
+        if self.start_time is None:
+            self.start_time = sim_time  # Set start time on first call
+
+        relative_time = sim_time - self.start_time
         epoch_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-        row = [epoch_time, sim_time, frame_num]
+
+        row = [epoch_time, relative_time, frame_num]
+
         for psm, state in robot_states.items():
             joint_positions = state["joint_positions"]
             jaw_angle = state["jaw_angle"]
@@ -52,7 +60,10 @@ class CSVLogger:
             row += list(ee_position)  # End-effector positions
             row += list(orientation_matrix.flatten())  # Orientation matrix
 
-        row += [camera_left_path, camera_right_path]  # Camera image paths
+        row += [
+            os.path.relpath(camera_left_path, os.path.dirname(self.log_file_path)),
+            os.path.relpath(camera_right_path, os.path.dirname(self.log_file_path))
+        ]
 
         # Append the row to the CSV file
         with open(self.log_file_path, mode="a", newline="") as log_file:

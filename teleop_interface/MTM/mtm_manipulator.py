@@ -27,6 +27,8 @@ class MTMManipulator:
         # To lock and unlock the orientation of the MTM
         self.teleop_ready = False
         self.enabled = False
+        self.first_clutch_triggered = False  # whether we've seen the first clutch press
+        self.reset_done = False
         rospy.Subscriber("/footpedals/clutch", Joy, self.clutch_callback)
     
     def clutch_callback(self, msg):
@@ -52,6 +54,7 @@ class MTMManipulator:
             self.mtml.body.servo_cf(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
             self.mtmr.unlock_orientation()
             self.mtmr.body.servo_cf(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
+
             
     def home(self):
         self.ral.check_connections()

@@ -20,11 +20,12 @@ class MTMTeleopEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
         # Set PSM as robot
         # We switch here to a stiffer PD controller for IK tracking to be better.
         self.scene.robot_1 = PSM_FAST_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot_1")
-        self.scene.robot_1.init_state.pos = (0.15, 0.0, 0.15)
+        self.scene.robot_1.init_state.pos = (0.05, 0.0, 0.08)
         self.scene.robot_1.init_state.rot = (1.0, 0.0, 0.0, 0.0)
         self.scene.robot_2 = PSM_FAST_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot_2")
-        self.scene.robot_2.init_state.pos = (-0.15, 0.0, 0.15)
+        self.scene.robot_2.init_state.pos = (-0.05, 0.0, 0.08)
         self.scene.robot_2.init_state.rot = (1.0, 0.0, 0.0, 0.0)
+        self.scene.robot_3 = None
         # Set actions for the specific robot type (PSM)
         self.actions.arm_1_action = DifferentialInverseKinematicsActionCfg(
             asset_name="robot_1",
@@ -71,3 +72,6 @@ class MTMTeleopEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
             scale=1.0,
             use_default_offset=False,
         )
+
+
+

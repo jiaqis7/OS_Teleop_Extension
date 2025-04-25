@@ -68,10 +68,18 @@ class MTMTeleop(DeviceBase):
         self.enabled = False
         self.clutch = True
         self.mono = False
+        self.first_clutch_triggered = False
+        self.reset_done = False
+
         self.mtml_pose = None
         self.mtmr_pose = None
         self.l_jaw_angle = None if not self.simulated else 0.5
         self.r_jaw_angle = None if not self.simulated else 0.5
+
+        # === Pose Lock ===
+        self.frozen_mtml_pose = None
+        self.frozen_mtmr_pose = None
+        self.use_frozen_pose = False
 
         # Transformation matrices to align orientation with the simulation
         self.hrsv_T_hrsv_sim = np.array([[0, 1, 0, 0],
@@ -108,51 +116,69 @@ class MTMTeleop(DeviceBase):
         if msg.buttons[0] == 1:
             if not self.enabled:
                 self.enabled = True
+                if not self.reset_done:
+                    self.first_clutch_triggered = True  # Only set once
             self.clutch = True
             print("Clutch Pressed")
-            return
-
         elif msg.buttons[0] == 0:
             if not self.enabled:
                 self.clutch = True
                 print("Ignoring the clutch releasing output before the first clutch press")
-                return
-            self.clutch = False
-            print("Clutch Released")
+            else:
+                self.clutch = False
+                print("Clutch Released")
+
 
     def mono_callback(self, msg):
-        if msg.buttons[0] == 1:
-            self.mono = True
-
-        elif msg.buttons[0] == 0:
-            self.mono = False
+        self.mono = msg.buttons[0] == 1
 
     def advance(self):
         """Retrieve the latest teleoperation command."""
-        if not self.mtml_pose or not self.mtmr_pose or not self.l_jaw_angle or not self.r_jaw_angle:
+        if not self.mtml_pose or not self.mtmr_pose or self.l_jaw_angle is None or self.r_jaw_angle is None:
             print("Waiting for subscription... Cannot start teleoperation yet")
-            return None, None, None, None, None, None, None
-        # Extract rotation (Rotation vector)
-        hrsv_p_mtml = self.mtml_pose.position
-        hrsv_q_mtml = self.mtml_pose.orientation
-        hrsv_T_mtml = pose_to_transformation_matrix(np.array([hrsv_p_mtml.x, hrsv_p_mtml.y, hrsv_p_mtml.z]), 
-                                                    np.array([hrsv_q_mtml.w, hrsv_q_mtml.x, hrsv_q_mtml.y, hrsv_q_mtml.z]))
+            return None, None, None, None, None, None, None, None, None
+        
+        # === Freeze MTM Pose on First Clutch Press ===
+        trigger_reset = self.first_clutch_triggered and not self.reset_done
+        if trigger_reset:
+            print("[MTM] Freezing MTM pose after first clutch press.")
+            self.frozen_mtml_pose = self.mtml_pose
+            self.frozen_mtmr_pose = self.mtmr_pose
+            self.use_frozen_pose = True
+
+        pose_mtml = self.frozen_mtml_pose if self.use_frozen_pose else self.mtml_pose
+        pose_mtmr = self.frozen_mtmr_pose if self.use_frozen_pose else self.mtmr_pose
+
+        # MTML
+        hrsv_T_mtml = pose_to_transformation_matrix(
+            np.array([self.mtml_pose.position.x, self.mtml_pose.position.y, self.mtml_pose.position.z]),
+            np.array([self.mtml_pose.orientation.w, self.mtml_pose.orientation.x,
+                      self.mtml_pose.orientation.y, self.mtml_pose.orientation.z])
+        )
         hrsv_sim_T_mtml_sim = self.hrsv_sim_T_hrsv @ hrsv_T_mtml @ self.mtm_T_mtm_sim
-        hrsv_sim_p_mtml_sim, hrsv_sim_q_mtml_sim = transformation_matrix_to_pose(hrsv_sim_T_mtml_sim)
-        target_mtml_rot = Rotation.from_quat(np.concatenate([hrsv_sim_q_mtml_sim[1:], [hrsv_sim_q_mtml_sim[0]]])).as_rotvec()
-        target_mtml_rot = np.array(target_mtml_rot)
+        p_mtml, q_mtml = transformation_matrix_to_pose(hrsv_sim_T_mtml_sim)
+        rvec_mtml = Rotation.from_quat(np.concatenate([q_mtml[1:], [q_mtml[0]]])).as_rotvec()
 
-
-        hrsv_p_mtmr = self.mtmr_pose.position
-        hrsv_q_mtmr = self.mtmr_pose.orientation
-        hrsv_T_mtmr = pose_to_transformation_matrix(np.array([hrsv_p_mtmr.x, hrsv_p_mtmr.y, hrsv_p_mtmr.z]), 
-                                                    np.array([hrsv_q_mtmr.w, hrsv_q_mtmr.x, hrsv_q_mtmr.y, hrsv_q_mtmr.z]))
+        # MTMR
+        hrsv_T_mtmr = pose_to_transformation_matrix(
+            np.array([self.mtmr_pose.position.x, self.mtmr_pose.position.y, self.mtmr_pose.position.z]),
+            np.array([self.mtmr_pose.orientation.w, self.mtmr_pose.orientation.x,
+                      self.mtmr_pose.orientation.y, self.mtmr_pose.orientation.z])
+        )
         hrsv_sim_T_mtmr_sim = self.hrsv_sim_T_hrsv @ hrsv_T_mtmr @ self.mtm_T_mtm_sim
-        hrsv_sim_p_mtmr_sim, hrsv_sim_q_mtmr_sim = transformation_matrix_to_pose(hrsv_sim_T_mtmr_sim)
-        target_mtmr_rot = Rotation.from_quat(np.concatenate([hrsv_sim_q_mtmr_sim[1:], [hrsv_sim_q_mtmr_sim[0]]])).as_rotvec()
-        target_mtmr_rot = np.array(target_mtmr_rot)
+        p_mtmr, q_mtmr = transformation_matrix_to_pose(hrsv_sim_T_mtmr_sim)
+        rvec_mtmr = Rotation.from_quat(np.concatenate([q_mtmr[1:], [q_mtmr[0]]])).as_rotvec()
 
-        return hrsv_sim_p_mtml_sim, target_mtml_rot, self.l_jaw_angle, hrsv_sim_p_mtmr_sim, target_mtmr_rot, self.r_jaw_angle, self.clutch, self.mono
+        # Compute reset flag
+        self.first_clutch_triggered = False  # reset after reporting once
+
+        return (
+            p_mtml, rvec_mtml, self.l_jaw_angle,
+            p_mtmr, rvec_mtmr, self.r_jaw_angle,
+            self.clutch, self.mono,
+            trigger_reset
+        )
+
 
     def reset(self):
         """Reset the teleoperation state."""
