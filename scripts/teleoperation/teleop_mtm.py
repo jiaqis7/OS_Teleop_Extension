@@ -349,15 +349,18 @@ def main():
             # Save camera images
             cam_l_input = camera_l.data.output["rgb"][0].cpu().numpy()
             cam_r_input = camera_r.data.output["rgb"][0].cpu().numpy()
-            camera_left_path = os.path.join(left_image_folder, f"camera_left_{frame_num}.png")
-            camera_right_path = os.path.join(right_image_folder, f"camera_right_{frame_num}.png")
+            camera_left_path = os.path.join(left_image_folder, f"camera_left_{frame_num}.bmp")
+            camera_right_path = os.path.join(right_image_folder, f"camera_right_{frame_num}.bmp")
+            # cam_l_input = cv2.resize(cam_l_input, (640, 360))
+            # cam_r_input = cv2.resize(cam_r_input, (640, 360))
+
             cv2.imwrite(camera_left_path, cam_l_input)
             cv2.imwrite(camera_right_path, cam_r_input)
 
             # Log data
             logger.log(frame_num, env.sim.current_time, robot_states, camera_left_path, camera_right_path)
 
-        time.sleep(max(0.0, 1/30.0 - time.time() + start_time))
+        time.sleep(max(0.0, 1/100.0 - time.time() + start_time))
 
     # close the simulator
     env.close()

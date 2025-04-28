@@ -94,7 +94,7 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
 
         # define the rigid cube
         cfg_cube_rigid = sim_utils.CuboidCfg(
-            size=(0.03, 0.004, 0.004),
+            size=(0.005, 0.005, 0.03),
             rigid_props=sim_utils.RigidBodyPropertiesCfg(
                 linear_damping=0.05,
                 angular_damping=0.05,
@@ -119,7 +119,7 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
         cfg_cube_rigid.func(
             "/World/Objects/CubeRigid",
             cfg_cube_rigid,
-            translation=(0.03, 0.0, 0.05),
+            translation=(0.03, -0.05, 0.005),
             orientation=(1.0, 0.0, 0.0, 0.0),
         )
 
@@ -163,7 +163,7 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
         self.scene.robot_3.init_state.pos = (0.0, -0.10, 0.15)
         self.scene.robot_3.init_state.rot = (1.0, 0.0, 0.0, 0.0)
         self.scene.robot_4 = ECM_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot_4")
-        self.scene.robot_4.init_state.pos = (0.0, 0.35, 0.35)
+        self.scene.robot_4.init_state.pos = (0.0, 0.35, 0.45)
         self.scene.robot_4.init_state.rot = (0.9238795, -0.3826834, 0, 0)
 
         # override actions

@@ -12,7 +12,7 @@ from custom_assets.psm_fast import PSM_FAST_CFG
 # Now using as controlling robot tip with absolute and gripper with joint angle
 # For teleoperation using MTM
 @configclass
-class MTMTeleopEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
+class PBEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
     def __post_init__(self):
         # post init of parent
         super().__post_init__()
@@ -20,14 +20,15 @@ class MTMTeleopEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
         # Set PSM as robot
         # We switch here to a stiffer PD controller for IK tracking to be better.
         self.scene.robot_1 = PSM_FAST_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot_1")
-        self.scene.robot_1.init_state.pos = (0.05, 0.0, 0.15)
+        self.scene.robot_1.init_state.pos = (0.05, 0.0, 0.2)
         self.scene.robot_1.init_state.rot = (1.0, 0.0, 0.0, 0.0)
         self.scene.robot_2 = PSM_FAST_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot_2")
-        self.scene.robot_2.init_state.pos = (-0.05, 0.0, 0.15)
+        self.scene.robot_2.init_state.pos = (-0.05, 0.0, 0.2)
         self.scene.robot_2.init_state.rot = (1.0, 0.0, 0.0, 0.0)
         self.scene.robot_3 = None
         # Set actions for the specific robot type (PSM)
-        self.actions.arm_1_action = DifferentialInverseKinematicsActionCfg(
+        
+        self.actions.arm_1_action = mdp.JointPositionActionCfg(
             asset_name="robot_1",
             joint_names=[
                 "psm_yaw_joint",
@@ -37,10 +38,11 @@ class MTMTeleopEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
                 "psm_tool_pitch_joint",
                 "psm_tool_yaw_joint",
             ],
-            body_name="psm_tool_tip_link",
-            controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=False, ik_method="dls"),
+            scale=1.0,
+            use_default_offset=True,
         )
-        self.actions.arm_2_action = DifferentialInverseKinematicsActionCfg(
+
+        self.actions.arm_2_action = mdp.JointPositionActionCfg(
             asset_name="robot_2",
             joint_names=[
                 "psm_yaw_joint",
@@ -50,8 +52,8 @@ class MTMTeleopEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
                 "psm_tool_pitch_joint",
                 "psm_tool_yaw_joint",
             ],
-            body_name="psm_tool_tip_link",
-            controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=False, ik_method="dls"),
+            scale=1.0,
+            use_default_offset=True,
         )
 
         self.actions.gripper_1_action = mdp.JointPositionActionCfg(
@@ -72,6 +74,7 @@ class MTMTeleopEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
             scale=1.0,
             use_default_offset=False,
         )
+
 
 
 
