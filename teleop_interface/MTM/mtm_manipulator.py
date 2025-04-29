@@ -11,6 +11,8 @@ import sys
 import PyKDL
 import rospy
 from sensor_msgs.msg import Joy
+from scipy.spatial.transform import Rotation
+
 
 class MTMManipulator:
     def __init__(self, expected_interval=0.01):
@@ -162,6 +164,37 @@ class MTMManipulator:
     def run(self):
         self.home()
         self.tests()
+
+
+    def move_to_pose(self, pos_l, rotvec_l, pos_r, rotvec_r):
+        """
+        Move MTML and MTMR to specified poses (position + rotation vector).
+        """
+        mtml_goal = PyKDL.Frame()
+        mtmr_goal = PyKDL.Frame()
+
+        mtml_goal.p = PyKDL.Vector(*pos_l)
+        mtmr_goal.p = PyKDL.Vector(*pos_r)
+
+        rotmat_l = Rotation.from_rotvec(rotvec_l).as_matrix()
+        rotmat_r = Rotation.from_rotvec(rotvec_r).as_matrix()
+
+        mtml_goal.M = PyKDL.Rotation(
+            rotmat_l[0,0], rotmat_l[0,1], rotmat_l[0,2],
+            rotmat_l[1,0], rotmat_l[1,1], rotmat_l[1,2],
+            rotmat_l[2,0], rotmat_l[2,1], rotmat_l[2,2]
+        )
+
+        mtmr_goal.M = PyKDL.Rotation(
+            rotmat_r[0,0], rotmat_r[0,1], rotmat_r[0,2],
+            rotmat_r[1,0], rotmat_r[1,1], rotmat_r[1,2],
+            rotmat_r[2,0], rotmat_r[2,1], rotmat_r[2,2]
+        )
+
+        self.mtml.move_cp(mtml_goal).wait()
+        self.mtmr.move_cp(mtmr_goal).wait()
+
+    
 
 
 def main():

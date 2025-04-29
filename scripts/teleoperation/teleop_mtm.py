@@ -80,7 +80,14 @@ def process_actions(cam_T_psm1, w_T_psm1base, cam_T_psm2, w_T_psm2base, w_T_cam,
     return actions
 
 
+
 def main():
+
+    saved_psm1_tip_pos_w = None
+    saved_psm1_tip_quat_w = None
+    saved_psm2_tip_pos_w = None
+    saved_psm2_tip_quat_w = None
+
     is_simulated = args_cli.is_simulated
     scale=args_cli.scale
     enable_logging = args_cli.enable_logging
@@ -90,29 +97,7 @@ def main():
         "PSM2": "robot_2"
     }
 
-    # if enable_logging:
-    #     # Create a unique folder for this run
-    #     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    #     run_folder = os.path.join(os.getcwd(), f"teleop_logs_{timestamp}")
-    #     left_image_folder = os.path.join(run_folder, "left_images")
-    #     right_image_folder = os.path.join(run_folder, "right_images")
-
-
-    #     os.makedirs(left_image_folder, exist_ok=True)
-    #     os.makedirs(right_image_folder, exist_ok=True)
-
-    #     # Initialize logger
-    #     log_file_path = os.path.join(run_folder, "teleop_log(2).csv")
-    #     logger = CSVLogger(log_file_path, psm_name_dict)
-
-    #     frame_num = 0
-
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    run_folder = os.path.join(os.getcwd(), f"teleop_logs_{timestamp}")
-    left_image_folder = os.path.join(run_folder, "left_images")
-    right_image_folder = os.path.join(run_folder, "right_images")
-    os.makedirs(left_image_folder, exist_ok=True)
-    os.makedirs(right_image_folder, exist_ok=True)
+    
 
     logger = None
     frame_num = 0
@@ -165,16 +150,76 @@ def main():
     while simulation_app.is_running():
         start_time = time.time()
 
+
+        # Check if reset trigger file exists
+        if os.path.exists("reset_trigger.txt"):
+            print("[RESET-TRIGGER] reset_trigger.txt detected. Resetting environment...")
+
+            env.reset()
+
+            print("[RESET-TRIGGER] Moving MTM to Home Pose...")
+            mtm_manipulator.home()
+            time.sleep(2.0)
+
+            # Use saved PSM tip poses
+            world_T_psm1tip = pose_to_transformation_matrix(saved_psm1_tip_pos_w, saved_psm1_tip_quat_w)
+            world_T_psm2tip = pose_to_transformation_matrix(saved_psm2_tip_pos_w, saved_psm2_tip_quat_w)
+
+            hrsv_T_mtml = teleop_interface.simpose2hrsvpose(cam_T_world @ world_T_psm1tip)
+            hrsv_T_mtmr = teleop_interface.simpose2hrsvpose(cam_T_world @ world_T_psm2tip)
+
+            # Reset MTM orientation
+            mtm_manipulator.adjust_orientation(hrsv_T_mtml, hrsv_T_mtmr)
+
+            # Move PSM tips to saved initial positions
+            cam_T_psm1tip = cam_T_world @ world_T_psm1tip
+            cam_T_psm2tip = cam_T_world @ world_T_psm2tip
+
+            actions = process_actions(
+                cam_T_psm1tip, world_T_psm1_base,
+                cam_T_psm2tip, world_T_psm2_base,
+                world_T_cam, env,
+                0.5, 0.5
+            )
+
+            for _ in range(30):
+                env.step(actions)
+
+            print("[RESET-TRIGGER] Environment reset completed.")
+
+            # Delete the trigger file
+            os.remove("reset_trigger.txt")
+
+            # Require re-clutch after reset
+            was_in_clutch = True
+            has_synced_psms = False
+            teleop_started = False
+            print("[RESET-TRIGGER] Reset completed. Please clutch to resume teleoperation.")
+
+
+
         if not enable_logging and os.path.exists(args_cli.log_trigger_file):
             print("[LOG] Trigger file detected. Logging started.")
             enable_logging = True
             teleop_start_time = time.time()
-            logger = CSVLogger(os.path.join(run_folder, "teleop_log(2).csv"), psm_name_dict)
+            
+            timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            run_folder = os.path.join(os.getcwd(), f"teleop_logs_{timestamp}")
+            left_image_folder = os.path.join(run_folder, "left_images")
+            right_image_folder = os.path.join(run_folder, "right_images")
+            os.makedirs(left_image_folder, exist_ok=True)
+            os.makedirs(right_image_folder, exist_ok=True)
+
+            logger = CSVLogger(os.path.join(run_folder, "teleop_log.csv"), psm_name_dict)
             frame_num = 0
 
-        if teleop_started and (time.time() - teleop_start_time > args_cli.sim_time):
-            print(f"[AUTO EXIT] {args_cli.sim_time:.1f} seconds of teleoperation elapsed. Exiting.")
-            break
+        if enable_logging and (time.time() - teleop_start_time > args_cli.sim_time):
+            print(f"[LOG] {args_cli.sim_time:.1f} seconds of logging elapsed. Stopping logging.")
+            enable_logging = False
+            logger = None
+            if os.path.exists(args_cli.log_trigger_file):
+                os.remove(args_cli.log_trigger_file)
+
 
         # process actions
         camera_l_pos = camera_l.data.pos_w
@@ -200,6 +245,12 @@ def main():
 
             mtm_manipulator.adjust_orientation(hrsv_T_mtml, hrsv_T_mtmr)
             print("Initial orientation matched. Start teleoperation by pressing and releasing the clutch button.")
+
+            saved_psm1_tip_pos_w = psm1_tip_pose_w
+            saved_psm1_tip_quat_w = psm1_tip_quat_w
+            saved_psm2_tip_pos_w = psm2_tip_pose_w
+            saved_psm2_tip_quat_w = psm2_tip_quat_w
+            
             continue
 
         # get target pos, rot in camera view with joint and clutch commands
@@ -227,14 +278,17 @@ def main():
 
             env.reset()
 
-            # Set fixed poses for PSM1 and PSM2
-            psm1_tip_pose_w = psm1.data.body_link_pos_w[0][-1].cpu().numpy()
-            psm1_tip_quat_w = psm1.data.body_link_quat_w[0][-1].cpu().numpy()
-            psm2_tip_pose_w = psm2.data.body_link_pos_w[0][-1].cpu().numpy()
-            psm2_tip_quat_w = psm2.data.body_link_quat_w[0][-1].cpu().numpy()
-                    
-            cam_T_psm1tip = cam_T_world @ pose_to_transformation_matrix(psm1_tip_pose_w, psm1_tip_quat_w)
-            cam_T_psm2tip = cam_T_world @ pose_to_transformation_matrix(psm2_tip_pose_w, psm2_tip_quat_w)
+            # Instead of reading live PSM poses, use saved ones
+            world_T_psm1tip = pose_to_transformation_matrix(saved_psm1_tip_pos_w, saved_psm1_tip_quat_w)
+            world_T_psm2tip = pose_to_transformation_matrix(saved_psm2_tip_pos_w, saved_psm2_tip_quat_w)
+
+            hrsv_T_mtml = teleop_interface.simpose2hrsvpose(cam_T_world @ world_T_psm1tip)
+            hrsv_T_mtmr = teleop_interface.simpose2hrsvpose(cam_T_world @ world_T_psm2tip)
+
+            mtm_manipulator.adjust_orientation(hrsv_T_mtml, hrsv_T_mtmr)
+
+            cam_T_psm1tip = cam_T_world @ world_T_psm1tip
+            cam_T_psm2tip = cam_T_world @ world_T_psm2tip
 
             actions = process_actions(
                 cam_T_psm1tip, world_T_psm1_base,
@@ -243,11 +297,9 @@ def main():
                 0.5, 0.5
             )
 
-            for _ in range(5):
+            for _ in range(30):
                 env.step(actions)
 
-
-            # Immediately mark as synced and start teleop
             print("[SYNC] PSMs reset complete. Starting teleoperation.")
             has_synced_psms = True
             teleop_start_time = time.time()
@@ -269,6 +321,7 @@ def main():
         if not clutch:
             if was_in_clutch:
                 print("Released from clutch. Starting teleoperation again")
+
                 init_mtml_position = mtml_pos
                 psm1_tip_pose_w = psm1.data.body_link_pos_w[0][-1].cpu().numpy()
                 psm1_tip_quat_w = psm1.data.body_link_quat_w[0][-1].cpu().numpy()
@@ -349,8 +402,8 @@ def main():
             # Save camera images
             cam_l_input = camera_l.data.output["rgb"][0].cpu().numpy()
             cam_r_input = camera_r.data.output["rgb"][0].cpu().numpy()
-            camera_left_path = os.path.join(left_image_folder, f"camera_left_{frame_num}.bmp")
-            camera_right_path = os.path.join(right_image_folder, f"camera_right_{frame_num}.bmp")
+            camera_left_path = os.path.join(left_image_folder, f"camera_left_{frame_num}.png")
+            camera_right_path = os.path.join(right_image_folder, f"camera_right_{frame_num}.png")
             # cam_l_input = cv2.resize(cam_l_input, (640, 360))
             # cam_r_input = cv2.resize(cam_r_input, (640, 360))
 
@@ -360,14 +413,12 @@ def main():
             # Log data
             logger.log(frame_num, env.sim.current_time, robot_states, camera_left_path, camera_right_path)
 
-        time.sleep(max(0.0, 1/100.0 - time.time() + start_time))
+        time.sleep(max(0.0, 1/30.0 - time.time() + start_time))
 
     # close the simulator
     env.close()
     if os.path.exists(args_cli.log_trigger_file):
         os.remove(args_cli.log_trigger_file)
-
-
 
 
 

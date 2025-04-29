@@ -15,6 +15,7 @@ from omni.isaac.lab.sim.spawners.from_files.from_files_cfg import UsdFileCfg
 from omni.isaac.lab.sim.spawners.shapes.shapes_cfg import CuboidCfg
 from omni.isaac.lab.sim.spawners.materials.physics_materials_cfg import RigidBodyMaterialCfg, DeformableBodyMaterialCfg
 from omni.isaac.lab.sim.spawners.materials.visual_materials_cfg import PreviewSurfaceCfg
+from omni.isaac.lab.sim.spawners.materials.visual_materials import spawn_preview_surface
 from omni.isaac.lab.sim.spawners.meshes.meshes_cfg import MeshCuboidCfg
 from omni.isaac.lab.utils import configclass
 
@@ -28,6 +29,14 @@ from omni.isaac.lab.markers.config import FRAME_MARKER_CFG  # isort: skip
 from orbit.surgical.assets.psm import PSM_CFG  # isort: skip
 from orbit.surgical.assets.ecm import ECM_CFG  # isort: skip
 
+# def apply_preview_surface(prim_path, diffuse_color=(0.18, 0.18, 0.18), roughness=0.5, metallic=0.0):
+            
+#             material_cfg = PreviewSurfaceCfg(
+#                 diffuse_color=diffuse_color,
+#                 roughness=roughness,
+#                 metallic=metallic,
+#             )
+#             return spawn_preview_surface(prim_path, material_cfg)
 
 ##
 # Environment configuration
@@ -73,28 +82,12 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
             spawn=None,  # Already spawned manually above
         )
 
-        # # Set Peg Block as object
-        # self.scene.object = RigidObjectCfg(
-        #     prim_path="{ENV_REGEX_NS}/Object",
-        #     init_state=RigidObjectCfg.InitialStateCfg(pos=(0.1, 0.0, 0.025), rot=(1, 0, 0, 0)),
-        #     spawn=UsdFileCfg(
-        #         usd_path=f"{ORBITSURGICAL_ASSETS_DATA_DIR}/Props/Surgical_block/block.usd",
-        #         # usd_path=f"/home/stanford/OS_Teleop_Extension/minimal_cube(2).usda",
-        #         scale=(0.01, 0.01, 0.01),
-        #         rigid_props=RigidBodyPropertiesCfg(
-        #             solver_position_iteration_count=16,
-        #             solver_velocity_iteration_count=8,
-        #             max_angular_velocity=100,
-        #             max_linear_velocity=100,
-        #             max_depenetration_velocity=1.0,
-        #             disable_gravity=False,
-        #         ),
-        #     ),
-        # )
+        
+
 
         # define the rigid cube
         cfg_cube_rigid = sim_utils.CuboidCfg(
-            size=(0.005, 0.005, 0.03),
+            size=(0.02, 0.004, 0.004),
             rigid_props=sim_utils.RigidBodyPropertiesCfg(
                 linear_damping=0.05,
                 angular_damping=0.05,
@@ -108,7 +101,12 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
                 contact_offset=0.005,
                 rest_offset=-0.001,
             ),
-            visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(0.0, 0.0, 0.3)),
+            visual_material=PreviewSurfaceCfg(  # <== this stores the material config
+                diffuse_color=(0.0, 0.0, 0.8),    # much more blue here
+                roughness=0.4,
+                metallic=0.0,
+                opacity=1.0,
+            ),
             physics_material=sim_utils.RigidBodyMaterialCfg(
                 static_friction=2.5,
                 dynamic_friction=2.0,
@@ -119,10 +117,9 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
         cfg_cube_rigid.func(
             "/World/Objects/CubeRigid",
             cfg_cube_rigid,
-            translation=(0.03, -0.05, 0.005),
+            translation=(0.0, 0.0, 0.0),
             orientation=(1.0, 0.0, 0.0, 0.0),
         )
-
         
 
         # sensors
@@ -131,7 +128,7 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
             update_period=0.1,
             height=480,
             width=640,
-            data_types=["rgb", "distance_to_image_plane", "semantic_segmentation"],
+            data_types=["rgb"],
             spawn=sim_utils.PinholeCameraCfg(
                 focal_length=24.0, focus_distance=400.0, horizontal_aperture=20.955, clipping_range=(0.1, 1.0e5)
             ),
@@ -145,7 +142,7 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
             update_period=0.1,
             height=480,
             width=640,
-            data_types=["rgb", "distance_to_image_plane", "semantic_segmentation"],
+            data_types=["rgb"],
             spawn=sim_utils.PinholeCameraCfg(
                 focal_length=24.0, focus_distance=400.0, horizontal_aperture=20.955, clipping_range=(0.1, 1.0e5)
             ),
@@ -163,7 +160,7 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
         self.scene.robot_3.init_state.pos = (0.0, -0.10, 0.15)
         self.scene.robot_3.init_state.rot = (1.0, 0.0, 0.0, 0.0)
         self.scene.robot_4 = ECM_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot_4")
-        self.scene.robot_4.init_state.pos = (0.0, 0.35, 0.45)
+        self.scene.robot_4.init_state.pos = (0.0, 0.45, 0.45)
         self.scene.robot_4.init_state.rot = (0.9238795, -0.3826834, 0, 0)
 
         # override actions
