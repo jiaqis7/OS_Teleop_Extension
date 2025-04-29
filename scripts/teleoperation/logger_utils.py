@@ -30,7 +30,7 @@ class CSVLogger:
             header += ["Camera Left", "Camera Right"]  # Camera image paths
             csv_writer.writerow(header)
 
-    def log(self, frame_num, sim_time, robot_states, camera_left_path, camera_right_path):
+    def log(self, frame_num, real_time, robot_states, camera_left_path, camera_right_path):
         """
         Log a single row of data to the CSV file.
 
@@ -41,9 +41,9 @@ class CSVLogger:
         :param camera_right_path: Path to the right camera image
         """
         if self.start_time is None:
-            self.start_time = sim_time  # Set start time on first call
+            self.start_time = real_time  # Set start time on first call
 
-        relative_time = sim_time - self.start_time
+        relative_time = real_time - self.start_time
         epoch_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 

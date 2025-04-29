@@ -37,7 +37,6 @@ def main():
         args_cli.task, device=args_cli.device, num_envs=args_cli.num_envs, use_fabric=not args_cli.disable_fabric
     )
     env = gym.make(args_cli.task, cfg=env_cfg)
-    env.reset()
 
     # Read CSV
     df = pd.read_csv(args_cli.csv_file)
@@ -47,10 +46,25 @@ def main():
     psm1_jaw_column = "PSM1_jaw_angle"
     psm2_jaw_column = "PSM2_jaw_angle"
 
+    time_stamps = df["Time (Seconds)"].values
+
+    env.reset()
+    
+
+    # init_psm1_joints = df.loc[0, psm1_joint_columns].values
+    # init_psm2_joints = df.loc[0, psm2_joint_columns].values
+    # init_psm1_gripper = df.loc[0, psm1_jaw_column]
+    # init_psm2_gripper = df.loc[0, psm2_jaw_column]
+
+    # # Send to robots
+    # env.scene["robot_1"].write_joint_positions(np.concatenate([init_psm1_joints, [-init_psm1_gripper/2, init_psm1_gripper/2]]))
+    # env.scene["robot_2"].write_joint_positions(np.concatenate([init_psm2_joints, [-init_psm2_gripper/2, init_psm2_gripper/2]]))
+
     print(f"[INFO] Start playing back {len(df)} frames at {TARGET_FREQUENCY}Hz...")
 
+    start_time_global = time.time()
+
     for frame_idx in range(len(df)):
-        start_time = time.time()
 
         # Read frame
         psm1_joints = df.loc[frame_idx, psm1_joint_columns].values
@@ -68,6 +82,7 @@ def main():
             psm1_joints, [psm1_gripper1, psm1_gripper2],
             psm2_joints, [psm2_gripper1, psm2_gripper2]
         ])
+        
         action = np.array(action).astype(np.float32)
         action = torch.tensor(action, device=env.unwrapped.device).unsqueeze(0)
 
@@ -75,9 +90,16 @@ def main():
         env.step(action)
 
         # Sleep to maintain 10 Hz
-        elapsed = time.time() - start_time
-        if elapsed < TARGET_DT:
-            time.sleep(TARGET_DT - elapsed)
+        # elapsed = time.time() - start_time
+        # if elapsed < TARGET_DT:
+        #     time.sleep(TARGET_DT - elapsed)
+
+        if frame_idx < len(df) - 1:
+            current_time = time.time() - start_time_global
+            next_frame_time = time_stamps[frame_idx + 1]
+            sleep_time = next_frame_time - current_time
+            if sleep_time > 0:
+                time.sleep(sleep_time)
 
     print("[INFO] Playback finished. Stopping simulation.")
 

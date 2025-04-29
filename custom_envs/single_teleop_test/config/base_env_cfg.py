@@ -87,7 +87,7 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
 
         # define the rigid cube
         cfg_cube_rigid = sim_utils.CuboidCfg(
-            size=(0.02, 0.004, 0.004),
+            size=(0.025, 0.004, 0.004),
             rigid_props=sim_utils.RigidBodyPropertiesCfg(
                 linear_damping=0.05,
                 angular_damping=0.05,
@@ -102,7 +102,7 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
                 rest_offset=-0.001,
             ),
             visual_material=PreviewSurfaceCfg(  # <== this stores the material config
-                diffuse_color=(0.0, 0.0, 0.8),    # much more blue here
+                diffuse_color=(0.8, 0.0, 0.0),    
                 roughness=0.4,
                 metallic=0.0,
                 opacity=1.0,

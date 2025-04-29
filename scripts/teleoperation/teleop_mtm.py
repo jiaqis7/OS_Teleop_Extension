@@ -17,6 +17,8 @@ parser.add_argument("--sim_time", type=float, default=30.0, help="Duration (in s
 parser.add_argument("--log_trigger_file", type=str, default="log_trigger.txt",
     help="Path to a file that enables logging when it exists.")
 
+parser.add_argument("--disable_viewport", action="store_true", help="Disable extra viewport windows.")
+
 
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
@@ -117,6 +119,10 @@ def main():
     env = gym.make(args_cli.task, cfg=env_cfg)
     env.reset()
 
+    # # force physics to settle initial joint states
+    # for _ in range(2):
+    #     env.sim.step()
+
     teleop_interface = MTMTeleop(is_simulated=is_simulated)
     teleop_interface.reset()
 
@@ -128,12 +134,24 @@ def main():
     camera_l = env.unwrapped.scene["camera_left"]
     camera_r = env.unwrapped.scene["camera_right"]
 
-    if not is_simulated:
+    if not is_simulated and not args_cli.disable_viewport:
         view_port_l = vp_utils.create_viewport_window("Left Camera", width = 800, height = 600)
         view_port_l.viewport_api.camera_path = '/World/envs/env_0/Robot_4/ecm_end_link/camera_left' #camera_l.cfg.prim_path
 
         view_port_r = vp_utils.create_viewport_window("Right Camera", width = 800, height = 600)
         view_port_r.viewport_api.camera_path = '/World/envs/env_0/Robot_4/ecm_end_link/camera_right' #camera_r.cfg.prim_path
+
+    # if not is_simulated:
+    #     cam_l_input = camera_l.data.output["rgb"][0].cpu().numpy()
+    #     cam_r_input = camera_r.data.output["rgb"][0].cpu().numpy()
+
+    #     cam_l_input = cv2.cvtColor(cam_l_input, cv2.COLOR_RGB2BGR)
+    #     cam_r_input = cv2.cvtColor(cam_r_input, cv2.COLOR_RGB2BGR)
+
+    #     cv2.imshow("Left Camera View", cam_l_input)
+    #     cv2.imshow("Right Camera View", cam_r_input)
+    #     cv2.waitKey(1)
+
 
     psm1 = env.unwrapped.scene[psm_name_dict["PSM1"]]
     psm2 = env.unwrapped.scene[psm_name_dict["PSM2"]]
@@ -149,6 +167,10 @@ def main():
     # simulate environment
     while simulation_app.is_running():
         start_time = time.time()
+
+        # if enable_logging and teleop_start_time is None:
+        #     print("[LOG] Logging was enabled at start. Setting teleop_start_time now.")
+        #     teleop_start_time = time.time()
 
 
         # Check if reset trigger file exists
@@ -198,27 +220,53 @@ def main():
 
 
 
-        if not enable_logging and os.path.exists(args_cli.log_trigger_file):
-            print("[LOG] Trigger file detected. Logging started.")
-            enable_logging = True
-            teleop_start_time = time.time()
+        # if not enable_logging and os.path.exists(args_cli.log_trigger_file):
+        #     print("[LOG] Trigger file detected. Logging started.")
             
-            timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            run_folder = os.path.join(os.getcwd(), f"teleop_logs_{timestamp}")
-            left_image_folder = os.path.join(run_folder, "left_images")
-            right_image_folder = os.path.join(run_folder, "right_images")
-            os.makedirs(left_image_folder, exist_ok=True)
-            os.makedirs(right_image_folder, exist_ok=True)
+        #     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        #     run_folder = os.path.join(os.getcwd(), f"teleop_logs_{timestamp}")
+        #     left_image_folder = os.path.join(run_folder, "left_images")
+        #     right_image_folder = os.path.join(run_folder, "right_images")
+        #     os.makedirs(left_image_folder, exist_ok=True)
+        #     os.makedirs(right_image_folder, exist_ok=True)
 
-            logger = CSVLogger(os.path.join(run_folder, "teleop_log.csv"), psm_name_dict)
-            frame_num = 0
+        #     logger = CSVLogger(os.path.join(run_folder, "teleop_log.csv"), psm_name_dict)
+        #     frame_num = 0
+
+        #     enable_logging = True
+        #     teleop_start_time = time.time()
+
+
+        if os.path.exists(args_cli.log_trigger_file):
+            if not enable_logging:
+                # 第一次 logging
+                print("[LOG] Trigger file detected. Logging started.")
+
+                timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                run_folder = os.path.join(os.getcwd(), f"teleop_logs_{timestamp}")
+                left_image_folder = os.path.join(run_folder, "left_images")
+                right_image_folder = os.path.join(run_folder, "right_images")
+                os.makedirs(left_image_folder, exist_ok=True)
+                os.makedirs(right_image_folder, exist_ok=True)
+
+                logger = CSVLogger(os.path.join(run_folder, "teleop_log.csv"), psm_name_dict)
+                frame_num = 0
+
+                enable_logging = True
+
+            # ❗无论是第一次还是再次logging，**都必须刷新teleop_start_time**
+            teleop_start_time = time.time()
+
+            # 删除 trigger file
+            os.remove(args_cli.log_trigger_file)
+            
 
         if enable_logging and (time.time() - teleop_start_time > args_cli.sim_time):
             print(f"[LOG] {args_cli.sim_time:.1f} seconds of logging elapsed. Stopping logging.")
             enable_logging = False
             logger = None
-            if os.path.exists(args_cli.log_trigger_file):
-                os.remove(args_cli.log_trigger_file)
+            # if os.path.exists(args_cli.log_trigger_file):
+            #     os.remove(args_cli.log_trigger_file)
 
 
         # process actions
@@ -402,18 +450,25 @@ def main():
             # Save camera images
             cam_l_input = camera_l.data.output["rgb"][0].cpu().numpy()
             cam_r_input = camera_r.data.output["rgb"][0].cpu().numpy()
-            camera_left_path = os.path.join(left_image_folder, f"camera_left_{frame_num}.png")
-            camera_right_path = os.path.join(right_image_folder, f"camera_right_{frame_num}.png")
+            
             # cam_l_input = cv2.resize(cam_l_input, (640, 360))
             # cam_r_input = cv2.resize(cam_r_input, (640, 360))
 
-            cv2.imwrite(camera_left_path, cam_l_input)
-            cv2.imwrite(camera_right_path, cam_r_input)
+            cam_l_input_bgr = cv2.cvtColor(cam_l_input, cv2.COLOR_RGB2BGR)
+            cam_r_input_bgr = cv2.cvtColor(cam_r_input, cv2.COLOR_RGB2BGR)
+
+            camera_left_path = os.path.join(left_image_folder, f"camera_left_{frame_num}.png")
+            camera_right_path = os.path.join(right_image_folder, f"camera_right_{frame_num}.png")
+
+            cv2.imwrite(camera_left_path, cam_l_input_bgr)
+            cv2.imwrite(camera_right_path, cam_r_input_bgr)
 
             # Log data
-            logger.log(frame_num, env.sim.current_time, robot_states, camera_left_path, camera_right_path)
+            logger.log(frame_num, time.time(), robot_states, camera_left_path, camera_right_path)
 
-        time.sleep(max(0.0, 1/30.0 - time.time() + start_time))
+        elapsed = time.time() - start_time
+        sleep_time = max(0.0, (1/30.0) - elapsed)
+        time.sleep(sleep_time)
 
     # close the simulator
     env.close()
