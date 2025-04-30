@@ -2,6 +2,8 @@ from orbit.surgical.assets.psm import PSM_HIGH_PD_CFG  # isort: skip
 
 PSM_FAST_CFG = PSM_HIGH_PD_CFG.copy()
 PSM_FAST_CFG.actuators["psm"].velocity_limit = 3.5
+PSM_FAST_CFG.actuators["psm"].stiffness = 900.0
+PSM_FAST_CFG.actuators["psm"].damping = 100.0
 PSM_FAST_CFG.actuators["psm_tool"].velocity_limit = 0.4
 PSM_FAST_CFG.actuators["psm_tool"].effort_limit = 100.0
 PSM_FAST_CFG.actuators["psm_tool"].stiffness = 1000.0

@@ -13,7 +13,7 @@ parser.add_argument("--scale", type=float, default=0.4, help="Teleop scaling fac
 parser.add_argument("--is_simulated", type=bool, default=False, help="Whether the MTM input is from the simulated model or not.")
 # parser.add_argument("--enable_logging", type=bool, default=False, help="Whether to log the teleoperation output or not.")
 parser.add_argument("--enable_logging", action="store_true", help="Enable logging from the start (default is off)")
-parser.add_argument("--sim_time", type=float, default=30.0, help="Duration (in seconds) for teleoperation before auto exit.")
+# parser.add_argument("--sim_time", type=float, default=30.0, help="Duration (in seconds) for teleoperation before auto exit.")
 parser.add_argument("--log_trigger_file", type=str, default="log_trigger.txt",
     help="Path to a file that enables logging when it exists.")
 
@@ -80,6 +80,50 @@ def process_actions(cam_T_psm1, w_T_psm1base, cam_T_psm2, w_T_psm2base, w_T_cam,
                               psm2_rel_pos, psm2_rel_quat, get_jaw_gripper_angles(gripper2_command, env, 'robot_2')])
     actions = torch.tensor(actions, device=env.unwrapped.device).repeat(env.unwrapped.num_envs, 1)
     return actions
+
+
+def reset_psm_and_mtm(
+    env, mtm_manipulator, teleop_interface,
+    saved_psm1_tip_pos_w, saved_psm1_tip_quat_w,
+    saved_psm2_tip_pos_w, saved_psm2_tip_quat_w,
+    cam_T_world, world_T_psm1_base, world_T_psm2_base,
+    num_steps=30
+):
+    """
+    Reset PSMs to saved initial poses and MTMs to home + reorient.
+    """
+
+    print("[RESET] Starting task-space reset of PSMs and MTMs...")
+
+    # Convert world tip pose to camera frame
+    world_T_psm1tip = pose_to_transformation_matrix(saved_psm1_tip_pos_w, saved_psm1_tip_quat_w)
+    world_T_psm2tip = pose_to_transformation_matrix(saved_psm2_tip_pos_w, saved_psm2_tip_quat_w)
+
+    cam_T_psm1tip = cam_T_world @ world_T_psm1tip
+    cam_T_psm2tip = cam_T_world @ world_T_psm2tip
+
+    # Process actions
+    actions = process_actions(
+        cam_T_psm1tip, world_T_psm1_base,
+        cam_T_psm2tip, world_T_psm2_base,
+        np.linalg.inv(cam_T_world), env,
+        gripper1_command=-1.73, gripper2_command=-1.73
+    )
+
+    # Apply multiple steps to settle physics
+    for _ in range(num_steps):
+        env.step(actions)
+
+    print("[RESET] Moving MTM to home position...")
+    mtm_manipulator.home()
+    time.sleep(2.0)
+
+    # Compute MTM orientation alignment
+    hrsv_T_mtml = teleop_interface.simpose2hrsvpose(cam_T_psm1tip)
+    hrsv_T_mtmr = teleop_interface.simpose2hrsvpose(cam_T_psm2tip)
+    mtm_manipulator.adjust_orientation(hrsv_T_mtml, hrsv_T_mtmr)
+
+    print("[RESET] Reset complete. Awaiting user clutch.")
 
 
 
@@ -174,49 +218,85 @@ def main():
 
 
         # Check if reset trigger file exists
+        # if os.path.exists("reset_trigger.txt"):
+        #     print("[RESET-TRIGGER] reset_trigger.txt detected. Resetting environment...")
+
+        #     env.reset()
+
+        #     print("[RESET-TRIGGER] Moving MTM to Home Pose...")
+        #     mtm_manipulator.home()
+        #     time.sleep(2.0)
+
+        #     # Use saved PSM tip poses
+        #     world_T_psm1tip = pose_to_transformation_matrix(saved_psm1_tip_pos_w, saved_psm1_tip_quat_w)
+        #     world_T_psm2tip = pose_to_transformation_matrix(saved_psm2_tip_pos_w, saved_psm2_tip_quat_w)
+
+        #     hrsv_T_mtml = teleop_interface.simpose2hrsvpose(cam_T_world @ world_T_psm1tip)
+        #     hrsv_T_mtmr = teleop_interface.simpose2hrsvpose(cam_T_world @ world_T_psm2tip)
+
+        #     # Reset MTM orientation
+        #     mtm_manipulator.adjust_orientation(hrsv_T_mtml, hrsv_T_mtmr)
+
+        #     # Move PSM tips to saved initial positions
+        #     cam_T_psm1tip = cam_T_world @ world_T_psm1tip
+        #     cam_T_psm2tip = cam_T_world @ world_T_psm2tip
+
+        #     actions = process_actions(
+        #         cam_T_psm1tip, world_T_psm1_base,
+        #         cam_T_psm2tip, world_T_psm2_base,
+        #         world_T_cam, env,
+        #         0.5, 0.5
+        #     )
+
+        #     for _ in range(30):
+        #         env.step(actions)
+
+        #     print("[RESET-TRIGGER] Environment reset completed.")
+
+        #     # Delete the trigger file
+        #     os.remove("reset_trigger.txt")
+
+        #     # Require re-clutch after reset
+        #     was_in_clutch = True
+        #     has_synced_psms = False
+        #     teleop_started = False
+        #     print("[RESET-TRIGGER] Reset completed. Please clutch to resume teleoperation.")
+
         if os.path.exists("reset_trigger.txt"):
             print("[RESET-TRIGGER] reset_trigger.txt detected. Resetting environment...")
-
             env.reset()
 
-            print("[RESET-TRIGGER] Moving MTM to Home Pose...")
-            mtm_manipulator.home()
-            time.sleep(2.0)
+            # Recompute cam_T_world and base transforms
+            camera_l_pos = camera_l.data.pos_w
+            camera_r_pos = camera_r.data.pos_w
+            str_camera_pos = (camera_l_pos + camera_r_pos) / 2
+            camera_quat = camera_l.data.quat_w_world
+            world_T_cam = pose_to_transformation_matrix(str_camera_pos.cpu().numpy()[0], camera_quat.cpu().numpy()[0])
+            cam_T_world = np.linalg.inv(world_T_cam)
 
-            # Use saved PSM tip poses
-            world_T_psm1tip = pose_to_transformation_matrix(saved_psm1_tip_pos_w, saved_psm1_tip_quat_w)
-            world_T_psm2tip = pose_to_transformation_matrix(saved_psm2_tip_pos_w, saved_psm2_tip_quat_w)
+            psm1_base_link_pos = psm1.data.body_link_pos_w[0][0].cpu().numpy()
+            psm1_base_link_quat = psm1.data.body_link_quat_w[0][0].cpu().numpy()
+            world_T_psm1_base = pose_to_transformation_matrix(psm1_base_link_pos, psm1_base_link_quat)
 
-            hrsv_T_mtml = teleop_interface.simpose2hrsvpose(cam_T_world @ world_T_psm1tip)
-            hrsv_T_mtmr = teleop_interface.simpose2hrsvpose(cam_T_world @ world_T_psm2tip)
+            psm2_base_link_pos = psm2.data.body_link_pos_w[0][0].cpu().numpy()
+            psm2_base_link_quat = psm2.data.body_link_quat_w[0][0].cpu().numpy()
+            world_T_psm2_base = pose_to_transformation_matrix(psm2_base_link_pos, psm2_base_link_quat)
 
-            # Reset MTM orientation
-            mtm_manipulator.adjust_orientation(hrsv_T_mtml, hrsv_T_mtmr)
-
-            # Move PSM tips to saved initial positions
-            cam_T_psm1tip = cam_T_world @ world_T_psm1tip
-            cam_T_psm2tip = cam_T_world @ world_T_psm2tip
-
-            actions = process_actions(
-                cam_T_psm1tip, world_T_psm1_base,
-                cam_T_psm2tip, world_T_psm2_base,
-                world_T_cam, env,
-                0.5, 0.5
+            # Execute reset logic
+            reset_psm_and_mtm(
+                env, mtm_manipulator, teleop_interface,
+                saved_psm1_tip_pos_w, saved_psm1_tip_quat_w,
+                saved_psm2_tip_pos_w, saved_psm2_tip_quat_w,
+                cam_T_world, world_T_psm1_base, world_T_psm2_base
             )
 
-            for _ in range(30):
-                env.step(actions)
-
-            print("[RESET-TRIGGER] Environment reset completed.")
-
-            # Delete the trigger file
+            # Delete file and force reclutch
             os.remove("reset_trigger.txt")
-
-            # Require re-clutch after reset
             was_in_clutch = True
             has_synced_psms = False
             teleop_started = False
-            print("[RESET-TRIGGER] Reset completed. Please clutch to resume teleoperation.")
+            print("[RESET-TRIGGER] Reset complete. Please clutch to resume teleoperation.")
+
 
 
 
@@ -239,7 +319,7 @@ def main():
 
         if os.path.exists(args_cli.log_trigger_file):
             if not enable_logging:
-                # 第一次 logging
+
                 print("[LOG] Trigger file detected. Logging started.")
 
                 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -249,20 +329,21 @@ def main():
                 os.makedirs(left_image_folder, exist_ok=True)
                 os.makedirs(right_image_folder, exist_ok=True)
 
-                logger = CSVLogger(os.path.join(run_folder, "teleop_log.csv"), psm_name_dict)
+
+                teleop_start_time = time.time()
+
+                logger = CSVLogger(os.path.join(run_folder, "teleop_log.csv"), psm_name_dict, start_time=teleop_start_time)
                 frame_num = 0
 
                 enable_logging = True
 
-            # ❗无论是第一次还是再次logging，**都必须刷新teleop_start_time**
-            teleop_start_time = time.time()
+            
 
-            # 删除 trigger file
             os.remove(args_cli.log_trigger_file)
             
 
-        if enable_logging and (time.time() - teleop_start_time > args_cli.sim_time):
-            print(f"[LOG] {args_cli.sim_time:.1f} seconds of logging elapsed. Stopping logging.")
+        if enable_logging and (time.time() - teleop_start_time > 30):
+            print(f"[LOG] 30 seconds of logging elapsed. Stopping logging.")
             enable_logging = False
             logger = None
             # if os.path.exists(args_cli.log_trigger_file):
@@ -321,37 +402,37 @@ def main():
         psm2_base_link_quat = psm2.data.body_link_quat_w[0][0].cpu().numpy()
         world_T_psm2_base = pose_to_transformation_matrix(psm2_base_link_pos, psm2_base_link_quat)
 
-        if trigger_reset and not has_synced_psms:
-            print("[SYNC] First clutch pressed. Resetting PSMs to fixed start pose.")
+        # if trigger_reset and not has_synced_psms:
+        #     print("[SYNC] First clutch pressed. Resetting PSMs to fixed start pose.")
 
-            env.reset()
+        #     env.reset()
 
-            # Instead of reading live PSM poses, use saved ones
-            world_T_psm1tip = pose_to_transformation_matrix(saved_psm1_tip_pos_w, saved_psm1_tip_quat_w)
-            world_T_psm2tip = pose_to_transformation_matrix(saved_psm2_tip_pos_w, saved_psm2_tip_quat_w)
+        #     # Instead of reading live PSM poses, use saved ones
+        #     world_T_psm1tip = pose_to_transformation_matrix(saved_psm1_tip_pos_w, saved_psm1_tip_quat_w)
+        #     world_T_psm2tip = pose_to_transformation_matrix(saved_psm2_tip_pos_w, saved_psm2_tip_quat_w)
 
-            hrsv_T_mtml = teleop_interface.simpose2hrsvpose(cam_T_world @ world_T_psm1tip)
-            hrsv_T_mtmr = teleop_interface.simpose2hrsvpose(cam_T_world @ world_T_psm2tip)
+        #     hrsv_T_mtml = teleop_interface.simpose2hrsvpose(cam_T_world @ world_T_psm1tip)
+        #     hrsv_T_mtmr = teleop_interface.simpose2hrsvpose(cam_T_world @ world_T_psm2tip)
 
-            mtm_manipulator.adjust_orientation(hrsv_T_mtml, hrsv_T_mtmr)
+        #     mtm_manipulator.adjust_orientation(hrsv_T_mtml, hrsv_T_mtmr)
 
-            cam_T_psm1tip = cam_T_world @ world_T_psm1tip
-            cam_T_psm2tip = cam_T_world @ world_T_psm2tip
+        #     cam_T_psm1tip = cam_T_world @ world_T_psm1tip
+        #     cam_T_psm2tip = cam_T_world @ world_T_psm2tip
 
-            actions = process_actions(
-                cam_T_psm1tip, world_T_psm1_base,
-                cam_T_psm2tip, world_T_psm2_base,
-                world_T_cam, env,
-                0.5, 0.5
-            )
+        #     actions = process_actions(
+        #         cam_T_psm1tip, world_T_psm1_base,
+        #         cam_T_psm2tip, world_T_psm2_base,
+        #         world_T_cam, env,
+        #         0.5, 0.5
+        #     )
 
-            for _ in range(30):
-                env.step(actions)
+        #     for _ in range(30):
+        #         env.step(actions)
 
-            print("[SYNC] PSMs reset complete. Starting teleoperation.")
-            has_synced_psms = True
-            teleop_start_time = time.time()
-            teleop_started = True
+        #     print("[SYNC] PSMs reset complete. Starting teleoperation.")
+        #     has_synced_psms = True
+        #     teleop_start_time = time.time()
+        #     teleop_started = True
 
         # stop teleoperation if mono button is pressed
         if mono:

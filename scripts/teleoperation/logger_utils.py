@@ -4,13 +4,13 @@ import numpy as np
 from datetime import datetime
 
 class CSVLogger:
-    def __init__(self, log_file_path, psm_name_dict):
+    def __init__(self, log_file_path, psm_name_dict, start_time=None):
         """
         Initialize the logger with the file path and robot name mapping.
         """
         self.log_file_path = log_file_path
         self.psm_name_dict = psm_name_dict
-        self.start_time = None  # Track first time
+        self.start_time = start_time  # Track first time
 
 
         # Create the CSV file and write the header

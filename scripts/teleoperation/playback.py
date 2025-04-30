@@ -28,8 +28,67 @@ from omni.isaac.lab_tasks.utils import parse_env_cfg
 sys.path.append(os.path.abspath("."))
 import custom_envs
 
-TARGET_FREQUENCY = 15  # Hz
-TARGET_DT = 1.0 / TARGET_FREQUENCY  # 0.1 seconds
+
+
+
+# def main():
+#     env_cfg = parse_env_cfg(
+#         args_cli.task, device=args_cli.device, num_envs=args_cli.num_envs, use_fabric=not args_cli.disable_fabric
+#     )
+#     env = gym.make(args_cli.task, cfg=env_cfg)
+
+#     # Read CSV
+#     df = pd.read_csv(args_cli.csv_file)
+
+#     psm1_joint_columns = [f"PSM1_joint_{i}" for i in range(1, 7)]
+#     psm2_joint_columns = [f"PSM2_joint_{i}" for i in range(1, 7)]
+#     psm1_jaw_column = "PSM1_jaw_angle"
+#     psm2_jaw_column = "PSM2_jaw_angle"
+
+#     time_stamps = df["Time (Seconds)"].values.astype(np.float64)
+#     time_stamps -= time_stamps[0]  # Normalize to start from 0.0
+
+#     print(f"[INFO] Start playing back {len(df)} frames based on original timestamps...")
+
+#     env.reset()
+#     start_time_global = time.time()
+
+#     for frame_idx in range(len(df)):
+#         # Wait until the timestamped time is reached
+#         target_timestamp = time_stamps[frame_idx]
+#         while True:
+#             current_time = time.time() - start_time_global
+#             sleep_time = target_timestamp - current_time
+#             if sleep_time > 0:
+#                 time.sleep(min(sleep_time, 0.002))  # sleep in small chunks
+#             else:
+#                 break
+
+#         # Extract and process frame
+#         psm1_joints = df.loc[frame_idx, psm1_joint_columns].values.astype(np.float32)
+#         psm2_joints = df.loc[frame_idx, psm2_joint_columns].values.astype(np.float32)
+#         psm1_jaw = float(df.loc[frame_idx, psm1_jaw_column])
+#         psm2_jaw = float(df.loc[frame_idx, psm2_jaw_column])
+
+#         psm1_gripper1 = -psm1_jaw / 2
+#         psm1_gripper2 = psm1_jaw / 2
+#         psm2_gripper1 = -psm2_jaw / 2
+#         psm2_gripper2 = psm2_jaw / 2
+
+#         action = np.concatenate([
+#             psm1_joints, [psm1_gripper1, psm1_gripper2],
+#             psm2_joints, [psm2_gripper1, psm2_gripper2]
+#         ], dtype=np.float32)
+
+#         action = torch.tensor(action, device=env.unwrapped.device).unsqueeze(0)
+#         # env.step(action)
+
+#         for _ in range(3):
+#             env.step(action)
+#             time.sleep(0.0)  # adjust to slow down playback if needed
+
+#     print("[INFO] Playback finished. Stopping simulation.")
+#     env.close()
 
 
 def main():
@@ -38,7 +97,6 @@ def main():
     )
     env = gym.make(args_cli.task, cfg=env_cfg)
 
-    # Read CSV
     df = pd.read_csv(args_cli.csv_file)
 
     psm1_joint_columns = [f"PSM1_joint_{i}" for i in range(1, 7)]
@@ -46,64 +104,73 @@ def main():
     psm1_jaw_column = "PSM1_jaw_angle"
     psm2_jaw_column = "PSM2_jaw_angle"
 
-    time_stamps = df["Time (Seconds)"].values
+    time_stamps = df["Time (Seconds)"].values.astype(np.float64)
+    time_stamps -= time_stamps[0]
+
+    print(f"[INFO] Moving to initial position, then starting playback of {len(df)} frames...")
 
     env.reset()
-    
 
-    # init_psm1_joints = df.loc[0, psm1_joint_columns].values
-    # init_psm2_joints = df.loc[0, psm2_joint_columns].values
-    # init_psm1_gripper = df.loc[0, psm1_jaw_column]
-    # init_psm2_gripper = df.loc[0, psm2_jaw_column]
+    # Extract first frame joint values
+    psm1_joints = df.loc[0, psm1_joint_columns].values.astype(np.float32)
+    psm2_joints = df.loc[0, psm2_joint_columns].values.astype(np.float32)
+    psm1_jaw = float(df.loc[0, psm1_jaw_column])
+    psm2_jaw = float(df.loc[0, psm2_jaw_column])
+    psm1_gripper1 = -psm1_jaw / 2
+    psm1_gripper2 = psm1_jaw / 2
+    psm2_gripper1 = -psm2_jaw / 2
+    psm2_gripper2 = psm2_jaw / 2
 
-    # # Send to robots
-    # env.scene["robot_1"].write_joint_positions(np.concatenate([init_psm1_joints, [-init_psm1_gripper/2, init_psm1_gripper/2]]))
-    # env.scene["robot_2"].write_joint_positions(np.concatenate([init_psm2_joints, [-init_psm2_gripper/2, init_psm2_gripper/2]]))
+    init_action = np.concatenate([
+        psm1_joints, [psm1_gripper1, psm1_gripper2],
+        psm2_joints, [psm2_gripper1, psm2_gripper2]
+    ], dtype=np.float32)
+    init_action = torch.tensor(init_action, device=env.unwrapped.device).unsqueeze(0)
 
-    print(f"[INFO] Start playing back {len(df)} frames at {TARGET_FREQUENCY}Hz...")
+    # Move to initial pose and hold for a few seconds
+    print("[INFO] Holding initial pose from frame 0 for 3 seconds...")
+    for _ in range(90):  # 30 Hz × 3 sec
+        env.step(init_action)
+        time.sleep(1.0 / 30.0)
+
+    print("[INFO] Starting playback...")
 
     start_time_global = time.time()
 
     for frame_idx in range(len(df)):
+        target_timestamp = time_stamps[frame_idx]
+        while True:
+            current_time = time.time() - start_time_global
+            sleep_time = target_timestamp - current_time
+            if sleep_time > 0:
+                time.sleep(min(sleep_time, 0.002))
+            else:
+                break
 
-        # Read frame
-        psm1_joints = df.loc[frame_idx, psm1_joint_columns].values
-        psm2_joints = df.loc[frame_idx, psm2_joint_columns].values
-        psm1_jaw = df.loc[frame_idx, psm1_jaw_column]
-        psm2_jaw = df.loc[frame_idx, psm2_jaw_column]
-
+        # Read current frame
+        psm1_joints = df.loc[frame_idx, psm1_joint_columns].values.astype(np.float32)
+        psm2_joints = df.loc[frame_idx, psm2_joint_columns].values.astype(np.float32)
+        psm1_jaw = float(df.loc[frame_idx, psm1_jaw_column])
+        psm2_jaw = float(df.loc[frame_idx, psm2_jaw_column])
         psm1_gripper1 = -psm1_jaw / 2
         psm1_gripper2 = psm1_jaw / 2
         psm2_gripper1 = -psm2_jaw / 2
         psm2_gripper2 = psm2_jaw / 2
 
-        # Generate action
         action = np.concatenate([
             psm1_joints, [psm1_gripper1, psm1_gripper2],
             psm2_joints, [psm2_gripper1, psm2_gripper2]
-        ])
-        
-        action = np.array(action).astype(np.float32)
+        ], dtype=np.float32)
+
         action = torch.tensor(action, device=env.unwrapped.device).unsqueeze(0)
 
-        # Step simulation
-        env.step(action)
+        for _ in range(3):  # repeat for better tracking
+            env.step(action)
+            time.sleep(0.0)
 
-        # Sleep to maintain 10 Hz
-        # elapsed = time.time() - start_time
-        # if elapsed < TARGET_DT:
-        #     time.sleep(TARGET_DT - elapsed)
-
-        if frame_idx < len(df) - 1:
-            current_time = time.time() - start_time_global
-            next_frame_time = time_stamps[frame_idx + 1]
-            sleep_time = next_frame_time - current_time
-            if sleep_time > 0:
-                time.sleep(sleep_time)
-
-    print("[INFO] Playback finished. Stopping simulation.")
-
+    print("[INFO] Playback finished.")
     env.close()
+
 
 
 if __name__ == "__main__":

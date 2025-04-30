@@ -22,20 +22,20 @@ class MTMTeleopEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
         self.scene.robot_1 = PSM_FAST_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot_1")
         self.scene.robot_1.init_state.pos = (0.1, 0.0, 0.1)
         self.scene.robot_1.init_state.rot = (0.9659, 0.0, 0.2588, 0.0)
-        self.scene.robot_1.init_state.joint_pos = {
-            "psm_main_insertion_joint": 0.1,
-            "psm_tool_gripper1_joint": -0.5,
-            "psm_tool_gripper2_joint": 0.5,
-        }
+        # self.scene.robot_1.init_state.joint_pos = {
+        #     "psm_main_insertion_joint": 0.1,
+        #     "psm_tool_gripper1_joint": -1.5,
+        #     "psm_tool_gripper2_joint": 1.5,
+        # }
 
         self.scene.robot_2 = PSM_FAST_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot_2")
         self.scene.robot_2.init_state.pos = (-0.1, 0.0, 0.1)
         self.scene.robot_2.init_state.rot = (0.9659, 0.0, -0.2588, 0.0)
-        self.scene.robot_2.init_state.joint_pos = {
-            "psm_main_insertion_joint": 0.1,
-            "psm_tool_gripper1_joint": -0.5,
-            "psm_tool_gripper2_joint": 0.5,
-        }
+        # self.scene.robot_2.init_state.joint_pos = {
+        #     "psm_main_insertion_joint": 0.1,
+        #     "psm_tool_gripper1_joint": -1.5,
+        #     "psm_tool_gripper2_joint": 1.5,
+        # }
 
         self.scene.robot_3 = None
         # Set actions for the specific robot type (PSM)
@@ -75,6 +75,7 @@ class MTMTeleopEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
             ],
             scale=1.0,
             use_default_offset=False,
+  
         )
         self.actions.gripper_2_action = mdp.JointPositionActionCfg(
             asset_name="robot_2",
@@ -84,6 +85,7 @@ class MTMTeleopEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
             ],
             scale=1.0,
             use_default_offset=False,
+
         )
 
 
