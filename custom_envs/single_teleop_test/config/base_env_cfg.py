@@ -82,56 +82,96 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
             spawn=None,  # Already spawned manually above
         )
 
+
+        # Define the cube and register it to the scene
+        self.scene.cube_rigid = RigidObjectCfg(
+            prim_path="/World/Objects/CubeRigid",
+            init_state=RigidObjectCfg.InitialStateCfg(
+                pos=(0.0, 0.0, 0.0),
+                rot=(1.0, 0.0, 0.0, 0.0),
+            ),
+            spawn=sim_utils.CuboidCfg(
+                size=(0.03, 0.004, 0.004),
+                rigid_props=sim_utils.RigidBodyPropertiesCfg(
+                    linear_damping=0.05,
+                    angular_damping=0.05,
+                    solver_position_iteration_count=30,
+                    solver_velocity_iteration_count=10,
+                ),
+                mass_props=sim_utils.MassPropertiesCfg(
+                    mass=0.03,
+                ),
+                collision_props=sim_utils.CollisionPropertiesCfg(
+                    contact_offset=0.005,
+                    rest_offset=-0.001,
+                ),
+                visual_material=PreviewSurfaceCfg(
+                    diffuse_color=(0.8, 0.0, 0.0),
+                    roughness=0.4,
+                    metallic=0.0,
+                    opacity=1.0,
+                ),
+                physics_material=sim_utils.RigidBodyMaterialCfg(
+                    static_friction=2.5,
+                    dynamic_friction=2.5,
+                    restitution=0.0,
+                ),
+            )
+        )
+
+
         
 
 
         # define the rigid cube
-        cfg_cube_rigid = sim_utils.CuboidCfg(
-            size=(0.03, 0.004, 0.004),
-            rigid_props=sim_utils.RigidBodyPropertiesCfg(
-                linear_damping=0.05,
-                angular_damping=0.05,
-                solver_position_iteration_count=30,
-                solver_velocity_iteration_count=10,
-            ),
-            mass_props=sim_utils.MassPropertiesCfg(
-                mass=0.03,
-            ),
-            collision_props=sim_utils.CollisionPropertiesCfg(
-                contact_offset=0.005,
-                rest_offset=-0.001,
-            ),
-            visual_material=PreviewSurfaceCfg(  # <== this stores the material config
-                diffuse_color=(0.8, 0.0, 0.0),    
-                roughness=0.4,
-                metallic=0.0,
-                opacity=1.0,
-            ),
-            physics_material=sim_utils.RigidBodyMaterialCfg(
-                static_friction=2.5,
-                dynamic_friction=2.5,
-                restitution=0.0,
-            ),
-        )
+        # cfg_cube_rigid = sim_utils.CuboidCfg(
+        #     size=(0.03, 0.004, 0.004),
+        #     rigid_props=sim_utils.RigidBodyPropertiesCfg(
+        #         linear_damping=0.05,
+        #         angular_damping=0.05,
+        #         solver_position_iteration_count=30,
+        #         solver_velocity_iteration_count=10,
+        #     ),
+        #     mass_props=sim_utils.MassPropertiesCfg(
+        #         mass=0.03,
+        #     ),
+        #     collision_props=sim_utils.CollisionPropertiesCfg(
+        #         contact_offset=0.005,
+        #         rest_offset=-0.001,
+        #     ),
+        #     visual_material=PreviewSurfaceCfg(  # <== this stores the material config
+        #         diffuse_color=(0.8, 0.0, 0.0),    
+        #         roughness=0.4,
+        #         metallic=0.0,
+        #         opacity=1.0,
+        #     ),
+        #     physics_material=sim_utils.RigidBodyMaterialCfg(
+        #         static_friction=2.5,
+        #         dynamic_friction=2.5,
+        #         restitution=0.0,
+        #     ),
+        # )
 
-        cfg_cube_rigid.func(
-            "/World/Objects/CubeRigid",
-            cfg_cube_rigid,
-            translation=(0.0, 0.0, 0.0),
-            orientation=(1.0, 0.0, 0.0, 0.0),
-        )
+        # cfg_cube_rigid.func(
+        #     "/World/Objects/CubeRigid",
+        #     cfg_cube_rigid,
+        #     translation=(0.0, 0.0, 0.0),
+        #     orientation=(1.0, 0.0, 0.0, 0.0),
+        # )
 
 
-        # # Define the deformable cube
+        # Define the deformable cube
         # cfg_cube_deformable = MeshCuboidCfg(
         #     size=(0.025, 0.004, 0.004),
         #     deformable_props=DeformableBodyPropertiesCfg(
-        #         solver_position_iteration_count=30,
+        #         solver_position_iteration_count=16,
         #         vertex_velocity_damping=0.05,
-        #         contact_offset=0.0025,
-        #         rest_offset=0.0005,
-        #         simulation_hexahedral_resolution=12,
+        #         contact_offset=0.0003,
+        #         rest_offset=0.0002,
+        #         simulation_hexahedral_resolution=9,
+
         #     ),
+
         #     mass_props=sim_utils.MassPropertiesCfg(
         #         mass=0.01,
         #     ),
@@ -142,10 +182,10 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
         #         opacity=1.0,
         #     ),
         #     physics_material=DeformableBodyMaterialCfg(
-        #         dynamic_friction=3.0,
-        #         youngs_modulus=50000.0,
+        #         dynamic_friction=0.5,
+        #         youngs_modulus=50000000.0,
         #         poissons_ratio=0.45,
-        #         elasticity_damping=0.02,
+        #         elasticity_damping=0.005,
         #         damping_scale=1.0,
         #     ),
         # )

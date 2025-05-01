@@ -1,6 +1,8 @@
 import argparse
 
 from omni.isaac.lab.app import AppLauncher
+from teleop_logger import TeleopLogger
+
 
 # add argparse arguments
 parser = argparse.ArgumentParser(description="MTM teleoperation for Custom MultiArm dVRK environments.")
@@ -44,6 +46,7 @@ from scipy.spatial.transform import Rotation as R
 import numpy as np
 import time
 from datetime import datetime
+import math
 
 import omni.kit.viewport.utility as vp_utils
 import omni.kit.commands
@@ -52,17 +55,20 @@ from logger_utils import CSVLogger
 
 import sys
 import os
+import random
 sys.path.append(os.path.abspath("."))
 from teleop_interface.MTM.se3_mtm import MTMTeleop
 from teleop_interface.MTM.mtm_manipulator import MTMManipulator
 import custom_envs
+from teleop_logger import reset_cube_pose_and_log, log_initial_cube_pose
 
 # map mtm gripper joint angle to psm jaw gripper angles in simulation
-def get_jaw_gripper_angles(gripper_command, env, robot_name="robot_1"):
+def get_jaw_gripper_angles(gripper_command, env, robot_name="robot_2"):
     if gripper_command is None:
         gripper1_joint_angle = env.unwrapped[robot_name].data.joint_pos[0][-2].cpu().numpy()
         gripper2_joint_angle = env.unwrapped[robot_name].data.joint_pos[0][-1].cpu().numpy()
         return np.array([gripper1_joint_angle, gripper2_joint_angle])
+        # return np.array([-0.52359, 0.52359])
     # input: -1.72 (closed), 1.06 (opened)
     # output: 0,0 (closed), -0.52359, 0.52359 (opened)
     gripper2_angle = 0.52359 / (1.06 + 1.72) * (gripper_command + 1.72)
@@ -208,8 +214,11 @@ def main():
 
     
 
-    logger = None
-    frame_num = 0
+    # logger = None
+    # frame_num = 0
+
+    teleop_logger = TeleopLogger(args_cli.log_trigger_file, psm_name_dict, log_duration=30.0)
+
         
     # Setup the MTM in the real world
     mtm_manipulator = MTMManipulator()
@@ -225,6 +234,8 @@ def main():
     # create environment
     env = gym.make(args_cli.task, cfg=env_cfg)
     env.reset()
+
+    log_initial_cube_pose(env)
 
     teleop_interface = MTMTeleop(is_simulated=is_simulated)
     teleop_interface.reset()
@@ -290,7 +301,7 @@ def main():
             saved_psm2_tip_pos_w = psm2_tip_pose_w
             saved_psm2_tip_quat_w = psm2_tip_quat_w
 
-            open_jaws(env, psm1, psm2)
+            # open_jaws(env, psm1, psm2)
 
             continue
 
@@ -396,6 +407,25 @@ def main():
             print("[RESET-TRIGGER] reset_trigger.txt detected. Resetting environment...")
             env.reset()
 
+            time.sleep(0.5)  # Give sim time to stabilize
+
+            # Random position
+            pos_x = random.uniform(-0.1, 0.0)
+            pos_y = random.uniform(-0.05, 0.05)
+            pos_z = 0.0  # slightly above table
+
+            # Random yaw rotation (z-axis only)
+            yaw = random.uniform(-math.pi, math.pi)
+            quat = R.from_euler("z", yaw).as_quat()  # (x, y, z, w)
+            orientation = [quat[3], quat[0], quat[1], quat[2]]  # (w, x, y, z)
+
+            reset_cube_pose_and_log(
+                env,
+                log_dir="teleop_logs/cube_latest",
+                position=[pos_x, pos_y, pos_z],
+                orientation=orientation,
+            )
+
             was_in_clutch = True
             has_synced_psms = False
             teleop_started = False
@@ -441,43 +471,21 @@ def main():
             
             print("[RESET-TRIGGER] Reset complete. Please clutch to resume teleoperation.")
 
+        teleop_logger.check_and_start_logging(env)
 
-        if os.path.exists(args_cli.log_trigger_file):
-            if not enable_logging:
+        if teleop_logger.enable_logging and teleop_logger.frame_num == 0:
+            import shutil
+            source_json = "teleop_logs/cube_latest/cube_pose.json"
+            if os.path.exists(source_json):
+                shutil.copy(source_json, os.path.join(teleop_logger.log_dir, "cube_pose.json"))
+                print(f"[LOG] Copied cube pose to log folder: {teleop_logger.log_dir}")
 
-                print("[LOG] Trigger file detected. Logging started.")
+        teleop_logger.stop_logging()
 
-                timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-                run_folder = os.path.join(os.getcwd(), f"teleop_logs_{timestamp}")
-                left_image_folder = os.path.join(run_folder, "left_images")
-                right_image_folder = os.path.join(run_folder, "right_images")
-                os.makedirs(left_image_folder, exist_ok=True)
-                os.makedirs(right_image_folder, exist_ok=True)
-
-
-                logging_start_time = time.time()
-
-                logger = CSVLogger(os.path.join(run_folder, "teleop_log.csv"), psm_name_dict, start_time=logging_start_time)
-                frame_num = 0
-
-                enable_logging = True
-
-            
-
-            os.remove(args_cli.log_trigger_file)
-            
-
-        if enable_logging and (time.time() - logging_start_time > 30):
-            print(f"[LOG] 30 seconds of logging elapsed. Stopping logging.")
-            enable_logging = False
-            logger = None
-            # if os.path.exists(args_cli.log_trigger_file):
-            #     os.remove(args_cli.log_trigger_file)
-
-
-        if enable_logging:
-            # For Logging
-            frame_num += 1
+        if teleop_logger.enable_logging:
+            # PREPARE ALL DATA ON MAIN THREAD
+            frame_num = teleop_logger.frame_num + 1
+            timestamp = time.time()
 
             robot_states = {}
             for psm, robot_name in psm_name_dict.items():
@@ -495,24 +503,15 @@ def main():
                     "orientation_matrix": orientation_matrix,
                 }
 
-            # Save camera images
-            cam_l_input = camera_l.data.output["rgb"][0].cpu().numpy()
-            cam_r_input = camera_r.data.output["rgb"][0].cpu().numpy()
+            cam_l_img = camera_l.data.output["rgb"][0].cpu().numpy()
+            cam_r_img = camera_r.data.output["rgb"][0].cpu().numpy()
 
-            cam_l_input_bgr = cv2.cvtColor(cam_l_input, cv2.COLOR_RGB2BGR)
-            cam_r_input_bgr = cv2.cvtColor(cam_r_input, cv2.COLOR_RGB2BGR)
+            teleop_logger.enqueue(frame_num, timestamp, robot_states, cam_l_img, cam_r_img)
+            teleop_logger.frame_num = frame_num
 
-            camera_left_path = os.path.join(left_image_folder, f"camera_left_{frame_num}.png")
-            camera_right_path = os.path.join(right_image_folder, f"camera_right_{frame_num}.png")
-
-            cv2.imwrite(camera_left_path, cam_l_input_bgr)
-            cv2.imwrite(camera_right_path, cam_r_input_bgr)
-
-            # Log data
-            logger.log(frame_num, time.time(), robot_states, camera_left_path, camera_right_path)
 
         elapsed = time.time() - start_time
-        sleep_time = max(0.0, (1/150.0) - elapsed)
+        sleep_time = max(0.0, (1/200.0) - elapsed)
         time.sleep(sleep_time)
 
     # close the simulator
@@ -526,4 +525,6 @@ if __name__ == "__main__":
     # run the main function
     main()
     # close sim app
+    teleop_logger.shutdown()
+
     simulation_app.close()
