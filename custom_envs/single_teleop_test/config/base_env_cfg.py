@@ -120,54 +120,14 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
         )
 
 
-        
-
-
-        # define the rigid cube
-        # cfg_cube_rigid = sim_utils.CuboidCfg(
-        #     size=(0.03, 0.004, 0.004),
-        #     rigid_props=sim_utils.RigidBodyPropertiesCfg(
-        #         linear_damping=0.05,
-        #         angular_damping=0.05,
-        #         solver_position_iteration_count=30,
-        #         solver_velocity_iteration_count=10,
-        #     ),
-        #     mass_props=sim_utils.MassPropertiesCfg(
-        #         mass=0.03,
-        #     ),
-        #     collision_props=sim_utils.CollisionPropertiesCfg(
-        #         contact_offset=0.005,
-        #         rest_offset=-0.001,
-        #     ),
-        #     visual_material=PreviewSurfaceCfg(  # <== this stores the material config
-        #         diffuse_color=(0.8, 0.0, 0.0),    
-        #         roughness=0.4,
-        #         metallic=0.0,
-        #         opacity=1.0,
-        #     ),
-        #     physics_material=sim_utils.RigidBodyMaterialCfg(
-        #         static_friction=2.5,
-        #         dynamic_friction=2.5,
-        #         restitution=0.0,
-        #     ),
-        # )
-
-        # cfg_cube_rigid.func(
-        #     "/World/Objects/CubeRigid",
-        #     cfg_cube_rigid,
-        #     translation=(0.0, 0.0, 0.0),
-        #     orientation=(1.0, 0.0, 0.0, 0.0),
-        # )
-
-
-        # Define the deformable cube
+        # # Define the deformable cube
         # cfg_cube_deformable = MeshCuboidCfg(
         #     size=(0.025, 0.004, 0.004),
         #     deformable_props=DeformableBodyPropertiesCfg(
         #         solver_position_iteration_count=16,
-        #         vertex_velocity_damping=0.05,
+        #         vertex_velocity_damping=0.1,
         #         contact_offset=0.0003,
-        #         rest_offset=0.0002,
+        #         rest_offset=-0.0002,
         #         simulation_hexahedral_resolution=9,
 
         #     ),
@@ -182,10 +142,10 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
         #         opacity=1.0,
         #     ),
         #     physics_material=DeformableBodyMaterialCfg(
-        #         dynamic_friction=0.5,
-        #         youngs_modulus=50000000.0,
+        #         dynamic_friction=3.0,
+        #         youngs_modulus=100000000000.0,
         #         poissons_ratio=0.45,
-        #         elasticity_damping=0.005,
+        #         elasticity_damping=0.02,
         #         damping_scale=1.0,
         #     ),
         # )
@@ -195,6 +155,41 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
         #     cfg_cube_deformable,
         #     translation=(0.0, 0.0, 0.0),
         #     orientation=(1.0, 0.0, 0.0, 0.0),
+        # )
+
+        # Define the deformable cube and register it to the scene
+        # self.scene.cube_deformable = DeformableObjectCfg(
+        #     prim_path="/World/Objects/CubeDeformable",
+        #     init_state=DeformableObjectCfg.InitialStateCfg(
+        #         pos=(0.0, 0.0, 0.0),
+        #         rot=(1.0, 0.0, 0.0, 0.0),
+        #     ),
+        #     spawn=sim_utils.MeshCuboidCfg(
+        #         size=(0.03, 0.002, 0.002),
+        #         deformable_props=DeformableBodyPropertiesCfg(
+        #             solver_position_iteration_count=16,
+        #             vertex_velocity_damping=0.1,
+        #             contact_offset=0.0003,
+        #             rest_offset=0.0002,
+        #             simulation_hexahedral_resolution=12,  # resolution of FEM mesh
+        #         ),
+        #         mass_props=sim_utils.MassPropertiesCfg(
+        #             mass=0.003,
+        #         ),
+        #         visual_material=PreviewSurfaceCfg(
+        #             diffuse_color=(0.8, 0.0, 0.0),
+        #             roughness=0.4,
+        #             metallic=0.0,
+        #             opacity=1.0,
+        #         ),
+        #         physics_material=DeformableBodyMaterialCfg(
+        #             dynamic_friction=3.0,         # approximates gripping
+        #             youngs_modulus=5e9,           # stiffness
+        #             poissons_ratio=0.47,          # compressibility
+        #             elasticity_damping=0.02,      # energy dissipation
+        #             damping_scale=1.0,
+        #         ),
+        #     )
         # )
         
 

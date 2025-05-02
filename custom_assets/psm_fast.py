@@ -9,7 +9,7 @@ PSM_FAST_CFG.actuators["psm_tool"].effort_limit = 50.0
 PSM_FAST_CFG.actuators["psm_tool"].stiffness = 5000.0
 PSM_FAST_CFG.actuators["psm_tool"].damping = 60.0
 # PSM_FAST_CFG.actuators["psm_tool"].armature = 0.03
-# PSM_FAST_CFG.actuators["psm_tool"].friction = 0.03
+# PSM_FAST_CFG.actuators["psm_tool"].friction = 3.0
 """
 Configuration of dVRK PSM robot arm with higher joint velocity limit"
 This configuration is to mitigate unintuitive delay during teleoperation

@@ -60,7 +60,7 @@ sys.path.append(os.path.abspath("."))
 from teleop_interface.MTM.se3_mtm import MTMTeleop
 from teleop_interface.MTM.mtm_manipulator import MTMManipulator
 import custom_envs
-from teleop_logger import reset_cube_pose_and_log, log_initial_cube_pose
+from teleop_logger import reset_cube_pose, log_current_pose
 
 # map mtm gripper joint angle to psm jaw gripper angles in simulation
 def get_jaw_gripper_angles(gripper_command, env, robot_name="robot_2"):
@@ -172,7 +172,7 @@ def _compute_base_relative_action(env, psm1, psm2, jaw1, jaw2):
 
     return action_tensor
 
-def open_jaws(env, psm1, psm2, target=0.8):
+def open_jaws(env, psm1, psm2, target=1.04):
     """Open PSM jaws to match a target angle."""
     jaw_angle = 0.52359 / (1.06 + 1.72) * (target + 1.72)
     jaw1 = [-jaw_angle, jaw_angle]
@@ -234,8 +234,6 @@ def main():
     # create environment
     env = gym.make(args_cli.task, cfg=env_cfg)
     env.reset()
-
-    log_initial_cube_pose(env)
 
     teleop_interface = MTMTeleop(is_simulated=is_simulated)
     teleop_interface.reset()
@@ -301,7 +299,7 @@ def main():
             saved_psm2_tip_pos_w = psm2_tip_pose_w
             saved_psm2_tip_quat_w = psm2_tip_quat_w
 
-            # open_jaws(env, psm1, psm2)
+            open_jaws(env, psm1, psm2)
 
             continue
 
@@ -410,20 +408,20 @@ def main():
             time.sleep(0.5)  # Give sim time to stabilize
 
             # Random position
-            pos_x = random.uniform(-0.1, 0.0)
-            pos_y = random.uniform(-0.05, 0.05)
-            pos_z = 0.0  # slightly above table
+            cube_pos_x = random.uniform(0.0, 0.1)
+            cube_pos_y = random.uniform(-0.05, 0.05)
+            cube_pos_z = 0.0  # slightly above table
 
             # Random yaw rotation (z-axis only)
-            yaw = random.uniform(-math.pi, math.pi)
-            quat = R.from_euler("z", yaw).as_quat()  # (x, y, z, w)
-            orientation = [quat[3], quat[0], quat[1], quat[2]]  # (w, x, y, z)
+            cube_yaw = random.uniform(-math.pi, math.pi)
+            cube_quat = R.from_euler("z", cube_yaw).as_quat()  # (x, y, z, w)
+            cube_orientation = [cube_quat[3], cube_quat[0], cube_quat[1], cube_quat[2]]  # (w, x, y, z)
 
-            reset_cube_pose_and_log(
+            reset_cube_pose(
                 env,
                 log_dir="teleop_logs/cube_latest",
-                position=[pos_x, pos_y, pos_z],
-                orientation=orientation,
+                position=[cube_pos_x, cube_pos_y, cube_pos_z],
+                orientation=cube_orientation,
             )
 
             was_in_clutch = True
@@ -474,11 +472,7 @@ def main():
         teleop_logger.check_and_start_logging(env)
 
         if teleop_logger.enable_logging and teleop_logger.frame_num == 0:
-            import shutil
-            source_json = "teleop_logs/cube_latest/cube_pose.json"
-            if os.path.exists(source_json):
-                shutil.copy(source_json, os.path.join(teleop_logger.log_dir, "cube_pose.json"))
-                print(f"[LOG] Copied cube pose to log folder: {teleop_logger.log_dir}")
+            log_current_pose(env, teleop_logger.log_dir)
 
         teleop_logger.stop_logging()
 
