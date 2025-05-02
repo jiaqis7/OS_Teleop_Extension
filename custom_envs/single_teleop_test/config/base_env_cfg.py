@@ -99,7 +99,7 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
                     solver_velocity_iteration_count=10,
                 ),
                 mass_props=sim_utils.MassPropertiesCfg(
-                    mass=0.03,
+                    mass=0.01,
                 ),
                 collision_props=sim_utils.CollisionPropertiesCfg(
                     contact_offset=0.005,
@@ -112,8 +112,8 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
                     opacity=1.0,
                 ),
                 physics_material=sim_utils.RigidBodyMaterialCfg(
-                    static_friction=2.5,
-                    dynamic_friction=2.5,
+                    static_friction=3.0,
+                    dynamic_friction=3.0,
                     restitution=0.0,
                 ),
             )

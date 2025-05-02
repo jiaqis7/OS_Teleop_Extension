@@ -29,6 +29,7 @@ from omni.isaac.lab_tasks.utils import parse_env_cfg
 sys.path.append(os.path.abspath("."))
 from tf_utils import pose_to_transformation_matrix, transformation_matrix_to_pose
 import custom_envs
+from teleop_logger import reset_cube_pose_from_json
 
 
 def main():
@@ -38,6 +39,9 @@ def main():
     )
     env = gym.make(args_cli.task, cfg=env_cfg)
     env.reset()
+
+    json_path = os.path.join(os.path.dirname(args_cli.csv_file), "pose.json")
+    reset_cube_pose_from_json(env, json_path, cube_key="cube_rigid")  # or "cube_deformable"
 
     # Load data
     df = pd.read_csv(args_cli.csv_file)

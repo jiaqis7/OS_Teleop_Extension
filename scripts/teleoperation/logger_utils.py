@@ -2,6 +2,52 @@ import csv
 import os
 import numpy as np
 from datetime import datetime
+import json
+import shutil
+
+# def get_log_dir(base_dir, demo_name, replace_flag_path="replace_flag.txt", counter_file="demo_counter.json"):
+#     os.makedirs(base_dir, exist_ok=True)
+#     counter_path = os.path.join(base_dir, counter_file)
+
+#     # Load or initialize demo counters
+#     if os.path.exists(counter_path):
+#         with open(counter_path, "r") as f:
+#             demo_counters = json.load(f)
+#     else:
+#         demo_counters = {}
+
+#     replace = os.path.exists(replace_flag_path)
+
+#     # Default to 1 if not found
+#     current_idx = demo_counters.get(demo_name, 1)
+
+#     if replace:
+#         log_folder = f"{demo_name}_1"
+#         full_path = os.path.join(base_dir, log_folder)
+#         if os.path.exists(full_path):
+#             shutil.rmtree(full_path)
+#         os.remove(replace_flag_path)
+
+#         # Reset counter to 1
+#         demo_counters[demo_name] = 1
+#     else:
+#         log_folder = f"{demo_name}_{current_idx}"
+#         full_path = os.path.join(base_dir, log_folder)
+
+#         # Only increment counter if the folder didn't exist yet
+#         while os.path.exists(full_path):
+#             current_idx += 1
+#             log_folder = f"{demo_name}_{current_idx}"
+#             full_path = os.path.join(base_dir, log_folder)
+
+#         demo_counters[demo_name] = current_idx
+
+#     # Save updated counter
+#     with open(counter_path, "w") as f:
+#         json.dump(demo_counters, f, indent=4)
+
+#     return full_path
+
 
 class CSVLogger:
     def __init__(self, log_file_path, psm_name_dict, start_time=None):

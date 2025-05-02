@@ -20,6 +20,7 @@ parser.add_argument("--log_trigger_file", type=str, default="log_trigger.txt",
     help="Path to a file that enables logging when it exists.")
 
 parser.add_argument("--disable_viewport", action="store_true", help="Disable extra viewport windows.")
+parser.add_argument("--demo_name", type=str, default=None, help="Custom name for the logging folder (e.g., 'demo_1')")
 
 
 # append AppLauncher cli args
@@ -217,7 +218,12 @@ def main():
     # logger = None
     # frame_num = 0
 
-    teleop_logger = TeleopLogger(args_cli.log_trigger_file, psm_name_dict, log_duration=30.0)
+    teleop_logger = TeleopLogger(
+        trigger_file="log_trigger.txt",
+        psm_name_dict=psm_name_dict,
+        log_duration=30.0,
+    )
+
 
         
     # Setup the MTM in the real world

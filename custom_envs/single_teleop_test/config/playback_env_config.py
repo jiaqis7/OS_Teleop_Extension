@@ -1,5 +1,5 @@
 from omni.isaac.lab.controllers.differential_ik_cfg import DifferentialIKControllerCfg
-from omni.isaac.lab.envs.mdp.actions.actions_cfg import DifferentialInverseKinematicsActionCfg
+from omni.isaac.lab.envs.mdp.actions.actions_cfg import DifferentialInverseKinematicsActionCfg, JointPositionActionCfg
 from omni.isaac.lab.utils import configclass
 import orbit.surgical.tasks.surgical.reach_dual.mdp as mdp
 from . import base_env_cfg
@@ -20,12 +20,12 @@ class PBEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
         # Set PSM as robot
         # We switch here to a stiffer PD controller for IK tracking to be better.
         self.scene.robot_1 = PSM_FAST_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot_1")
-        self.scene.robot_1.init_state.pos = (0.15, 0.0, 0.15)
+        self.scene.robot_1.init_state.pos = (0.1, 0.0, 0.1)
         self.scene.robot_1.init_state.rot = (0.9659, 0.0, 0.2588, 0.0)
 
 
         self.scene.robot_2 = PSM_FAST_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot_2")
-        self.scene.robot_2.init_state.pos = (-0.15, 0.0, 0.15)
+        self.scene.robot_2.init_state.pos = (-0.1, 0.0, 0.1)
         self.scene.robot_2.init_state.rot = (0.9659, 0.0, -0.2588, 0.0)
         
 
@@ -33,7 +33,7 @@ class PBEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
         self.scene.robot_3 = None
         # Set actions for the specific robot type (PSM)
         
-        self.actions.arm_1_action = mdp.JointPositionActionCfg(
+        self.actions.arm_1_action = JointPositionActionCfg(
             asset_name="robot_1",
             joint_names=[
                 "psm_yaw_joint",
@@ -44,10 +44,10 @@ class PBEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
                 "psm_tool_yaw_joint",
             ],
             scale=1.0,
-            use_default_offset=True,
+            use_default_offset=False,
         )
 
-        self.actions.arm_2_action = mdp.JointPositionActionCfg(
+        self.actions.arm_2_action = JointPositionActionCfg(
             asset_name="robot_2",
             joint_names=[
                 "psm_yaw_joint",
@@ -58,7 +58,7 @@ class PBEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
                 "psm_tool_yaw_joint",
             ],
             scale=1.0,
-            use_default_offset=True,
+            use_default_offset=False,
         )
 
         self.actions.gripper_1_action = mdp.JointPositionActionCfg(

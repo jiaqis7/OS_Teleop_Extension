@@ -8,7 +8,11 @@ import numpy as np
 import torch
 from pathlib import Path
 from logger_utils import CSVLogger
+
 from scipy.spatial.transform import Rotation as R
+import shutil
+import re
+import glob
 
 
 def reset_cube_pose(env, log_dir, position, orientation, cube_key="cube_rigid"):
@@ -21,13 +25,14 @@ def reset_cube_pose(env, log_dir, position, orientation, cube_key="cube_rigid"):
     root_state[:, 7:13] = 0.0  # zero velocities
     cube.write_root_state_to_sim(root_state)
 
-    # Save latest pose (for debugging or reference)
-    Path(log_dir).mkdir(parents=True, exist_ok=True)
-    cube_pose = {"position": list(position), "orientation": list(orientation)}
-    with open(os.path.join(log_dir, "cube_pose.json"), "w") as f:
-        json.dump(cube_pose, f, indent=4)
+    # # Save latest pose (for debugging or reference)
+    # Path(log_dir).mkdir(parents=True, exist_ok=True)
+    # cube_pose = {"position": list(position), "orientation": list(orientation)}
+    # with open(os.path.join(log_dir, "pose.json"), "w") as f:
+    #     json.dump(cube_pose, f, indent=4)
 
-    print(f"[RESET] Cube pose reset and saved to {log_dir}/cube_pose.json")
+    print(f"[RESET] Cube pose applied: pos={position}, ori={orientation}")
+
 
 
 def log_current_pose(env, log_dir, cube_key="cube_rigid"):
@@ -66,6 +71,43 @@ def log_current_pose(env, log_dir, cube_key="cube_rigid"):
         json.dump(log_data, f, indent=4)
 
     print(f"[LOG] Logged current cube and robot tip poses to {json_path}")
+
+
+def reset_cube_pose_from_json(env, json_path, cube_key="cube_rigid"):
+    """
+    Reset the cube in the simulation to the pose stored in a JSON file.
+
+    :param env: Isaac Lab environment.
+    :param json_path: Path to the JSON file with "cube", "robot_1_tip", "robot_2_tip" keys.
+    :param cube_key: Key for the cube in the scene dictionary (e.g., "cube_rigid" or "cube_deformable").
+    """
+    if not os.path.exists(json_path):
+        print(f"[WARNING] cube_pose.json not found at {json_path}. Skipping reset.")
+        return
+
+    with open(json_path, "r") as f:
+        pose_data = json.load(f)
+
+    cube_pose = pose_data.get("cube", None)
+    if cube_pose is None:
+        print(f"[WARNING] 'cube' key not found in {json_path}. Skipping reset.")
+        return
+
+    position = cube_pose["position"]
+    orientation = cube_pose["orientation"]
+
+    cube = env.unwrapped.scene[cube_key]
+    device = cube.data.root_state_w.device
+    root_state = cube.data.root_state_w.clone()
+
+    root_state[:, 0:3] = torch.tensor(position, dtype=torch.float32, device=device)
+    root_state[:, 3:7] = torch.tensor(orientation, dtype=torch.float32, device=device)
+    root_state[:, 7:13] = 0.0  # zero velocities
+
+    cube.write_root_state_to_sim(root_state)
+
+    print(f"[RESET] Cube pose loaded from JSON and applied: {json_path}")
+
 
 
 
@@ -110,22 +152,43 @@ class TeleopLogger:
         self.logger_thread = threading.Thread(target=self._logger_loop, daemon=True)
         self.logger_thread.start()
 
+
     def check_and_start_logging(self, env):
-        if not self.enable_logging and os.path.exists(self.trigger_file):
-            print("[LOG] Trigger file detected. Starting logging.")
-            timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            self.log_dir = os.path.join(os.getcwd(), f"teleop_logs_{timestamp}")
-            os.makedirs(os.path.join(self.log_dir, "left_images"), exist_ok=True)
-            os.makedirs(os.path.join(self.log_dir, "right_images"), exist_ok=True)
+        if self.enable_logging:
+            return
 
-            self.start_time = time.time()
-            self.logger = CSVLogger(os.path.join(self.log_dir, "teleop_log.csv"), self.psm_name_dict, start_time=self.start_time)
-            self.enable_logging = True
-            self.frame_num = 0
+        # Look for any file like log_trigger_demo_X.txt
+        trigger_files = glob.glob("log_trigger_*.txt")
+        if not trigger_files:
+            return
 
-            log_current_pose(env, self.log_dir)
+        trigger_file = trigger_files[0]
+        match = re.match(r"log_trigger_(.+)\.txt", os.path.basename(trigger_file))
+        if not match:
+            print(f"[LOG] Invalid trigger filename format: {trigger_file}")
+            return
 
-            os.remove(self.trigger_file)
+        folder_name = match.group(1)  # e.g., 'demo_1'
+        self.log_dir = os.path.join(os.getcwd(), folder_name)
+
+        # Replace folder if it already exists
+        if os.path.exists(self.log_dir):
+            print(f"[LOG] Replacing existing folder: {folder_name}")
+            shutil.rmtree(self.log_dir)
+
+        print(f"[LOG] Logging into folder: {self.log_dir}")
+        os.makedirs(os.path.join(self.log_dir, "left_images"), exist_ok=True)
+        os.makedirs(os.path.join(self.log_dir, "right_images"), exist_ok=True)
+
+        self.start_time = time.time()
+        self.logger = CSVLogger(os.path.join(self.log_dir, "teleop_log.csv"), self.psm_name_dict, start_time=self.start_time)
+        self.enable_logging = True
+        self.frame_num = 0
+
+        log_current_pose(env, self.log_dir)
+
+        os.remove(trigger_file)
+
 
     def stop_logging(self):
         if self.enable_logging and (time.time() - self.start_time) > self.log_duration:
