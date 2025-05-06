@@ -36,6 +36,7 @@ import time
 import omni.kit.viewport.utility as vp_utils
 from tf_utils import pose_to_transformation_matrix, transformation_matrix_to_pose
 
+import rospy
 import sys
 import os
 sys.path.append(os.path.abspath("."))
@@ -73,6 +74,8 @@ def process_actions(cam_T_psm1, w_T_psm1base, cam_T_psm2, w_T_psm2base, cam_T_ps
     return actions
 
 def main():
+
+    
     scale=args_cli.scale
 
     # Setup the MTM in the real world
@@ -164,7 +167,7 @@ def main():
         world_T_psm3_base = pose_to_transformation_matrix(psm3_base_link_pos, psm3_base_link_quat)
 
         # get target pos, rot in camera view with joint and clutch commands
-        mtml_pos, mtml_rot, l_gripper_joint, mtmr_pos, mtmr_rot, r_gripper_joint, mtm_clutch, mono = mtm_interface.advance()
+        mtml_pos, mtml_rot, l_gripper_joint, mtmr_pos, mtmr_rot, r_gripper_joint, mtm_clutch, mono, _ = mtm_interface.advance()
         if not l_gripper_joint:
             print("Waiting for the MTM topic subscription...")
             time.sleep(0.05)

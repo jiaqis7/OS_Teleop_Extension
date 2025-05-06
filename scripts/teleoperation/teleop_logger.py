@@ -62,6 +62,15 @@ def log_current_pose(env, log_dir, cube_key="cube_rigid"):
         "robot_2_tip": {
             "position": psm2_tip_pos,
             "orientation": psm2_tip_quat
+        },
+        "meta": {
+            "arm_names": ["PSM1", "PSM2"],
+            "teleop1_connection": "MTML-PSM1",
+            "teleop2_connection": "MTMR-PSM2",
+            "surgeon_name": "Jiaqi",
+            "assistant_name": "Jiaqi",
+            "mtm_scale": 0.8,
+            "duration": 30
         }
     }
 

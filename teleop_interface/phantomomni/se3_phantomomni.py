@@ -22,9 +22,8 @@ class PhantomOmniTeleop(DeviceBase):
         )
         self.pose_to_psm_frame_orientation = np.array([[-1, 0, 0, 0], [0, 0, -1, 0], [0, -1, 0, 0], [0, 0, 0, 1]])
 
-        # ROS node initialization
-        if not rospy.core.is_initialized():
-            rospy.init_node("phantom_omni_teleop", anonymous=True)
+
+   
             
         self.listener = tf.TransformListener()
         rospy.Subscriber("phantom/button", OmniButtonEvent, self.button_callback)
@@ -38,16 +37,11 @@ class PhantomOmniTeleop(DeviceBase):
 
     def button_callback(self, msg):
         # As long as the grey button is pressed continuously, self.clutch will be true
-        if msg.grey_button == 1:
-            self.clutch = True
+        # Clutch (grey button)
+        self.clutch = (msg.grey_button == 1)
 
-        # When the grey button is released, a message is passed msg.grey_button=0
-        # self.clutch will be set to false
-        elif msg.grey_button == 0:
-            self.clutch = False
-
-        # White button controls gripper state
-        self.gripper_command = msg.white_button == 1
+        # Gripper (white button)
+        self.gripper_command = True if msg.white_button == 1 else None
 
     def transform_to_matrix(self, trans, rot):
         """Convert a tf translation and quaternion rotation to a 4x4 transformation matrix."""

@@ -16,6 +16,8 @@ from scipy.spatial.transform import Rotation
 
 class MTMManipulator:
     def __init__(self, expected_interval=0.01):
+
+
         print('configuring MTM Manipulator for Teleoperation')
         self.ral = crtk.ral('dvrk_mtm_manipulator')
         self.expected_interval = expected_interval
@@ -112,6 +114,25 @@ class MTMManipulator:
 
         self.mtml.move_cp(mtml_goal).wait()
         self.mtmr.move_cp(mtmr_goal).wait()
+
+    def adjust_orientation_right(self, hrsv_T_mtmr):
+        """
+        Adjust only the MTMR orientation based on the provided transformation matrix.
+        """
+        print("[MTM] Adjusting orientation of MTMR...")
+
+        # Preserve current position, update only orientation
+        mtmr_goal = PyKDL.Frame()
+        mtmr_goal.p = self.mtmr.setpoint_cp().p
+
+        mtmr_goal.M = PyKDL.Rotation(
+            hrsv_T_mtmr[0][0], hrsv_T_mtmr[0][1], hrsv_T_mtmr[0][2],
+            hrsv_T_mtmr[1][0], hrsv_T_mtmr[1][1], hrsv_T_mtmr[1][2],
+            hrsv_T_mtmr[2][0], hrsv_T_mtmr[2][1], hrsv_T_mtmr[2][2]
+        )
+
+        self.mtmr.move_cp(mtmr_goal).wait()
+        print("[MTM] MTMR orientation updated.")
 
     def hold_position(self):
         self.mtml.hold()
