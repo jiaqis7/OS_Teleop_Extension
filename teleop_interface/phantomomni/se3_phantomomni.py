@@ -23,7 +23,9 @@ class PhantomOmniTeleop(DeviceBase):
         self.pose_to_psm_frame_orientation = np.array([[-1, 0, 0, 0], [0, 0, -1, 0], [0, -1, 0, 0], [0, 0, 0, 1]])
 
 
-   
+        # ROS node initialization
+        if not rospy.core.is_initialized():
+            rospy.init_node("phantom_omni_teleop", anonymous=True)
             
         self.listener = tf.TransformListener()
         rospy.Subscriber("phantom/button", OmniButtonEvent, self.button_callback)

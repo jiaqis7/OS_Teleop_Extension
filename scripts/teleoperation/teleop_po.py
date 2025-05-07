@@ -89,10 +89,6 @@ def main():
     while simulation_app.is_running():
         start_time = time.time()
 
-        # get camera images
-        # cam_l_input = camera_l.data.output["rgb"][0].cpu().numpy()
-        # cam_r_input = camera_r.data.output["rgb"][0].cpu().numpy()
-
         # get 6D transform vector, gripper command, clutch from teleop interface
         stylus_pose, gripper_command, clutch = teleop_interface.advance()
         if clutch is None:
