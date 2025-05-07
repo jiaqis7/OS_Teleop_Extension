@@ -1,7 +1,7 @@
 import argparse
 
 from omni.isaac.lab.app import AppLauncher
-from teleop_logger import TeleopLogger, log_current_pose
+from teleop_logger import TeleopLogger, log_current_pose, reset_cube_pose
 
 # add argparse arguments
 parser = argparse.ArgumentParser(description="MTMR + PO teleoperation for PSM2 and PSM1")
@@ -88,6 +88,114 @@ def align_mtm_orientation_once(mtm_manipulator, mtm_interface, psm2, cam_T_world
 
 
 
+def reset_psm_to_initial_pose(
+    env,
+    saved_psm1_tip_pos_w, saved_psm1_tip_quat_w,
+    saved_psm2_tip_pos_w, saved_psm2_tip_quat_w,
+    world_T_psm1_base, world_T_psm2_base,
+    num_steps=30
+):
+    print("[RESET] Moving PSMs to saved initial pose...")
+
+    world_T_psm1_tip = pose_to_transformation_matrix(saved_psm1_tip_pos_w, saved_psm1_tip_quat_w)
+    world_T_psm2_tip = pose_to_transformation_matrix(saved_psm2_tip_pos_w, saved_psm2_tip_quat_w)
+
+    psm1_base_T_tip = np.linalg.inv(world_T_psm1_base) @ world_T_psm1_tip
+    psm2_base_T_tip = np.linalg.inv(world_T_psm2_base) @ world_T_psm2_tip
+
+    psm1_rel_pos, psm1_rel_quat = transformation_matrix_to_pose(psm1_base_T_tip)
+    psm2_rel_pos, psm2_rel_quat = transformation_matrix_to_pose(psm2_base_T_tip)
+
+    action_vec = np.concatenate([
+        psm1_rel_pos, psm1_rel_quat, [0.0, 0.0],
+        psm2_rel_pos, psm2_rel_quat, [0.0, 0.0]
+    ], dtype=np.float32)
+
+    action_tensor = torch.tensor(action_vec, device=env.unwrapped.device).unsqueeze(0)
+
+    for _ in range(num_steps):
+        env.step(action_tensor)
+
+    print("[RESET] PSMs moved to initial pose.")
+
+
+def reorient_mtm_to_match_psm(
+    mtm_manipulator, teleop_interface,
+    saved_psm1_tip_pos_w, saved_psm1_tip_quat_w,
+    saved_psm2_tip_pos_w, saved_psm2_tip_quat_w,
+    cam_T_world
+):
+    print("[RESET] Reorienting MTMs to match PSM tip pose...")
+
+    world_T_psm1tip = pose_to_transformation_matrix(saved_psm1_tip_pos_w, saved_psm1_tip_quat_w)
+    world_T_psm2tip = pose_to_transformation_matrix(saved_psm2_tip_pos_w, saved_psm2_tip_quat_w)
+
+    cam_T_psm1tip = cam_T_world @ world_T_psm1tip
+    cam_T_psm2tip = cam_T_world @ world_T_psm2tip
+
+    hrsv_T_mtml = teleop_interface.simpose2hrsvpose(cam_T_psm1tip)
+    hrsv_T_mtmr = teleop_interface.simpose2hrsvpose(cam_T_psm2tip)
+
+    mtm_manipulator.home()
+    time.sleep(2.0)
+    mtm_manipulator.adjust_orientation(hrsv_T_mtml, hrsv_T_mtmr)
+
+    print("[RESET] MTMs reoriented.")
+
+
+def _compute_base_relative_action(env, psm1, psm2, jaw1, jaw2):
+    """Helper to compute and return action tensor given PSMs and target jaw angles."""
+    # Get world-frame tip poses
+    psm1_tip_pos = psm1.data.body_link_pos_w[0][-1].cpu().numpy()
+    psm1_tip_quat = psm1.data.body_link_quat_w[0][-1].cpu().numpy()
+    psm2_tip_pos = psm2.data.body_link_pos_w[0][-1].cpu().numpy()
+    psm2_tip_quat = psm2.data.body_link_quat_w[0][-1].cpu().numpy()
+    world_T_psm1tip = pose_to_transformation_matrix(psm1_tip_pos, psm1_tip_quat)
+    world_T_psm2tip = pose_to_transformation_matrix(psm2_tip_pos, psm2_tip_quat)
+
+    # Get base transforms
+    psm1_base_link_pos = psm1.data.body_link_pos_w[0][0].cpu().numpy()
+    psm1_base_link_quat = psm1.data.body_link_quat_w[0][0].cpu().numpy()
+    psm2_base_link_pos = psm2.data.body_link_pos_w[0][0].cpu().numpy()
+    psm2_base_link_quat = psm2.data.body_link_quat_w[0][0].cpu().numpy()
+    world_T_psm1_base = pose_to_transformation_matrix(psm1_base_link_pos, psm1_base_link_quat)
+    world_T_psm2_base = pose_to_transformation_matrix(psm2_base_link_pos, psm2_base_link_quat)
+
+    # Compute base-relative poses
+    psm1_rel_pos, psm1_rel_quat = transformation_matrix_to_pose(np.linalg.inv(world_T_psm1_base) @ world_T_psm1tip)
+    psm2_rel_pos, psm2_rel_quat = transformation_matrix_to_pose(np.linalg.inv(world_T_psm2_base) @ world_T_psm2tip)
+
+    # Construct action tensor
+    action_tensor = torch.tensor(
+        np.concatenate([psm1_rel_pos, psm1_rel_quat, jaw1, psm2_rel_pos, psm2_rel_quat, jaw2], dtype=np.float32),
+        device=env.unwrapped.device
+    ).unsqueeze(0)
+
+    return action_tensor
+
+def open_jaws(env, psm1, psm2, target=1.04):
+    """Open PSM jaws to match a target angle."""
+    jaw_angle = 0.52359 / (1.06 + 1.72) * (target + 1.72)
+    jaw1 = [-jaw_angle, jaw_angle]
+    jaw2 = [-jaw_angle, jaw_angle]
+
+    print(f"[INIT] Opening jaws to approximate MTM input: {target} → [{jaw1[0]:.3f}, {jaw1[1]:.3f}]")
+    action_tensor = _compute_base_relative_action(env, psm1, psm2, jaw1=jaw1, jaw2=jaw2)
+    for _ in range(30):
+        env.step(action_tensor)
+    print("[INIT] PSM jaws opened.")
+
+
+def set_jaws_closed(env, psm1, psm2):
+    """Force-close jaws after reset to override any input artifacts."""
+    print("[FIX] Forcing PSM jaws closed...")
+    action_tensor = _compute_base_relative_action(env, psm1, psm2, jaw1=[0.0, 0.0], jaw2=[-0.0, 0.0])
+    for _ in range(30):
+        env.step(action_tensor)
+    print("[FIX] PSM jaws closed.")
+
+
+
 def main():
     scale = args_cli.scale
 
@@ -121,11 +229,18 @@ def main():
 
     was_in_mtm_clutch = True
     was_in_po_clutch = True
+    po_waiting_for_clutch = False
+
     init_psm1_tip_position = None
     init_psm2_tip_position = None
     init_mtmr_position = None
     init_stylus_position = None
     orientation_aligned = False
+
+    saved_psm1_tip_pos_w = None
+    saved_psm1_tip_quat_w = None
+    saved_psm2_tip_pos_w = None
+    saved_psm2_tip_quat_w = None
 
     psm_name_dict = {
         "PSM1": "robot_1",
@@ -150,6 +265,11 @@ def main():
         if not orientation_aligned:
             align_mtm_orientation_once(mtm_manipulator, mtm_interface, psm2, cam_T_world)
             orientation_aligned = True
+
+            saved_psm1_tip_pos_w = psm1.data.body_link_pos_w[0][-1].cpu().numpy()
+            saved_psm1_tip_quat_w = psm1.data.body_link_quat_w[0][-1].cpu().numpy()
+            saved_psm2_tip_pos_w = psm2.data.body_link_pos_w[0][-1].cpu().numpy()
+            saved_psm2_tip_quat_w = psm2.data.body_link_quat_w[0][-1].cpu().numpy()
 
         psm1_base = pose_to_transformation_matrix(
             psm1.data.body_link_pos_w[0][0].cpu().numpy(),
@@ -189,6 +309,8 @@ def main():
             cam_T_psm2tip = cam_T_world @ tip
 
         if not po_clutch:
+            if po_waiting_for_clutch:
+                continue  # ✅ don't resume until clutch is pressed again
             if was_in_po_clutch:
                 print("[PO] Clutch released. Initializing teleoperation.")
                 init_stylus_position = stylus_pose[:3]
@@ -197,13 +319,18 @@ def main():
                 world_T_psm1tip = pose_to_transformation_matrix(tip_pose, tip_quat)
                 cam_T_psm1tip_init = cam_T_world @ world_T_psm1tip
                 init_psm1_tip_position = cam_T_psm1tip_init[:3, 3]
-
-            stylus_orientation = R.from_rotvec(stylus_pose[3:]).as_quat()
-            stylus_orientation = np.concatenate([[stylus_orientation[3]], stylus_orientation[:3]])
-            psm1_target = init_psm1_tip_position + (stylus_pose[:3] - init_stylus_position) * scale
-            cam_T_psm1tip = pose_to_transformation_matrix(psm1_target, stylus_orientation)
-            was_in_po_clutch = False
+                was_in_po_clutch = False
+            elif init_stylus_position is not None and init_psm1_tip_position is not None:
+                stylus_orientation = R.from_rotvec(stylus_pose[3:]).as_quat()
+                stylus_orientation = np.concatenate([[stylus_orientation[3]], stylus_orientation[:3]])
+                psm1_target = init_psm1_tip_position + (stylus_pose[:3] - init_stylus_position) * scale
+                cam_T_psm1tip = pose_to_transformation_matrix(psm1_target, stylus_orientation)
         else:
+            if po_waiting_for_clutch:
+                print("[PO] Clutch pressed after reset. Ready to resume.")
+                po_waiting_for_clutch = False
+                was_in_po_clutch = True
+                continue
             if not was_in_po_clutch:
                 print("[PO] Clutch pressed. Freezing teleop.")
             was_in_po_clutch = True
@@ -215,6 +342,65 @@ def main():
 
         actions = process_actions(cam_T_psm1tip, psm1_base, cam_T_psm2tip, psm2_base, world_T_cam, env, po_gripper, r_gripper_joint)
         env.step(actions)
+
+        if os.path.exists("reset_trigger.txt"):
+            print("[RESET] Detected reset trigger. Resetting cube and both PSMs...")
+
+            # Reset cube
+            cube_pos = [np.random.uniform(0.0, 0.1), np.random.uniform(-0.05, 0.05), 0.0]
+            cube_yaw = np.random.uniform(-np.pi, np.pi)
+            cube_quat = R.from_euler("z", cube_yaw).as_quat()
+            cube_ori = [cube_quat[3], cube_quat[0], cube_quat[1], cube_quat[2]]
+            reset_cube_pose(env, "teleop_logs/cube_latest", cube_pos, cube_ori)
+
+            # Recompute cam_T_world and base transforms
+            cam_pos = (camera_l.data.pos_w + camera_r.data.pos_w) / 2
+            cam_quat = camera_l.data.quat_w_world
+            world_T_cam = pose_to_transformation_matrix(cam_pos.cpu().numpy()[0], cam_quat.cpu().numpy()[0])
+            cam_T_world = np.linalg.inv(world_T_cam)
+
+            psm1_base = pose_to_transformation_matrix(
+                psm1.data.body_link_pos_w[0][0].cpu().numpy(),
+                psm1.data.body_link_quat_w[0][0].cpu().numpy()
+            )
+            psm2_base = pose_to_transformation_matrix(
+                psm2.data.body_link_pos_w[0][0].cpu().numpy(),
+                psm2.data.body_link_quat_w[0][0].cpu().numpy()
+            )
+
+            # Reset PSMs to saved poses
+            reset_psm_to_initial_pose(
+                env,
+                saved_psm1_tip_pos_w, saved_psm1_tip_quat_w,
+                saved_psm2_tip_pos_w, saved_psm2_tip_quat_w,
+                psm1_base, psm2_base,
+                num_steps=30
+            )
+
+            # Reorient MTM
+            reorient_mtm_to_match_psm(
+                mtm_manipulator, mtm_interface,
+                saved_psm1_tip_pos_w, saved_psm1_tip_quat_w,
+                saved_psm2_tip_pos_w, saved_psm2_tip_quat_w,
+                cam_T_world
+            )
+
+            open_jaws(env, psm1, psm2, target=0.8)
+
+            # Reset clutch and state
+            was_in_mtm_clutch = True
+            was_in_po_clutch = True
+            po_waiting_for_clutch = True
+            init_psm1_tip_position = None
+            init_psm2_tip_position = None
+            init_mtmr_position = None
+            init_stylus_position = None
+            os.remove("reset_trigger.txt")
+
+            print("[RESET] Reset complete. Reclutch both inputs to resume.")
+            continue
+
+
 
         teleop_logger.check_and_start_logging(env)
 
