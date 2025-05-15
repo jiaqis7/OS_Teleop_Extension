@@ -113,34 +113,52 @@ def reset_psm_to_initial_pose(
 
     action_tensor = torch.tensor(action_vec, device=env.unwrapped.device).unsqueeze(0)
 
-    for _ in range(num_steps):
+    for _ in range(90):
         env.step(action_tensor)
 
     print("[RESET] PSMs moved to initial pose.")
 
 
-def reorient_mtm_to_match_psm(
+# def reorient_mtm_to_match_psm(
+#     mtm_manipulator, teleop_interface,
+#     saved_psm1_tip_pos_w, saved_psm1_tip_quat_w,
+#     saved_psm2_tip_pos_w, saved_psm2_tip_quat_w,
+#     cam_T_world
+# ):
+#     print("[RESET] Reorienting MTMs to match PSM tip pose...")
+
+#     world_T_psm1tip = pose_to_transformation_matrix(saved_psm1_tip_pos_w, saved_psm1_tip_quat_w)
+#     world_T_psm2tip = pose_to_transformation_matrix(saved_psm2_tip_pos_w, saved_psm2_tip_quat_w)
+
+#     cam_T_psm1tip = cam_T_world @ world_T_psm1tip
+#     cam_T_psm2tip = cam_T_world @ world_T_psm2tip
+
+#     hrsv_T_mtml = teleop_interface.simpose2hrsvpose(cam_T_psm1tip)
+#     hrsv_T_mtmr = teleop_interface.simpose2hrsvpose(cam_T_psm2tip)
+
+#     mtm_manipulator.home()
+#     time.sleep(2.0)
+#     mtm_manipulator.adjust_orientation(hrsv_T_mtml, hrsv_T_mtmr)
+
+#     print("[RESET] MTMs reoriented.")
+
+def reorient_mtm_to_match_psm_right_only(
     mtm_manipulator, teleop_interface,
-    saved_psm1_tip_pos_w, saved_psm1_tip_quat_w,
     saved_psm2_tip_pos_w, saved_psm2_tip_quat_w,
     cam_T_world
 ):
-    print("[RESET] Reorienting MTMs to match PSM tip pose...")
+    print("[RESET] Reorienting **only MTMR** to match PSM2 tip pose...")
 
-    world_T_psm1tip = pose_to_transformation_matrix(saved_psm1_tip_pos_w, saved_psm1_tip_quat_w)
     world_T_psm2tip = pose_to_transformation_matrix(saved_psm2_tip_pos_w, saved_psm2_tip_quat_w)
-
-    cam_T_psm1tip = cam_T_world @ world_T_psm1tip
     cam_T_psm2tip = cam_T_world @ world_T_psm2tip
 
-    hrsv_T_mtml = teleop_interface.simpose2hrsvpose(cam_T_psm1tip)
     hrsv_T_mtmr = teleop_interface.simpose2hrsvpose(cam_T_psm2tip)
 
     mtm_manipulator.home()
     time.sleep(2.0)
-    mtm_manipulator.adjust_orientation(hrsv_T_mtml, hrsv_T_mtmr)
+    mtm_manipulator.adjust_orientation_right(hrsv_T_mtmr[:3, :3])
 
-    print("[RESET] MTMs reoriented.")
+    print("[RESET] MTMR reoriented.")
 
 
 def _compute_base_relative_action(env, psm1, psm2, jaw1, jaw2):
@@ -176,14 +194,14 @@ def _compute_base_relative_action(env, psm1, psm2, jaw1, jaw2):
 def open_jaws(env, psm1, psm2, target=1.04):
     """Open PSM jaws to match a target angle."""
     jaw_angle = 0.52359 / (1.06 + 1.72) * (target + 1.72)
-    jaw1 = [-jaw_angle, jaw_angle]
+    jaw1 = [0.0, 0.0]
     jaw2 = [-jaw_angle, jaw_angle]
 
     print(f"[INIT] Opening jaws to approximate MTM input: {target} → [{jaw1[0]:.3f}, {jaw1[1]:.3f}]")
     action_tensor = _compute_base_relative_action(env, psm1, psm2, jaw1=jaw1, jaw2=jaw2)
     for _ in range(30):
         env.step(action_tensor)
-    print("[INIT] PSM jaws opened.")
+    print("[INIT] PSM2 jaws opened.")
 
 
 def set_jaws_closed(env, psm1, psm2):
@@ -378,9 +396,8 @@ def main():
             )
 
             # Reorient MTM
-            reorient_mtm_to_match_psm(
+            reorient_mtm_to_match_psm_right_only(
                 mtm_manipulator, mtm_interface,
-                saved_psm1_tip_pos_w, saved_psm1_tip_quat_w,
                 saved_psm2_tip_pos_w, saved_psm2_tip_quat_w,
                 cam_T_world
             )

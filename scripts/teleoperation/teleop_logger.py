@@ -65,11 +65,11 @@ def log_current_pose(env, log_dir, cube_key="cube_rigid"):
         },
         "meta": {
             "arm_names": ["PSM1", "PSM2"],
-            "teleop1_connection": "MTML-PSM1",
+            "teleop1_connection": "Phantom Omni-PSM1",
             "teleop2_connection": "MTMR-PSM2",
-            "surgeon_name": "Jiaqi",
+            "surgeon_name": "Alaa",
             "assistant_name": "Jiaqi",
-            "mtm_scale": 0.8,
+            "mtm_scale": 0.4,
             "duration": 30
         }
     }
