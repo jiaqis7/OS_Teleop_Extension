@@ -54,9 +54,9 @@ teleop_logger = TeleopLogger(trigger_file=args_cli.log_trigger_file, psm_name_di
 def get_jaw_gripper_angles(gripper_command, robot_name):
     if gripper_command is None:
         return np.array([0.0, 0.0])
-    g2_angle = 0.52359 / (1.06 + 1.72) * (gripper_command + 1.72)
+    norm_cmd = np.interp(gripper_command, [-1.0, 1.0], [-1.72, 1.06])
+    g2_angle = 0.52359 / (1.06 + 1.72) * (norm_cmd + 1.72)
     return np.array([-g2_angle, g2_angle])
-
 
 def process_actions(cam_T_psm1, w_T_psm1base, cam_T_psm2, w_T_psm2base, w_T_cam, env, gripper1_command, gripper2_command):
     psm1base_T_psm1 = np.linalg.inv(w_T_psm1base) @ w_T_cam @ cam_T_psm1
@@ -68,6 +68,26 @@ def process_actions(cam_T_psm1, w_T_psm1base, cam_T_psm2, w_T_psm2base, w_T_cam,
         psm2_rel_pos, psm2_rel_quat, get_jaw_gripper_angles(gripper2_command, 'robot_2')
     ])
     return torch.tensor(actions, device=env.unwrapped.device).repeat(env.unwrapped.num_envs, 1)
+    if po_waiting_for_clutch:
+        print("[INFO] PO re-clutched after reset.")
+        po_waiting_for_clutch = False
+    if was_in_po_clutch:
+        init_stylus_pos = stylus_pose[:3]
+        init_psm3_tip_pos = (cam_T_world @ pose_to_transformation_matrix(
+            psm3.data.body_link_pos_w[0][-1].cpu().numpy(),
+            psm3.data.body_link_quat_w[0][-1].cpu().numpy()
+        ))[:3, 3]
+    p3_target = init_psm3_tip_pos + (stylus_pose[:3] - init_stylus_pos) * scale
+    cam_T_psm3 = pose_to_transformation_matrix(p3_target, po_q)
+    was_in_po_clutch = False
+else:
+    if not was_in_po_clutch:
+        print("[INFO] PO clutch pressed. Resuming teleoperation.")
+    was_in_po_clutch = True
+    cam_T_psm3 = cam_T_world @ pose_to_transformation_matrix(
+        psm3.data.body_link_pos_w[0][-1].cpu().numpy(),
+        psm3.data.body_link_quat_w[0][-1].cpu().numpy()
+    )
 
 
 def align_mtm_orientation_once(mtm_manipulator, mtm_interface, psm2, cam_T_world):
@@ -119,28 +139,28 @@ def reset_psm_to_initial_pose(
     print("[RESET] PSMs moved to initial pose.")
 
 
-# def reorient_mtm_to_match_psm(
-#     mtm_manipulator, teleop_interface,
-#     saved_psm1_tip_pos_w, saved_psm1_tip_quat_w,
-#     saved_psm2_tip_pos_w, saved_psm2_tip_quat_w,
-#     cam_T_world
-# ):
-#     print("[RESET] Reorienting MTMs to match PSM tip pose...")
+def reorient_mtm_to_match_psm(
+    mtm_manipulator, teleop_interface,
+    saved_psm1_tip_pos_w, saved_psm1_tip_quat_w,
+    saved_psm2_tip_pos_w, saved_psm2_tip_quat_w,
+    cam_T_world
+):
+    print("[RESET] Reorienting MTMs to match PSM tip pose...")
 
-#     world_T_psm1tip = pose_to_transformation_matrix(saved_psm1_tip_pos_w, saved_psm1_tip_quat_w)
-#     world_T_psm2tip = pose_to_transformation_matrix(saved_psm2_tip_pos_w, saved_psm2_tip_quat_w)
+    world_T_psm1tip = pose_to_transformation_matrix(saved_psm1_tip_pos_w, saved_psm1_tip_quat_w)
+    world_T_psm2tip = pose_to_transformation_matrix(saved_psm2_tip_pos_w, saved_psm2_tip_quat_w)
 
-#     cam_T_psm1tip = cam_T_world @ world_T_psm1tip
-#     cam_T_psm2tip = cam_T_world @ world_T_psm2tip
+    cam_T_psm1tip = cam_T_world @ world_T_psm1tip
+    cam_T_psm2tip = cam_T_world @ world_T_psm2tip
 
-#     hrsv_T_mtml = teleop_interface.simpose2hrsvpose(cam_T_psm1tip)
-#     hrsv_T_mtmr = teleop_interface.simpose2hrsvpose(cam_T_psm2tip)
+    hrsv_T_mtml = teleop_interface.simpose2hrsvpose(cam_T_psm1tip)
+    hrsv_T_mtmr = teleop_interface.simpose2hrsvpose(cam_T_psm2tip)
 
-#     mtm_manipulator.home()
-#     time.sleep(2.0)
-#     mtm_manipulator.adjust_orientation(hrsv_T_mtml, hrsv_T_mtmr)
+    mtm_manipulator.home()
+    time.sleep(2.0)
+    mtm_manipulator.adjust_orientation(hrsv_T_mtml, hrsv_T_mtmr)
 
-#     print("[RESET] MTMs reoriented.")
+    print("[RESET] MTMs reoriented.")
 
 def reorient_mtm_to_match_psm_right_only(
     mtm_manipulator, teleop_interface,

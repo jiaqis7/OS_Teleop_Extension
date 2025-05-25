@@ -79,8 +79,3 @@ class MTMTeleopEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
             use_default_offset=False,
 
         )
-
-        
-
-
-

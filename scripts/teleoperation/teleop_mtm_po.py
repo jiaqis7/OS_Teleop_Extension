@@ -1,273 +1,356 @@
+# --- [Argument Parsing + App Launcher] ---
+
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+
 import argparse
-
 from omni.isaac.lab.app import AppLauncher
+from teleop_logger import TeleopLogger, log_current_pose, reset_cube_pose
 
-# add argparse arguments
-parser = argparse.ArgumentParser(description="Simultaneous MTM + PO teleoperation for Isaac Lab environments.")
-parser.add_argument(
-    "--disable_fabric", action="store_true", default=False, help="Disable fabric and use USD I/O operations."
-)
-parser.add_argument("--num_envs", type=int, default=1, help="Number of environments to simulate.")
-parser.add_argument("--task", type=str, default="Isaac-MTM-PO-Teleop-v0", help="Name of the task.")
-parser.add_argument("--scale", type=float, default=0.4, help="Teleop scaling factor.")
-# append AppLauncher cli args
+parser = argparse.ArgumentParser(description="MTML+MTMR+PO Teleop")
+parser.add_argument("--disable_fabric", action="store_true", default=False)
+parser.add_argument("--num_envs", type=int, default=1)
+parser.add_argument("--task", type=str, default="Isaac-MTML-MTMR-PO-Teleop-v0")
+parser.add_argument("--scale", type=float, default=0.4)
+parser.add_argument("--is_simulated", type=bool, default=False)
+parser.add_argument("--disable_viewport", action="store_true")
+parser.add_argument("--log_trigger_file", type=str, default="log_trigger.txt")
+parser.add_argument("--enable_logging", action="store_true")
+parser.add_argument("--demo_name", type=str, default=None)
 AppLauncher.add_app_launcher_args(parser)
-# parse the arguments
 args_cli = parser.parse_args()
 
-# launch omniverse app
 app_launcher = AppLauncher(args_cli)
 simulation_app = app_launcher.app
 
-"""Rest everything follows."""
-
+# --- [Imports] ---
 
 import gymnasium as gym
 import torch
-
-from omni.isaac.lab_tasks.utils import parse_env_cfg
-
-import matplotlib.pyplot as plt
-import cv2
-from scipy.spatial.transform import Rotation as R
 import numpy as np
 import time
-
+from scipy.spatial.transform import Rotation as R
 import omni.kit.viewport.utility as vp_utils
-from tf_utils import pose_to_transformation_matrix, transformation_matrix_to_pose
 
-import rospy
-import sys
-import os
-sys.path.append(os.path.abspath("."))
-from teleop_interface.phantomomni.se3_phantomomni import PhantomOmniTeleop
+import custom_envs
+from omni.isaac.lab_tasks.utils import parse_env_cfg
+from tf_utils import pose_to_transformation_matrix, transformation_matrix_to_pose
 from teleop_interface.MTM.se3_mtm import MTMTeleop
 from teleop_interface.MTM.mtm_manipulator import MTMManipulator
-import custom_envs
+from teleop_interface.phantomomni.se3_phantomomni import PhantomOmniTeleop
 
-# map mtm gripper joint angle to psm jaw gripper angles in simulation
-def get_jaw_gripper_angles(gripper_command, env, robot_name="robot_1"):
+# --- [Gripper Map] ---
+def get_jaw_gripper_angles(gripper_command, robot_name):
     if gripper_command is None:
-        gripper1_joint_angle = env.unwrapped[robot_name].data.joint_pos[0][-2].cpu().numpy()
-        gripper2_joint_angle = env.unwrapped[robot_name].data.joint_pos[0][-1].cpu().numpy()
-        return np.array([gripper1_joint_angle, gripper2_joint_angle])
-    # input: -1.72 (closed), 1.06 (opened)
-    # output: 0,0 (closed), -0.52359, 0.52359 (opened)
-    gripper2_angle = 0.52359 / (1.06 + 1.72) * (gripper_command + 1.72)
-    return np.array([-gripper2_angle, gripper2_angle])
+        return np.array([0.0, 0.0])
+    norm_cmd = np.interp(gripper_command, [-1.0, 1.0], [-1.72, 1.06])
+    g2_angle = 0.52359 / (1.06 + 1.72) * (norm_cmd + 1.72)
+    return np.array([-g2_angle, g2_angle])
 
-# process cam_T_psmtip to psmbase_T_psmtip and make usuable action input
-def process_actions(cam_T_psm1, w_T_psm1base, cam_T_psm2, w_T_psm2base, cam_T_psm3, w_T_psm3base, w_T_cam, env, gripper1_command, gripper2_command, gripper3_command) -> torch.Tensor:
-    """Process actions for the environment."""
-    psm1base_T_psm1 = np.linalg.inv(w_T_psm1base)@w_T_cam@cam_T_psm1
-    psm2base_T_psm2 = np.linalg.inv(w_T_psm2base)@w_T_cam@cam_T_psm2
-    psm1_rel_pos, psm1_rel_quat = transformation_matrix_to_pose(psm1base_T_psm1)
-    psm2_rel_pos, psm2_rel_quat = transformation_matrix_to_pose(psm2base_T_psm2)
+# --- [Reset Helpers] ---
+def reset_psms_to_initial_pose(env, saved_tips, base_matrices, num_steps=30):
+    actions = []
+    for i in range(3):
+        T_world_tip = pose_to_transformation_matrix(*saved_tips[i])
+        T_base = base_matrices[i]
+        base_T_tip = np.linalg.inv(T_base) @ T_world_tip
+        pos, quat = transformation_matrix_to_pose(base_T_tip)
+        jaw = [0.0, 0.0]
+        actions.extend([*pos, *quat, *jaw])
+    action_tensor = torch.tensor(np.array(actions, dtype=np.float32), device=env.unwrapped.device).unsqueeze(0)
+    for _ in range(num_steps):
+        env.step(action_tensor)
 
-    psm3base_T_psm3 = np.linalg.inv(w_T_psm3base)@w_T_cam@cam_T_psm3
-    psm3_rel_pos, psm3_rel_quat = transformation_matrix_to_pose(psm3base_T_psm3)
+# --- [Process Actions] ---
+def process_actions(cam_T_psm1, w_T_psm1base, cam_T_psm2, w_T_psm2base,
+                    cam_T_psm3, w_T_psm3base, w_T_cam, env, g1, g2, g3):
+    def base_relative_pose(cam_T_tip, world_T_base):
+        return transformation_matrix_to_pose(np.linalg.inv(world_T_base) @ w_T_cam @ cam_T_tip)
 
-    actions = np.concatenate([psm1_rel_pos, psm1_rel_quat, get_jaw_gripper_angles(gripper1_command, env, 'robot_1'), 
-                              psm2_rel_pos, psm2_rel_quat, get_jaw_gripper_angles(gripper2_command, env, 'robot_2'),
-                              psm3_rel_pos, psm3_rel_quat, [1.0 if gripper3_command else -1.0]])
-    actions = torch.tensor(actions, device=env.unwrapped.device).repeat(env.unwrapped.num_envs, 1)
-    return actions
+    a = []
+    for cam_T, base, g, robot in zip([cam_T_psm1, cam_T_psm2, cam_T_psm3],
+                                     [w_T_psm1base, w_T_psm2base, w_T_psm3base],
+                                     [g1, g2, g3],
+                                     ['robot_1', 'robot_2', 'robot_3']):
+        pos, quat = base_relative_pose(cam_T, base)
+        jaw = get_jaw_gripper_angles(g, robot)
+        a.extend([*pos, *quat, *jaw])
+    return torch.tensor(a, device=env.unwrapped.device).unsqueeze(0).repeat(env.unwrapped.num_envs, 1)
 
+
+def _compute_base_relative_action(env, psm1, psm2, psm3, jaw1, jaw2, jaw3):
+    """Helper to compute and return action tensor given PSMs and target jaw angles."""
+    # Get world-frame tip poses
+    psm1_tip_pos = psm1.data.body_link_pos_w[0][-1].cpu().numpy()
+    psm1_tip_quat = psm1.data.body_link_quat_w[0][-1].cpu().numpy()
+    psm2_tip_pos = psm2.data.body_link_pos_w[0][-1].cpu().numpy()
+    psm2_tip_quat = psm2.data.body_link_quat_w[0][-1].cpu().numpy()
+    psm3_tip_pos = psm3.data.body_link_pos_w[0][-1].cpu().numpy()
+    psm3_tip_quat = psm3.data.body_link_quat_w[0][-1].cpu().numpy()
+    world_T_psm1tip = pose_to_transformation_matrix(psm1_tip_pos, psm1_tip_quat)
+    world_T_psm2tip = pose_to_transformation_matrix(psm2_tip_pos, psm2_tip_quat)
+    world_T_psm3tip = pose_to_transformation_matrix(psm3_tip_pos, psm3_tip_quat)
+
+    # Get base transforms
+    psm1_base_link_pos = psm1.data.body_link_pos_w[0][0].cpu().numpy()
+    psm1_base_link_quat = psm1.data.body_link_quat_w[0][0].cpu().numpy()
+    psm2_base_link_pos = psm2.data.body_link_pos_w[0][0].cpu().numpy()
+    psm2_base_link_quat = psm2.data.body_link_quat_w[0][0].cpu().numpy()
+    psm3_base_link_pos = psm3.data.body_link_pos_w[0][0].cpu().numpy()
+    psm3_base_link_quat = psm3.data.body_link_quat_w[0][0].cpu().numpy()
+    world_T_psm1_base = pose_to_transformation_matrix(psm1_base_link_pos, psm1_base_link_quat)
+    world_T_psm2_base = pose_to_transformation_matrix(psm2_base_link_pos, psm2_base_link_quat)
+    world_T_psm3_base = pose_to_transformation_matrix(psm3_base_link_pos, psm3_base_link_quat)
+
+    # Compute base-relative poses
+    psm1_rel_pos, psm1_rel_quat = transformation_matrix_to_pose(np.linalg.inv(world_T_psm1_base) @ world_T_psm1tip)
+    psm2_rel_pos, psm2_rel_quat = transformation_matrix_to_pose(np.linalg.inv(world_T_psm2_base) @ world_T_psm2tip)
+    psm3_rel_pos, psm3_rel_quat = transformation_matrix_to_pose(np.linalg.inv(world_T_psm3_base) @ world_T_psm3tip)
+
+    # Construct action tensor
+    action_tensor = torch.tensor(
+        np.concatenate([psm1_rel_pos, psm1_rel_quat, jaw1, psm2_rel_pos, psm2_rel_quat, jaw2, psm3_rel_pos, psm3_rel_quat, jaw3], dtype=np.float32),
+        device=env.unwrapped.device
+    ).unsqueeze(0)
+
+    return action_tensor
+
+
+def open_jaws(env, psm1, psm2, psm3, target=1.04):
+    """Open PSM jaws to match a target angle."""
+    jaw_angle = 0.52359 / (1.06 + 1.72) * (target + 1.72)
+    jaw1 = [-jaw_angle, jaw_angle]
+    jaw2 = [-jaw_angle, jaw_angle]
+    jaw3 = [0, 0]  # PSM3 does not have jaws, so we set it to zero
+
+    print(f"[INIT] Opening jaws to approximate MTM input: {target} → [{jaw1[0]:.3f}, {jaw1[1]:.3f}]")
+    action_tensor = _compute_base_relative_action(env, psm1, psm2, psm3, jaw1=jaw1, jaw2=jaw2, jaw3=jaw3)
+    for _ in range(30):
+        env.step(action_tensor)
+    print("[INIT] jaws opened.")
+
+
+# --- [Main Loop] ---
 def main():
 
-    
-    scale=args_cli.scale
+    # Define robot name mapping
+    psm_name_dict = {
+        "PSM1": "robot_1",
+        "PSM2": "robot_2",
+        "PSM3": "robot_3"
+    }
 
-    # Setup the MTM in the real world
-    mtm_manipulator = MTMManipulator()
-    mtm_manipulator.home()
-
-    # parse configuration
-    env_cfg = parse_env_cfg(
-        args_cli.task, device=args_cli.device, num_envs=args_cli.num_envs, use_fabric=not args_cli.disable_fabric
+    # Initialize TeleopLogger
+    teleop_logger = TeleopLogger(
+        trigger_file=args_cli.log_trigger_file,
+        psm_name_dict=psm_name_dict,
+        log_duration=30.0  # seconds
     )
-    # modify configuration
+
+    scale = args_cli.scale
+    is_simulated = args_cli.is_simulated
+
+    mtm = MTMManipulator(); mtm.home()
+    mtm_teleop = MTMTeleop(); mtm_teleop.reset()
+    po_teleop = PhantomOmniTeleop(); po_teleop.reset()
+
+    env_cfg = parse_env_cfg(args_cli.task, device=args_cli.device, num_envs=args_cli.num_envs, use_fabric=not args_cli.disable_fabric)
     env_cfg.terminations.time_out = None
+    env = gym.make(args_cli.task, cfg=env_cfg); env.reset()
 
-    # create environment
-    env = gym.make(args_cli.task, cfg=env_cfg)
-    env.reset()
+    cam_left = env.unwrapped.scene["camera_left"]
+    cam_right = env.unwrapped.scene["camera_right"]
 
-    mtm_interface = MTMTeleop()
-    mtm_interface.reset()
+    if not is_simulated and not args_cli.disable_viewport:
+        view_port_l = vp_utils.create_viewport_window("Left Camera", width=800, height=600)
+        view_port_l.viewport_api.camera_path = '/World/envs/env_0/Robot_4/ecm_end_link/camera_left'
 
-    po_interface = PhantomOmniTeleop()
-    po_interface.reset()
+        view_port_r = vp_utils.create_viewport_window("Right Camera", width=800, height=600)
+        view_port_r.viewport_api.camera_path = '/World/envs/env_0/Robot_4/ecm_end_link/camera_right'
 
-    camera_l = env.unwrapped.scene["camera_left"]
-    camera_r = env.unwrapped.scene["camera_right"]
+    psm1, psm2, psm3 = env.unwrapped.scene["robot_1"], env.unwrapped.scene["robot_2"], env.unwrapped.scene["robot_3"]
 
-    view_port_l = vp_utils.create_viewport_window("Left Camera", width = 800, height = 600)
-    view_port_l.viewport_api.camera_path = '/World/envs/env_0/Robot_4/ecm_end_link/camera_left' #camera_l.cfg.prim_path
+    saved_tips = [None] * 3
+    was_in_mtm_clutch, was_in_po_clutch = True, True
+    po_waiting_for_clutch = False
+    mtm_synced = False
 
-    view_port_r = vp_utils.create_viewport_window("Right Camera", width = 800, height = 600)
-    view_port_r.viewport_api.camera_path = '/World/envs/env_0/Robot_4/ecm_end_link/camera_right' #camera_r.cfg.prim_path
+    print("[INFO] Waiting for MTM and PO clutch to initialize...")
 
-    psm1 = env.unwrapped.scene["robot_1"]
-    psm2 = env.unwrapped.scene["robot_2"]
-    psm3 = env.unwrapped.scene["robot_3"]
-
-    mtm_orientation_matched = False
-    was_in_mtm_clutch = True
-    was_in_po_clutch = True
-    init_mtml_position = None
-    init_psm1_tip_position = None
-    init_mtmr_position = None
-    init_psm2_tip_position = None
-    init_stylus_position = None
-    init_psm3_tip_position = None
-
-    print("Press the clutch button and release to start teleoperation.")
-    # simulate environment
     while simulation_app.is_running():
-        start_time = time.time()
-
-        # process actions
-        camera_l_pos = camera_l.data.pos_w
-        camera_r_pos = camera_r.data.pos_w
-        # get center of both cameras
-        str_camera_pos = (camera_l_pos + camera_r_pos) / 2
-        camera_quat = camera_l.data.quat_w_world  # forward x, up z
-        world_T_cam = pose_to_transformation_matrix(str_camera_pos.cpu().numpy()[0], camera_quat.cpu().numpy()[0])
+        start = time.time()
+        cam_pos = ((cam_left.data.pos_w + cam_right.data.pos_w) / 2).cpu().numpy()[0]
+        cam_quat = cam_left.data.quat_w_world.cpu().numpy()[0]
+        world_T_cam = pose_to_transformation_matrix(cam_pos, cam_quat)
         cam_T_world = np.linalg.inv(world_T_cam)
 
-        if not mtm_orientation_matched:
-            print("Start matching orientation of MTM with the PSMs in the simulation. May take a few seconds.")
-            mtm_orientation_matched = True
-            psm1_tip_pose_w = psm1.data.body_link_pos_w[0][-1].cpu().numpy()
-            psm1_tip_quat_w = psm1.data.body_link_quat_w[0][-1].cpu().numpy()
-            world_T_psm1tip = pose_to_transformation_matrix(psm1_tip_pose_w, psm1_tip_quat_w)
-            hrsv_T_mtml = mtm_interface.simpose2hrsvpose(cam_T_world @ world_T_psm1tip)
+        def get_T_base(robot):
+            return pose_to_transformation_matrix(
+                robot.data.body_link_pos_w[0][0].cpu().numpy(),
+                robot.data.body_link_quat_w[0][0].cpu().numpy()
+            )
 
-            psm2_tip_pose_w = psm2.data.body_link_pos_w[0][-1].cpu().numpy()
-            psm2_tip_quat_w = psm2.data.body_link_quat_w[0][-1].cpu().numpy()
-            world_T_psm2tip = pose_to_transformation_matrix(psm2_tip_pose_w, psm2_tip_quat_w)
-            hrsv_T_mtmr = mtm_interface.simpose2hrsvpose(cam_T_world @ world_T_psm2tip)
+        world_T_b = [get_T_base(r) for r in [psm1, psm2, psm3]]
 
-            mtm_manipulator.adjust_orientation(hrsv_T_mtml, hrsv_T_mtmr)
-            # mtm_manipulator.release_force()
-            print("Initial orientation matched. Start teleoperation by pressing and releasing the clutch button.")
+        mtml_pos, mtml_rot, g1, mtmr_pos, mtmr_rot, g2, mtm_clutch, *_ = mtm_teleop.advance()
+        if g1 is None: time.sleep(0.05); continue
+
+        mtm_q1 = R.from_rotvec(mtml_rot).as_quat(); mtm_q1 = np.concatenate([[mtm_q1[3]], mtm_q1[:3]])
+        mtm_q2 = R.from_rotvec(mtmr_rot).as_quat(); mtm_q2 = np.concatenate([[mtm_q2[3]], mtm_q2[:3]])
+
+        if not mtm_synced:
+            print("[SYNC] Aligning MTM orientation to PSM tips...")
+            def tip_T(robot):
+                return pose_to_transformation_matrix(
+                    robot.data.body_link_pos_w[0][-1].cpu().numpy(),
+                    robot.data.body_link_quat_w[0][-1].cpu().numpy()
+                )
+            mtm.adjust_orientation(mtm_teleop.simpose2hrsvpose(cam_T_world @ tip_T(psm1)),
+                                   mtm_teleop.simpose2hrsvpose(cam_T_world @ tip_T(psm2)))
+            saved_tips[0] = (psm1.data.body_link_pos_w[0][-1].cpu().numpy(), psm1.data.body_link_quat_w[0][-1].cpu().numpy())
+            saved_tips[1] = (psm2.data.body_link_pos_w[0][-1].cpu().numpy(), psm2.data.body_link_quat_w[0][-1].cpu().numpy())
+            saved_tips[2] = (psm3.data.body_link_pos_w[0][-1].cpu().numpy(), psm3.data.body_link_quat_w[0][-1].cpu().numpy())
+            mtm_synced = True
+            print("[READY] All MTMs aligned. Press and release clutch to start teleoperation.")
             continue
 
-        psm1_base_link_pos = psm1.data.body_link_pos_w[0][0].cpu().numpy()
-        psm1_base_link_quat = psm1.data.body_link_quat_w[0][0].cpu().numpy()
-        world_T_psm1_base = pose_to_transformation_matrix(psm1_base_link_pos, psm1_base_link_quat)
+        stylus_pose, g3, po_clutch = po_teleop.advance()
+        if po_clutch is None: time.sleep(0.05); continue
+        po_q = R.from_rotvec(stylus_pose[3:]).as_quat(); po_q = np.concatenate([[po_q[3]], po_q[:3]])
 
-        psm2_base_link_pos = psm2.data.body_link_pos_w[0][0].cpu().numpy()
-        psm2_base_link_quat = psm2.data.body_link_quat_w[0][0].cpu().numpy()
-        world_T_psm2_base = pose_to_transformation_matrix(psm2_base_link_pos, psm2_base_link_quat)
-
-        psm3_base_link_pos = psm3.data.body_link_pos_w[0][0].cpu().numpy()
-        psm3_base_link_quat = psm3.data.body_link_quat_w[0][0].cpu().numpy()
-        world_T_psm3_base = pose_to_transformation_matrix(psm3_base_link_pos, psm3_base_link_quat)
-
-        # get target pos, rot in camera view with joint and clutch commands
-        mtml_pos, mtml_rot, l_gripper_joint, mtmr_pos, mtmr_rot, r_gripper_joint, mtm_clutch, mono, _ = mtm_interface.advance()
-        if not l_gripper_joint:
-            print("Waiting for the MTM topic subscription...")
-            time.sleep(0.05)
-            continue
-
-        mtml_orientation = R.from_rotvec(mtml_rot).as_quat()
-        mtml_orientation = np.concatenate([[mtml_orientation[3]], mtml_orientation[:3]])
-
-        mtmr_orientation = R.from_rotvec(mtmr_rot).as_quat()
-        mtmr_orientation = np.concatenate([[mtmr_orientation[3]], mtmr_orientation[:3]])
-
-        stylus_pose, po_gripper, po_clutch = po_interface.advance()
-        if po_clutch is None:
-            print("Waiting for the PO topic subscription...")
-            time.sleep(0.05)
-            continue
-        stylus_orientation = R.from_rotvec(stylus_pose[3:]).as_quat()
-        stylus_orientation = np.concatenate([[stylus_orientation[3]], stylus_orientation[:3]])
-
-        # Process MTM teleoperation action
         if not mtm_clutch:
             if was_in_mtm_clutch:
-                print("Released from clutch. Starting teleoperation again")
-                init_mtml_position = mtml_pos
-                psm1_tip_pose_w = psm1.data.body_link_pos_w[0][-1].cpu().numpy()
-                psm1_tip_quat_w = psm1.data.body_link_quat_w[0][-1].cpu().numpy()
-                world_T_psm1tip = pose_to_transformation_matrix(psm1_tip_pose_w, psm1_tip_quat_w)
-                init_cam_T_psm1tip = cam_T_world @ world_T_psm1tip
-                init_psm1_tip_position = init_cam_T_psm1tip[:3, 3]
-                cam_T_psm1tip = pose_to_transformation_matrix(init_cam_T_psm1tip[:3, 3], mtml_orientation)
-                # psm1_gripper_angle = l_gripper_joint
-
-                init_mtmr_position = mtmr_pos
-                psm2_tip_pose_w = psm2.data.body_link_pos_w[0][-1].cpu().numpy()
-                psm2_tip_quat_w = psm2.data.body_link_quat_w[0][-1].cpu().numpy()
-                world_T_psm2tip = pose_to_transformation_matrix(psm2_tip_pose_w, psm2_tip_quat_w)
-                init_cam_T_psm2tip = cam_T_world @ world_T_psm2tip
-                init_psm2_tip_position = init_cam_T_psm2tip[:3, 3]
-                cam_T_psm2tip = pose_to_transformation_matrix(init_cam_T_psm2tip[:3, 3], mtmr_orientation)
-                # psm2_gripper_angle = r_gripper_joint
-
-            else:
-                # normal operation
-                psm1_target_position = init_psm1_tip_position + (mtml_pos - init_mtml_position) * scale
-                cam_T_psm1tip = pose_to_transformation_matrix(psm1_target_position, mtml_orientation)
-
-                psm2_target_position = init_psm2_tip_position + (mtmr_pos - init_mtmr_position) * scale
-                cam_T_psm2tip = pose_to_transformation_matrix(psm2_target_position, mtmr_orientation)
-
+                init_mtml_pos = mtml_pos
+                init_mtmr_pos = mtmr_pos
+                def init_tip(robot): return (cam_T_world @ pose_to_transformation_matrix(
+                    robot.data.body_link_pos_w[0][-1].cpu().numpy(),
+                    robot.data.body_link_quat_w[0][-1].cpu().numpy()
+                ))[:3, 3]
+                init_psm1_tip_pos, init_psm2_tip_pos = init_tip(psm1), init_tip(psm2)
+            p1_target = init_psm1_tip_pos + (mtml_pos - init_mtml_pos) * scale
+            p2_target = init_psm2_tip_pos + (mtmr_pos - init_mtmr_pos) * scale
+            cam_T_psm1 = pose_to_transformation_matrix(p1_target, mtm_q1)
+            cam_T_psm2 = pose_to_transformation_matrix(p2_target, mtm_q2)
             was_in_mtm_clutch = False
-
-        else:  # clutch pressed: stop moving, set was_in_clutch to True
+        else:
             was_in_mtm_clutch = True
+            def cur_tip(robot):
+                return cam_T_world @ pose_to_transformation_matrix(
+                    robot.data.body_link_pos_w[0][-1].cpu().numpy(),
+                    robot.data.body_link_quat_w[0][-1].cpu().numpy()
+                )
+            cam_T_psm1, cam_T_psm2 = cur_tip(psm1), cur_tip(psm2)
 
-            psm1_cur_eef_pos = psm1.data.body_link_pos_w[0][-1].cpu().numpy()
-            psm1_cur_eef_quat = psm1.data.body_link_quat_w[0][-1].cpu().numpy()
-            world_T_psm1tip = pose_to_transformation_matrix(psm1_cur_eef_pos, psm1_cur_eef_quat)
-            cam_T_psm1tip = cam_T_world @ world_T_psm1tip
-            # psm1_gripper_angle = None
+        cam_T_psm3 = cam_T_world @ pose_to_transformation_matrix(
+            psm3.data.body_link_pos_w[0][-1].cpu().numpy(),
+            psm3.data.body_link_quat_w[0][-1].cpu().numpy()
+        )
 
-            psm2_cur_eef_pos = psm2.data.body_link_pos_w[0][-1].cpu().numpy()
-            psm2_cur_eef_quat = psm2.data.body_link_quat_w[0][-1].cpu().numpy()
-            world_T_psm2tip = pose_to_transformation_matrix(psm2_cur_eef_pos, psm2_cur_eef_quat)
-            cam_T_psm2tip = cam_T_world @ world_T_psm2tip
-            # psm2_gripper_angle = None
-
-        # Process PO teleoperation input
         if not po_clutch:
-            if was_in_po_clutch:
-                print("Released from clutch. Starting teleoperation again")
+            if po_waiting_for_clutch:
+                pass
+            elif was_in_po_clutch:
+                print("[PO] Clutch released. Initializing teleoperation.")
                 init_stylus_position = stylus_pose[:3]
+                tip_pose = psm3.data.body_link_pos_w[0][-1].cpu().numpy()
+                tip_quat = psm3.data.body_link_quat_w[0][-1].cpu().numpy()
+                world_T_psm3tip = pose_to_transformation_matrix(tip_pose, tip_quat)
+                cam_T_psm3tip_init = cam_T_world @ world_T_psm3tip
+                init_psm3_tip_position = cam_T_psm3tip_init[:3, 3]
+                was_in_po_clutch = False
 
-                psm3_tip_pose_w = psm3.data.body_link_pos_w[0][-1].cpu().numpy()
-                psm3_tip_quat_w = psm3.data.body_link_quat_w[0][-1].cpu().numpy()
-                world_T_psm3tip = pose_to_transformation_matrix(psm3_tip_pose_w, psm3_tip_quat_w)
-                init_cam_T_psm3tip = cam_T_world @ world_T_psm3tip
-                init_psm3_tip_position = init_cam_T_psm3tip[:3, 3]
-                cam_T_psm3tip = pose_to_transformation_matrix(init_cam_T_psm3tip[:3, 3], stylus_orientation)
-            else:
-                # normal operation
-                target_position = init_psm3_tip_position + (stylus_pose[:3] - init_stylus_position) * scale
-                cam_T_psm3tip = pose_to_transformation_matrix(target_position, stylus_orientation)
-            was_in_po_clutch = False
-        else:  # clutch pressed: stop moving, set was_in_po_clutch to True
+            if init_stylus_position is not None and init_psm3_tip_position is not None:
+                stylus_orientation = R.from_rotvec(stylus_pose[3:]).as_quat()
+                stylus_orientation = np.concatenate([[stylus_orientation[3]], stylus_orientation[:3]])
+                psm3_target = init_psm3_tip_position + (stylus_pose[:3] - init_stylus_position) * scale
+                cam_T_psm3 = pose_to_transformation_matrix(psm3_target, stylus_orientation)
+
+        else:
+            if po_waiting_for_clutch:
+                print("[PO] Clutch pressed after reset. Ready to resume.")
+                po_waiting_for_clutch = False
+                was_in_po_clutch = True
+            if not was_in_po_clutch:
+                print("[PO] Clutch pressed. Freezing teleop.")
             was_in_po_clutch = True
-            psm3_cur_eef_pos = psm3.data.body_link_pos_w[0][-1].cpu().numpy()
-            psm3_cur_eef_quat = psm3.data.body_link_quat_w[0][-1].cpu().numpy()
-            world_T_psm3tip = pose_to_transformation_matrix(psm3_cur_eef_pos, psm3_cur_eef_quat)
-            cam_T_psm3tip = cam_T_world @ world_T_psm3tip
+            po_gripper = None
 
-        actions = process_actions(cam_T_psm1tip, world_T_psm1_base, cam_T_psm2tip, world_T_psm2_base, cam_T_psm3tip, world_T_psm3_base, world_T_cam, env, l_gripper_joint, r_gripper_joint, po_gripper)
+
+        actions = process_actions(
+            cam_T_psm1, world_T_b[0], cam_T_psm2, world_T_b[1],
+            cam_T_psm3, world_T_b[2], world_T_cam, env,
+            g1, g2, g3
+        )
         env.step(actions)
-        time.sleep(max(0.0, 1/30.0 - time.time() + start_time))
 
-    # close the simulator
+        # Logging logic
+        teleop_logger.check_and_start_logging(env)
+
+        if teleop_logger.enable_logging and teleop_logger.frame_num == 0:
+            log_current_pose(env, teleop_logger.log_dir)
+
+        teleop_logger.stop_logging()
+
+        if teleop_logger.enable_logging:
+            frame_num = teleop_logger.frame_num + 1
+            timestamp = time.time()
+            robot_states = {}
+            for psm, robot_name in psm_name_dict.items():
+                robot = env.unwrapped.scene[robot_name]
+                joint_positions = robot.data.joint_pos[0][:6].cpu().numpy()
+                jaw_angle = abs(robot.data.joint_pos[0][-2].cpu().numpy()) + abs(robot.data.joint_pos[0][-1].cpu().numpy())
+                ee_position = robot.data.body_link_pos_w[0][-1].cpu().numpy()
+                ee_quat = robot.data.body_link_quat_w[0][-1].cpu().numpy()
+                orientation_matrix = R.from_quat(np.concatenate([ee_quat[1:], [ee_quat[0]]])).as_matrix()
+                robot_states[psm] = {
+                    "joint_positions": joint_positions,
+                    "jaw_angle": jaw_angle,
+                    "ee_position": ee_position,
+                    "orientation_matrix": orientation_matrix
+                }
+
+            cam_l_img = cam_left.data.output["rgb"][0].cpu().numpy()
+            cam_r_img = cam_right.data.output["rgb"][0].cpu().numpy()
+
+            teleop_logger.enqueue(frame_num, timestamp, robot_states, cam_l_img, cam_r_img)
+            teleop_logger.frame_num = frame_num
+
+
+        if os.path.exists("reset_trigger.txt"):
+            print("[RESET] Trigger detected. Resetting cube and all PSMs...")
+
+            cube_pos = [np.random.uniform(0.0, 0.1), np.random.uniform(-0.05, 0.05), 0.0]
+            cube_yaw = np.random.uniform(-np.pi, np.pi)
+            cube_quat = R.from_euler("z", cube_yaw).as_quat()
+            cube_ori = [cube_quat[3], cube_quat[0], cube_quat[1], cube_quat[2]]
+            reset_cube_pose(env, "teleop_logs/cube_latest", cube_pos, cube_ori)
+
+            reset_psms_to_initial_pose(env, saved_tips, world_T_b, num_steps=30)
+
+            mtm.home()
+            time.sleep(2.0)
+            mtm.adjust_orientation(
+                mtm_teleop.simpose2hrsvpose(cam_T_world @ pose_to_transformation_matrix(*saved_tips[0])),
+                mtm_teleop.simpose2hrsvpose(cam_T_world @ pose_to_transformation_matrix(*saved_tips[1]))
+            )
+
+            open_jaws(env, psm1, psm2, psm3, target=0.8)
+
+            was_in_mtm_clutch = True
+            was_in_po_clutch = True
+            po_waiting_for_clutch = True
+            init_stylus_position = None
+            init_psm3_tip_position = None
+            os.remove("reset_trigger.txt")
+            print("[READY] Reset complete. Reclutch MTM and PO to resume independently.")
+
+
+        time.sleep(max(0.0, 1/30.0 - time.time() + start))
+
     env.close()
-
+    teleop_logger.shutdown()
+    simulation_app.close()
 
 if __name__ == "__main__":
-    # run the main function
     main()
-    # close sim app
-    simulation_app.close()

@@ -43,12 +43,16 @@ def log_current_pose(env, log_dir, cube_key="cube_rigid"):
     # Also log world-frame tip pose of both PSMs
     psm1 = env.scene["robot_1"]
     psm2 = env.scene["robot_2"]
+    psm3 = env.scene["robot_3"]
 
     psm1_tip_pos = psm1.data.body_link_pos_w[0][-1].cpu().numpy().tolist()
     psm1_tip_quat = psm1.data.body_link_quat_w[0][-1].cpu().numpy().tolist()
 
     psm2_tip_pos = psm2.data.body_link_pos_w[0][-1].cpu().numpy().tolist()
     psm2_tip_quat = psm2.data.body_link_quat_w[0][-1].cpu().numpy().tolist()
+
+    psm3_tip_pos = psm3.data.body_link_pos_w[0][-1].cpu().numpy().tolist()
+    psm3_tip_quat = psm3.data.body_link_quat_w[0][-1].cpu().numpy().tolist()
 
     log_data = {
         "cube": {
@@ -63,10 +67,15 @@ def log_current_pose(env, log_dir, cube_key="cube_rigid"):
             "position": psm2_tip_pos,
             "orientation": psm2_tip_quat
         },
+        "robot_3_tip": {
+            "position": psm3_tip_pos,
+            "orientation": psm3_tip_quat
+        },
         "meta": {
-            "arm_names": ["PSM1", "PSM2"],
-            "teleop1_connection": "Phantom Omni-PSM1",
+            "arm_names": ["PSM1", "PSM2", "PSM3"],
+            "teleop1_connection": "MTML-PSM1",
             "teleop2_connection": "MTMR-PSM2",
+            "teleop3_connection": "PO-PSM3",
             "surgeon_name": "Alaa",
             "assistant_name": "Jiaqi",
             "mtm_scale": 0.4,

@@ -83,6 +83,24 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
         )
 
 
+        # self.scene.object3 = RigidObjectCfg(
+        #     prim_path="/World/Objects/Object3",
+        #     init_state=RigidObjectCfg.InitialStateCfg(pos=(0.0, 0.0, 0.0), rot=(1, 0, 0, 0)),
+        #     spawn=UsdFileCfg(
+        #         usd_path=f"{ORBITSURGICAL_ASSETS_DATA_DIR}/Props/Surgical_block/block.usd",
+        #         scale=(0.01, 0.01, 0.02),
+        #         rigid_props=RigidBodyPropertiesCfg(
+        #             solver_position_iteration_count=16,
+        #             solver_velocity_iteration_count=8,
+        #             max_angular_velocity=200,
+        #             max_linear_velocity=200,
+        #             max_depenetration_velocity=1.0,
+        #             disable_gravity=False,
+        #         ),
+        #     ),
+        # )
+
+
         # Define the cube and register it to the scene
         self.scene.cube_rigid = RigidObjectCfg(
             prim_path="/World/Objects/CubeRigid",
@@ -91,7 +109,7 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
                 rot=(1.0, 0.0, 0.0, 0.0),
             ),
             spawn=sim_utils.CuboidCfg(
-                size=(0.03, 0.004, 0.004),
+                size=(0.03, 0.003, 0.004),
                 rigid_props=sim_utils.RigidBodyPropertiesCfg(
                     linear_damping=0.05,
                     angular_damping=0.05,
@@ -99,7 +117,7 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
                     solver_velocity_iteration_count=10,
                 ),
                 mass_props=sim_utils.MassPropertiesCfg(
-                    mass=0.01,
+                    mass=0.02,
                 ),
                 collision_props=sim_utils.CollisionPropertiesCfg(
                     contact_offset=0.005,
@@ -118,80 +136,6 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
                 ),
             )
         )
-
-
-        # # Define the deformable cube
-        # cfg_cube_deformable = MeshCuboidCfg(
-        #     size=(0.025, 0.004, 0.004),
-        #     deformable_props=DeformableBodyPropertiesCfg(
-        #         solver_position_iteration_count=16,
-        #         vertex_velocity_damping=0.1,
-        #         contact_offset=0.0003,
-        #         rest_offset=-0.0002,
-        #         simulation_hexahedral_resolution=9,
-
-        #     ),
-
-        #     mass_props=sim_utils.MassPropertiesCfg(
-        #         mass=0.01,
-        #     ),
-        #     visual_material=PreviewSurfaceCfg(
-        #         diffuse_color=(0.8, 0.0, 0.0),
-        #         roughness=0.6,
-        #         metallic=0.0,
-        #         opacity=1.0,
-        #     ),
-        #     physics_material=DeformableBodyMaterialCfg(
-        #         dynamic_friction=3.0,
-        #         youngs_modulus=100000000000.0,
-        #         poissons_ratio=0.45,
-        #         elasticity_damping=0.02,
-        #         damping_scale=1.0,
-        #     ),
-        # )
-
-        # cfg_cube_deformable.func(
-        #     "/World/Objects/CubeDeformable",
-        #     cfg_cube_deformable,
-        #     translation=(0.0, 0.0, 0.0),
-        #     orientation=(1.0, 0.0, 0.0, 0.0),
-        # )
-
-        # Define the deformable cube and register it to the scene
-        # self.scene.cube_deformable = DeformableObjectCfg(
-        #     prim_path="/World/Objects/CubeDeformable",
-        #     init_state=DeformableObjectCfg.InitialStateCfg(
-        #         pos=(0.0, 0.0, 0.0),
-        #         rot=(1.0, 0.0, 0.0, 0.0),
-        #     ),
-        #     spawn=sim_utils.MeshCuboidCfg(
-        #         size=(0.03, 0.002, 0.002),
-        #         deformable_props=DeformableBodyPropertiesCfg(
-        #             solver_position_iteration_count=16,
-        #             vertex_velocity_damping=0.1,
-        #             contact_offset=0.0003,
-        #             rest_offset=0.0002,
-        #             simulation_hexahedral_resolution=12,  # resolution of FEM mesh
-        #         ),
-        #         mass_props=sim_utils.MassPropertiesCfg(
-        #             mass=0.003,
-        #         ),
-        #         visual_material=PreviewSurfaceCfg(
-        #             diffuse_color=(0.8, 0.0, 0.0),
-        #             roughness=0.4,
-        #             metallic=0.0,
-        #             opacity=1.0,
-        #         ),
-        #         physics_material=DeformableBodyMaterialCfg(
-        #             dynamic_friction=3.0,         # approximates gripping
-        #             youngs_modulus=5e9,           # stiffness
-        #             poissons_ratio=0.47,          # compressibility
-        #             elasticity_damping=0.02,      # energy dissipation
-        #             damping_scale=1.0,
-        #         ),
-        #     )
-        # )
-        
 
         # sensors
         self.scene.camera_left = CameraCfg(

@@ -64,16 +64,23 @@ import custom_envs
 from teleop_logger import reset_cube_pose, log_current_pose
 
 # map mtm gripper joint angle to psm jaw gripper angles in simulation
-def get_jaw_gripper_angles(gripper_command, env, robot_name="robot_2"):
+# def get_jaw_gripper_angles(gripper_command, env, robot_name="robot_2"):
+#     if gripper_command is None:
+#         gripper1_joint_angle = env.unwrapped[robot_name].data.joint_pos[0][-2].cpu().numpy()
+#         gripper2_joint_angle = env.unwrapped[robot_name].data.joint_pos[0][-1].cpu().numpy()
+#         return np.array([gripper1_joint_angle, gripper2_joint_angle])
+#         # return np.array([-0.52359, 0.52359])
+#     # input: -1.72 (closed), 1.06 (opened)
+#     # output: 0,0 (closed), -0.52359, 0.52359 (opened)
+#     gripper2_angle = 0.52359 / (1.06 + 1.72) * (gripper_command + 1.72)
+#     return np.array([-gripper2_angle, gripper2_angle])
+
+def get_jaw_gripper_angles(gripper_command, robot_name):
     if gripper_command is None:
-        gripper1_joint_angle = env.unwrapped[robot_name].data.joint_pos[0][-2].cpu().numpy()
-        gripper2_joint_angle = env.unwrapped[robot_name].data.joint_pos[0][-1].cpu().numpy()
-        return np.array([gripper1_joint_angle, gripper2_joint_angle])
-        # return np.array([-0.52359, 0.52359])
-    # input: -1.72 (closed), 1.06 (opened)
-    # output: 0,0 (closed), -0.52359, 0.52359 (opened)
-    gripper2_angle = 0.52359 / (1.06 + 1.72) * (gripper_command + 1.72)
-    return np.array([-gripper2_angle, gripper2_angle])
+        return np.array([0.0, 0.0])
+    norm_cmd = np.interp(gripper_command, [-1.0, 1.0], [-1.72, 1.06])
+    g2_angle = 0.52359 / (1.06 + 1.72) * (norm_cmd + 1.72)
+    return np.array([-g2_angle, g2_angle])
 
 
 # process cam_T_psmtip to psmbase_T_psmtip and make usuable action input
@@ -83,8 +90,8 @@ def process_actions(cam_T_psm1, w_T_psm1base, cam_T_psm2, w_T_psm2base, w_T_cam,
     psm2base_T_psm2 = np.linalg.inv(w_T_psm2base)@w_T_cam@cam_T_psm2
     psm1_rel_pos, psm1_rel_quat = transformation_matrix_to_pose(psm1base_T_psm1)
     psm2_rel_pos, psm2_rel_quat = transformation_matrix_to_pose(psm2base_T_psm2)
-    actions = np.concatenate([psm1_rel_pos, psm1_rel_quat, get_jaw_gripper_angles(gripper1_command, env, 'robot_1'),
-                              psm2_rel_pos, psm2_rel_quat, get_jaw_gripper_angles(gripper2_command, env, 'robot_2')])
+    actions = np.concatenate([psm1_rel_pos, psm1_rel_quat, get_jaw_gripper_angles(gripper1_command,  'robot_1'),
+                              psm2_rel_pos, psm2_rel_quat, get_jaw_gripper_angles(gripper2_command,  'robot_2')])
     actions = torch.tensor(actions, device=env.unwrapped.device).repeat(env.unwrapped.num_envs, 1)
     return actions
 
