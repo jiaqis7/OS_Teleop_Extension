@@ -4,6 +4,8 @@ from .config.po_env_cfg import POTeleopEnvCfg
 from .config.mtm_env_cfg import MTMTeleopEnvCfg
 from .config.playback_env_config import PBEnvCfg
 from .config.mtm_po_env_cfg import MTMPOTeleopEnvCfg
+from .config.mtml_act_cfg import MTMLACTEnvCfg
+from .config.playback_three_arm_env_cfg import PBThreeEnvCfg
 
 gym.register(
     id="Isaac-MultiArm-dVRK-v0",
@@ -37,5 +39,19 @@ gym.register(
     id="Isaac-MTML-MTMR-PO-Teleop-v0",
     entry_point="omni.isaac.lab.envs:ManagerBasedRLEnv",
     kwargs={"env_cfg_entry_point": MTMPOTeleopEnvCfg},
+    disable_env_checker=True,
+)
+
+gym.register(
+    id="Isaac-MTM-Teleop-pb-three-arm",
+    entry_point="omni.isaac.lab.envs:ManagerBasedRLEnv",
+    kwargs={"env_cfg_entry_point": PBThreeEnvCfg},
+    disable_env_checker=True,
+)
+
+gym.register(
+    id="Isaac-MTML-ACT-v0",
+    entry_point="omni.isaac.lab.envs:ManagerBasedRLEnv",
+    kwargs={"env_cfg_entry_point": MTMLACTEnvCfg},
     disable_env_checker=True,
 )

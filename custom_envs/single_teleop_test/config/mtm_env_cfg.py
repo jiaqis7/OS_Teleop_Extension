@@ -67,8 +67,8 @@ class MTMTeleopEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
             ],
             scale=1.0,
             use_default_offset=False,
-  
         )
+        
         self.actions.gripper_2_action = mdp.JointPositionActionCfg(
             asset_name="robot_2",
             joint_names=[

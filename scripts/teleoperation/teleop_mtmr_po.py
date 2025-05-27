@@ -1,6 +1,14 @@
 import argparse
 
 from omni.isaac.lab.app import AppLauncher
+
+AppLauncher.add_app_launcher_args(parser)
+args_cli = parser.parse_args()
+
+# launch omniverse app
+app_launcher = AppLauncher(args_cli)
+simulation_app = app_launcher.app
+
 from teleop_logger import TeleopLogger, log_current_pose, reset_cube_pose
 
 # add argparse arguments
@@ -14,12 +22,6 @@ parser.add_argument("--enable_logging", action="store_true")
 parser.add_argument("--log_trigger_file", type=str, default="log_trigger.txt")
 parser.add_argument("--disable_viewport", action="store_true")
 parser.add_argument("--demo_name", type=str, default=None)
-AppLauncher.add_app_launcher_args(parser)
-args_cli = parser.parse_args()
-
-# launch omniverse app
-app_launcher = AppLauncher(args_cli)
-simulation_app = app_launcher.app
 
 import gymnasium as gym
 import torch

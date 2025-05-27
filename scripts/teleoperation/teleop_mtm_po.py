@@ -320,8 +320,8 @@ def main():
         if os.path.exists("reset_trigger.txt"):
             print("[RESET] Trigger detected. Resetting cube and all PSMs...")
 
-            cube_pos = [np.random.uniform(0.0, 0.1), np.random.uniform(-0.05, 0.05), 0.0]
-            cube_yaw = np.random.uniform(-np.pi, np.pi)
+            cube_pos = [np.random.uniform(-0.01, 0.01), np.random.uniform(-0.02, 0.02), 0.0]
+            cube_yaw = np.random.uniform(-np.pi/6, np.pi/6)
             cube_quat = R.from_euler("z", cube_yaw).as_quat()
             cube_ori = [cube_quat[3], cube_quat[0], cube_quat[1], cube_quat[2]]
             reset_cube_pose(env, "teleop_logs/cube_latest", cube_pos, cube_ori)
