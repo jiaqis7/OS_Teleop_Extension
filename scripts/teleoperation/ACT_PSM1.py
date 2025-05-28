@@ -25,6 +25,8 @@ parser.add_argument("--log_trigger_file", type=str, default="log_trigger.txt",
 parser.add_argument("--disable_viewport", action="store_true", help="Disable extra viewport windows.")
 parser.add_argument("--demo_name", type=str, default=None, help="Custom name for the logging folder (e.g., 'demo_1')")
 
+
+
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
 # parse the arguments
@@ -60,6 +62,9 @@ import custom_envs
 from AdaptACT.procedures.controller import AutonomousController
 
 MODEL_TRIGGER_PATH = os.path.join(os.path.dirname(__file__), "model_trigger.txt")
+RESET_TRIGGER_PATH = "reset_trigger.txt"
+
+
 
 
 def get_jaw_gripper_angles(gripper_command):
@@ -69,22 +74,66 @@ def get_jaw_gripper_angles(gripper_command):
     g2_angle = 0.52359 / (1.06 + 1.72) * (norm_cmd + 1.72)
     return np.array([-g2_angle, g2_angle])
 
+def get_jaw_angle(joint_pos):
+    return abs(joint_pos[-2]) + abs(joint_pos[-1])
 
 def process_actions(psm1_joint_action, cam_T_psm2, w_T_psm2base, w_T_cam, gripper2_command, env):
     psm2base_T_psm2 = np.linalg.inv(w_T_psm2base) @ w_T_cam @ cam_T_psm2
     psm2_rel_pos, psm2_rel_quat = transformation_matrix_to_pose(psm2base_T_psm2)
-
-    g2_angles = get_jaw_gripper_angles(gripper2_command)
-    
+    g2_angle = np.interp(gripper2_command, [-1.0, 1.0], [-1.72, 1.06])
+    jaw_angle = 0.52359 / (1.06 + 1.72) * (g2_angle + 1.72)
+    g2_angles = np.array([-jaw_angle / 2, jaw_angle / 2])
     actions = np.concatenate([
-        psm1_joint_action[:6],     # arm joints
-        psm1_joint_action[6:8],    # model-controlled gripper
+        psm1_joint_action[:6],
+        psm1_joint_action[6:8],
         psm2_rel_pos,
         psm2_rel_quat,
-        g2_angles                  # teleop gripper
+        g2_angles
     ])
     return torch.tensor(actions, device=env.unwrapped.device).repeat(env.unwrapped.num_envs, 1)
 
+
+# def _compute_base_relative_action(env, psm1, psm2, jaw1, jaw2):
+#     """Helper to compute and return action tensor given PSMs and target jaw angles."""
+#     # Get world-frame tip poses
+#     psm1_tip_pos = psm1.data.body_link_pos_w[0][-1].cpu().numpy()
+#     psm1_tip_quat = psm1.data.body_link_quat_w[0][-1].cpu().numpy()
+#     psm2_tip_pos = psm2.data.body_link_pos_w[0][-1].cpu().numpy()
+#     psm2_tip_quat = psm2.data.body_link_quat_w[0][-1].cpu().numpy()
+#     world_T_psm1tip = pose_to_transformation_matrix(psm1_tip_pos, psm1_tip_quat)
+#     world_T_psm2tip = pose_to_transformation_matrix(psm2_tip_pos, psm2_tip_quat)
+
+#     # Get base transforms
+#     psm1_base_link_pos = psm1.data.body_link_pos_w[0][0].cpu().numpy()
+#     psm1_base_link_quat = psm1.data.body_link_quat_w[0][0].cpu().numpy()
+#     psm2_base_link_pos = psm2.data.body_link_pos_w[0][0].cpu().numpy()
+#     psm2_base_link_quat = psm2.data.body_link_quat_w[0][0].cpu().numpy()
+#     world_T_psm1_base = pose_to_transformation_matrix(psm1_base_link_pos, psm1_base_link_quat)
+#     world_T_psm2_base = pose_to_transformation_matrix(psm2_base_link_pos, psm2_base_link_quat)
+
+#     # Compute base-relative poses
+#     psm1_rel_pos, psm1_rel_quat = transformation_matrix_to_pose(np.linalg.inv(world_T_psm1_base) @ world_T_psm1tip)
+#     psm2_rel_pos, psm2_rel_quat = transformation_matrix_to_pose(np.linalg.inv(world_T_psm2_base) @ world_T_psm2tip)
+
+#     # Construct action tensor
+#     action_tensor = torch.tensor(
+#         np.concatenate([psm1_rel_pos, psm1_rel_quat, jaw1, psm2_rel_pos, psm2_rel_quat, jaw2], dtype=np.float32),
+#         device=env.unwrapped.device
+#     ).unsqueeze(0)
+
+#     return action_tensor
+
+# def open_jaws(env, psm1, psm2, target=1.04):
+#     """Open PSM jaws to match a target angle."""
+#     jaw_angle = 0.52359 / (1.06 + 1.72) * (target + 1.72)
+#     jaw1 = [-jaw_angle, jaw_angle]
+#     jaw2 = [-jaw_angle, jaw_angle]
+
+#     print(f"[INIT] Opening jaws to approximate MTM input: {target} → [{jaw1[0]:.3f}, {jaw1[1]:.3f}]")
+#     action_tensor = _compute_base_relative_action(env, psm1, psm2, jaw1=jaw1, jaw2=jaw2)
+#     for _ in range(30):
+#         env.step(action_tensor)
+#     print("[INIT] PSM2 jaws opened.")
 
 
 
@@ -129,6 +178,26 @@ def reset_psms_to_initial_pose(env, saved_psm1_joint_action,
 
 
 
+def reorient_mtm_to_match_psm_right_only(
+    mtm_manipulator, teleop_interface,
+    saved_psm2_tip_pos_w, saved_psm2_tip_quat_w,
+    cam_T_world
+):
+    print("[RESET] Reorienting **only MTMR** to match PSM2 tip pose...")
+
+    world_T_psm2tip = pose_to_transformation_matrix(saved_psm2_tip_pos_w, saved_psm2_tip_quat_w)
+    cam_T_psm2tip = cam_T_world @ world_T_psm2tip
+
+    hrsv_T_mtmr = teleop_interface.simpose2hrsvpose(cam_T_psm2tip)
+
+    mtm_manipulator.home()
+    time.sleep(2.0)
+    mtm_manipulator.adjust_orientation_right(hrsv_T_mtmr[:3, :3])
+
+    print("[RESET] MTMR reoriented.")
+
+
+
 def main():
     scale = args_cli.scale
     mtm_manipulator = MTMManipulator()
@@ -164,16 +233,16 @@ def main():
     psm1 = env.unwrapped.scene["robot_1"]
     psm2 = env.unwrapped.scene["robot_2"]
 
+    # open_jaws(env, psm1, psm2, target=0.8)
+
     was_in_mtm_clutch = True
     orientation_aligned = False
-    model_trigger_enabled = False
-    already_printed_model_trigger = False
+    model_triggered = False
+    printed_trigger = False
 
     # Initial pose cache
-    saved_psm1_tip_pos = None
-    saved_psm1_tip_quat = None 
-    saved_psm2_tip_pos = None
-    saved_psm2_tip_quat = None
+    saved_psm2_tip_pos_w = None
+    saved_psm2_tip_quat_w = None
 
     psm_name_dict = {
         "PSM1": "robot_1",
@@ -202,6 +271,10 @@ def main():
         if not orientation_aligned:
             align_mtm_orientation_once(mtm_manipulator, mtm_interface, psm2, cam_T_world)
             orientation_aligned = True
+            saved_psm1_tip_pos_w = psm1.data.body_link_pos_w[0][-1].cpu().numpy()
+            saved_psm1_tip_quat_w = psm1.data.body_link_quat_w[0][-1].cpu().numpy()
+            saved_psm2_tip_pos_w = psm2.data.body_link_pos_w[0][-1].cpu().numpy()
+            saved_psm2_tip_quat_w = psm2.data.body_link_quat_w[0][-1].cpu().numpy()
 
         psm1_base = pose_to_transformation_matrix(
             psm1.data.body_link_pos_w[0][0].cpu().numpy(),
@@ -238,53 +311,147 @@ def main():
             )
             cam_T_psm2tip = cam_T_world @ tip
 
+
+        if os.path.exists("reset_trigger.txt"):
+            print("[RESET] Detected reset trigger. Resetting cube and both PSMs...")
+
+            # Reset cube
+            cube_pos = [np.random.uniform(0.0, 0.1), np.random.uniform(-0.05, 0.05), 0.0]
+            cube_yaw = np.random.uniform(-np.pi, np.pi)
+            cube_quat = R.from_euler("z", cube_yaw).as_quat()
+            cube_ori = [cube_quat[3], cube_quat[0], cube_quat[1], cube_quat[2]]
+            reset_cube_pose(env, "teleop_logs/cube_latest", cube_pos, cube_ori)
+
+            # Recompute cam_T_world and base transforms
+            cam_pos = (camera_l.data.pos_w + camera_r.data.pos_w) / 2
+            cam_quat = camera_l.data.quat_w_world
+            world_T_cam = pose_to_transformation_matrix(cam_pos.cpu().numpy()[0], cam_quat.cpu().numpy()[0])
+            cam_T_world = np.linalg.inv(world_T_cam)
+
+            psm1_base = pose_to_transformation_matrix(
+                psm1.data.body_link_pos_w[0][0].cpu().numpy(),
+                psm1.data.body_link_quat_w[0][0].cpu().numpy()
+            )
+            psm2_base = pose_to_transformation_matrix(
+                psm2.data.body_link_pos_w[0][0].cpu().numpy(),
+                psm2.data.body_link_quat_w[0][0].cpu().numpy()
+            )
+
+            # Reset PSMs to saved poses
+            reset_psms_to_initial_pose(
+                env, saved_psm1_joint_action,
+                               saved_psm2_tip_pos_w, saved_psm2_tip_quat_w,
+                               psm2_base
+            )
+
+            # Reorient MTM
+            reorient_mtm_to_match_psm_right_only(
+                mtm_manipulator, mtm_interface,
+                saved_psm2_tip_pos_w, saved_psm2_tip_quat_w,
+                cam_T_world
+            )
+
+            # open_jaws(env, psm1, psm2, target=0.8)
+
+            # Reset clutch and state
+            was_in_mtm_clutch = True
+            orientation_aligned = False
+            model_triggered = False
+            printed_trigger = False
+
+            os.remove("reset_trigger.txt")
+
+            print("[RESET] Reset complete. Reclutch both inputs to resume.")
+            continue
+
+
         # Enable ACT control when model_trigger file appears
-        model_trigger_enabled |= os.path.exists(MODEL_TRIGGER_PATH)
-        if model_trigger_enabled and not already_printed_model_trigger:
+        # model_triggered |= os.path.exists(MODEL_TRIGGER_PATH)
+        # if model_triggered and not printed_trigger:
+        #     print("[MODEL] Trigger detected. Starting ACT control of PSM1.")
+        #     printed_trigger = True
+        #     try: os.remove(MODEL_TRIGGER_PATH)
+        #     except Exception as e: print(f"[MODEL] Failed to remove trigger file: {e}")
+
+        # if model_triggered:
+        #     psm1_q = psm1.data.joint_pos[0].cpu().numpy()
+        #     psm2_q = psm2.data.joint_pos[0].cpu().numpy()
+        #     jaw1, jaw2 = get_jaw_angle(psm1_q), get_jaw_angle(psm2_q)
+        #     model_input = np.concatenate([psm1_q[:-2], [jaw1], psm2_q[:-2], [jaw2]])
+        #     imgs = np.stack([camera_l.data.output["rgb"][0].cpu().numpy(), camera_r.data.output["rgb"][0].cpu().numpy()]) / 255.0
+        #     act = controller.step(imgs, model_input)
+        #     jaw = act[6]
+        #     psm1_act = np.concatenate([act[:6], [-jaw / 2, jaw / 2]])
+        # else:
+        #     psm1_act = saved_psm1_joint_action
+
+        # psm2_base = pose_to_transformation_matrix(
+        #     psm2.data.body_link_pos_w[0][0].cpu().numpy(),
+        #     psm2.data.body_link_quat_w[0][0].cpu().numpy()
+        # )
+
+        # actions = process_actions(psm1_act, cam_T_psm2tip, psm2_base, world_T_cam, r_gripper_joint, env)
+        # env.step(actions)
+        # time.sleep(max(0.0, 1/200.0 - (time.time() - start_time)))
+
+        # Enable ACT control when model_trigger file appears
+        model_triggered |= os.path.exists(MODEL_TRIGGER_PATH)
+        if model_triggered and not printed_trigger:
             print("[MODEL] Trigger detected. Starting ACT control of PSM1.")
-            already_printed_model_trigger = True
+            printed_trigger = True
             try:
                 os.remove(MODEL_TRIGGER_PATH)
-                print("[MODEL] Trigger file removed after activation.")
             except Exception as e:
                 print(f"[MODEL] Failed to remove trigger file: {e}")
 
-        if model_trigger_enabled:
-            psm1_obs = {
-                "qpos": psm1.data.joint_pos[0].cpu().numpy(),
-                "images": np.stack([
+        # Process ACT or fallback to teleop
+        if model_triggered:
+            try:
+                psm1_q = psm1.data.joint_pos[0].cpu().numpy()
+                psm2_q = psm2.data.joint_pos[0].cpu().numpy()
+                jaw1, jaw2 = get_jaw_angle(psm1_q), get_jaw_angle(psm2_q)
+                model_input = np.concatenate([psm1_q[:-2], [jaw1], psm2_q[:-2], [jaw2]])
+                imgs = np.stack([
                     camera_l.data.output["rgb"][0].cpu().numpy(),
                     camera_r.data.output["rgb"][0].cpu().numpy()
                 ]) / 255.0
-            }
-            psm1_act = controller.step(psm1_obs["images"], psm1_obs["qpos"])
+                act = controller.step(imgs, model_input)
+                jaw = act[6]
+                psm1_act = np.concatenate([act[:6], [-jaw / 2, jaw / 2]])
+                last_psm1_act = psm1_act  # cache for freezing
+            except RuntimeError as e:
+                if "Rollout was already completed" in str(e):
+                    if printed_trigger:
+                        print("[MODEL] ACT rollout completed. Freezing PSM1 at last pose.")
+                        printed_trigger = False  # print once
+                    psm1_act = last_psm1_act  # freeze at last pose
+                else:
+                    raise
         else:
             psm1_act = saved_psm1_joint_action
 
+        # Always update PSM2 action based on MTMR teleop
         psm2_base = pose_to_transformation_matrix(
             psm2.data.body_link_pos_w[0][0].cpu().numpy(),
             psm2.data.body_link_quat_w[0][0].cpu().numpy()
         )
 
-        actions = process_actions(
-            psm1_joint_action=psm1_act,
-            cam_T_psm2=cam_T_psm2tip,
-            w_T_psm2base=psm2_base,
-            w_T_cam=world_T_cam,
-            gripper2_command=r_gripper_joint,
-            env=env
-        )
-
-
-
+        actions = process_actions(psm1_act, cam_T_psm2tip, psm2_base, world_T_cam, r_gripper_joint, env)
         env.step(actions)
+        time.sleep(max(0.0, 1 / 200.0 - (time.time() - start_time)))
 
-        elapsed = time.time() - start_time
-        time.sleep(max(0.0, (1 / 200.0) - elapsed))
 
-    env.close()
+    # Clean up the trigger files but do not close env or simulation
     if os.path.exists(args_cli.log_trigger_file):
         os.remove(args_cli.log_trigger_file)
+    if os.path.exists(MODEL_TRIGGER_PATH):
+        os.remove(MODEL_TRIGGER_PATH)
+
+    print("[INFO] Rollout complete. Simulation is still running. Press Ctrl+C to exit.")
+
+    # Idle loop to keep the app alive
+    while simulation_app.is_running():
+        time.sleep(0.1)
 
 
 

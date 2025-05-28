@@ -109,18 +109,18 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
                 rot=(1.0, 0.0, 0.0, 0.0),
             ),
             spawn=sim_utils.CuboidCfg(
-                size=(0.04, 0.003, 0.004),
+                size=(0.03, 0.004, 0.004),
                 rigid_props=sim_utils.RigidBodyPropertiesCfg(
-                    linear_damping=0.3,
-                    angular_damping=0.3,
-                    solver_position_iteration_count=60,
-                    solver_velocity_iteration_count=20,
+                    linear_damping=0.05,
+                    angular_damping=0.05,
+                    solver_position_iteration_count=30,
+                    solver_velocity_iteration_count=10,
                 ),
                 mass_props=sim_utils.MassPropertiesCfg(
-                    mass=0.2,
+                    mass=0.03,
                 ),
                 collision_props=sim_utils.CollisionPropertiesCfg(
-                    contact_offset=0.01,
+                    contact_offset=0.005,
                     rest_offset=-0.001,
                 ),
                 visual_material=PreviewSurfaceCfg(
@@ -130,8 +130,8 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
                     opacity=1.0,
                 ),
                 physics_material=sim_utils.RigidBodyMaterialCfg(
-                    static_friction=5.0,
-                    dynamic_friction=5.0,
+                    static_friction=3.0,
+                    dynamic_friction=3.0,
                     restitution=0.0,
                 ),
             )

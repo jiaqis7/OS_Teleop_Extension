@@ -25,12 +25,6 @@ def reset_cube_pose(env, log_dir, position, orientation, cube_key="cube_rigid"):
     root_state[:, 7:13] = 0.0  # zero velocities
     cube.write_root_state_to_sim(root_state)
 
-    # # Save latest pose (for debugging or reference)
-    # Path(log_dir).mkdir(parents=True, exist_ok=True)
-    # cube_pose = {"position": list(position), "orientation": list(orientation)}
-    # with open(os.path.join(log_dir, "pose.json"), "w") as f:
-    #     json.dump(cube_pose, f, indent=4)
-
     print(f"[RESET] Cube pose applied: pos={position}, ori={orientation}")
 
 
