@@ -156,7 +156,7 @@ class RingBuffer:
 
 
 class TeleopLogger:
-    def __init__(self, trigger_file, psm_name_dict, log_duration=30.0):
+    def __init__(self, trigger_file, psm_name_dict, log_duration=60.0):
         self.trigger_file = trigger_file
         self.psm_name_dict = psm_name_dict
         self.log_duration = log_duration

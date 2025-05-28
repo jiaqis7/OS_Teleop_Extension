@@ -2,12 +2,6 @@ import argparse
 
 from omni.isaac.lab.app import AppLauncher
 
-AppLauncher.add_app_launcher_args(parser)
-args_cli = parser.parse_args()
-
-# launch omniverse app
-app_launcher = AppLauncher(args_cli)
-simulation_app = app_launcher.app
 
 from teleop_logger import TeleopLogger, log_current_pose, reset_cube_pose
 
@@ -22,6 +16,14 @@ parser.add_argument("--enable_logging", action="store_true")
 parser.add_argument("--log_trigger_file", type=str, default="log_trigger.txt")
 parser.add_argument("--disable_viewport", action="store_true")
 parser.add_argument("--demo_name", type=str, default=None)
+
+AppLauncher.add_app_launcher_args(parser)
+args_cli = parser.parse_args()
+
+# launch omniverse app
+app_launcher = AppLauncher(args_cli)
+simulation_app = app_launcher.app
+
 
 import gymnasium as gym
 import torch
@@ -70,26 +72,8 @@ def process_actions(cam_T_psm1, w_T_psm1base, cam_T_psm2, w_T_psm2base, w_T_cam,
         psm2_rel_pos, psm2_rel_quat, get_jaw_gripper_angles(gripper2_command, 'robot_2')
     ])
     return torch.tensor(actions, device=env.unwrapped.device).repeat(env.unwrapped.num_envs, 1)
-    if po_waiting_for_clutch:
-        print("[INFO] PO re-clutched after reset.")
-        po_waiting_for_clutch = False
-    if was_in_po_clutch:
-        init_stylus_pos = stylus_pose[:3]
-        init_psm3_tip_pos = (cam_T_world @ pose_to_transformation_matrix(
-            psm3.data.body_link_pos_w[0][-1].cpu().numpy(),
-            psm3.data.body_link_quat_w[0][-1].cpu().numpy()
-        ))[:3, 3]
-    p3_target = init_psm3_tip_pos + (stylus_pose[:3] - init_stylus_pos) * scale
-    cam_T_psm3 = pose_to_transformation_matrix(p3_target, po_q)
-    was_in_po_clutch = False
-else:
-    if not was_in_po_clutch:
-        print("[INFO] PO clutch pressed. Resuming teleoperation.")
-    was_in_po_clutch = True
-    cam_T_psm3 = cam_T_world @ pose_to_transformation_matrix(
-        psm3.data.body_link_pos_w[0][-1].cpu().numpy(),
-        psm3.data.body_link_quat_w[0][-1].cpu().numpy()
-    )
+
+
 
 
 def align_mtm_orientation_once(mtm_manipulator, mtm_interface, psm2, cam_T_world):

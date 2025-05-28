@@ -109,7 +109,7 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
                 rot=(1.0, 0.0, 0.0, 0.0),
             ),
             spawn=sim_utils.CuboidCfg(
-                size=(0.04, 0.004, 0.004),
+                size=(0.04, 0.003, 0.004),
                 rigid_props=sim_utils.RigidBodyPropertiesCfg(
                     linear_damping=0.3,
                     angular_damping=0.3,
@@ -121,7 +121,7 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
                 ),
                 collision_props=sim_utils.CollisionPropertiesCfg(
                     contact_offset=0.01,
-                    rest_offset=0.0,
+                    rest_offset=-0.001,
                 ),
                 visual_material=PreviewSurfaceCfg(
                     diffuse_color=(0.8, 0.0, 0.0),
