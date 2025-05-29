@@ -1,3 +1,6 @@
 [submodule "third_party/AdaptACT"]
 	path = third_party/AdaptACT
 	url = git@github.com:ZooeyHe/Adapt-ACT.git
+[submodule "third_party/Adapt-ACT"]
+	path = third_party/Adapt-ACT
+	url = git@github.com:ZooeyHe/Adapt-ACT.git
