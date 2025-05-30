@@ -320,11 +320,38 @@ def main():
         if os.path.exists("reset_trigger.txt"):
             print("[RESET] Trigger detected. Resetting cube and all PSMs...")
 
-            cube_pos = [np.random.uniform(-0.01, 0.01), np.random.uniform(-0.02, 0.02), 0.0]
-            cube_yaw = np.random.uniform(-np.pi/6, np.pi/6)
-            cube_quat = R.from_euler("z", cube_yaw).as_quat()
-            cube_ori = [cube_quat[3], cube_quat[0], cube_quat[1], cube_quat[2]]
-            reset_cube_pose(env, "teleop_logs/cube_latest", cube_pos, cube_ori)
+            cube_pos1 = [np.random.uniform(-0.01, 0.01), np.random.uniform(-0.01, 0.01), 0.0]
+            cube_yaw1 = np.random.uniform(-np.pi/2, np.pi/2)
+            cube_quat1 = R.from_euler("z", cube_yaw1).as_quat()
+            cube_ori1 = [cube_quat1[3], cube_quat1[0], cube_quat1[1], cube_quat1[2]]
+            reset_cube_pose(env, "teleop_logs/cube_latest_1", cube_pos1, cube_ori1)
+
+
+            # Reset Cube 2
+            cube_pos2 = [np.random.uniform(0.045, 0.055), np.random.uniform(0.0, 0.03), 0.0]
+            cube_yaw2 = np.random.uniform(-np.pi / 2, np.pi / 2)
+            cube_quat2 = R.from_euler("z", cube_yaw2).as_quat()
+            cube_ori2 = [cube_quat2[3], cube_quat2[0], cube_quat2[1], cube_quat2[2]]
+            reset_cube_pose(env, "teleop_logs/cube_latest_2", cube_pos2, cube_ori2, cube_key="cube_rigid_2")
+
+            # Reset Cube 3
+            cube_pos3 = [np.random.uniform(-0.055, -0.045), np.random.uniform(0.0, 0.03), 0.0]
+            cube_yaw3 = np.random.uniform(-np.pi / 2, np.pi / 2)
+            cube_quat3 = R.from_euler("z", cube_yaw3).as_quat()
+            cube_ori3 = [cube_quat3[3], cube_quat3[0], cube_quat3[1], cube_quat3[2]]
+            reset_cube_pose(env, "teleop_logs/cube_latest_3", cube_pos3, cube_ori3, cube_key="cube_rigid_3")
+
+
+            cube_pos4 = [np.random.uniform(0.0, 0.0), np.random.uniform(0.055, 0.055), 0.0]
+            cube_yaw4 = np.random.uniform(0, 0)
+            cube_quat4 = R.from_euler("z", cube_yaw4).as_quat()
+            cube_ori4 = [cube_quat4[3], cube_quat4[0], cube_quat4[1], cube_quat4[2]]
+            reset_cube_pose(env, "teleop_logs/cube_latest_4", cube_pos4, cube_ori4, cube_key="cube_rigid_4")
+
+
+
+
+
 
             reset_psms_to_initial_pose(env, saved_tips, world_T_b, num_steps=30)
 

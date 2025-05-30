@@ -40,7 +40,10 @@ def main():
 
     # Load cube pose from JSON and reset
     json_path = os.path.join(os.path.dirname(args_cli.csv_file), "pose.json")
-    reset_cube_pose_from_json(env, json_path, cube_key="cube_rigid")  # or cube_deformable
+    # reset_cube_pose_from_json(env, json_path, cube_key="cube_rigid")  # or cube_deformable
+
+    reset_cube_pose_from_json(env, json_path)
+
 
     # Load CSV data
     df = pd.read_csv(args_cli.csv_file)

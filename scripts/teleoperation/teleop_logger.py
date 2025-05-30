@@ -15,7 +15,7 @@ import re
 import glob
 
 
-def reset_cube_pose(env, log_dir, position, orientation, cube_key="cube_rigid"):
+def reset_cube_pose(env, log_dir, position, orientation, cube_key="cube_rigid_1"):
     cube = env.scene[cube_key]
     device = cube.data.root_state_w.device
 
@@ -29,42 +29,8 @@ def reset_cube_pose(env, log_dir, position, orientation, cube_key="cube_rigid"):
 
 
 
-def log_current_pose(env, log_dir, cube_key="cube_rigid"):
-    cube = env.scene[cube_key]
-    pos = cube.data.root_pos_w[0].cpu().numpy().tolist()
-    quat = cube.data.root_quat_w[0].cpu().numpy().tolist()
-
-    # Also log world-frame tip pose of both PSMs
-    psm1 = env.scene["robot_1"]
-    psm2 = env.scene["robot_2"]
-    psm3 = env.scene["robot_3"]
-
-    psm1_tip_pos = psm1.data.body_link_pos_w[0][-1].cpu().numpy().tolist()
-    psm1_tip_quat = psm1.data.body_link_quat_w[0][-1].cpu().numpy().tolist()
-
-    psm2_tip_pos = psm2.data.body_link_pos_w[0][-1].cpu().numpy().tolist()
-    psm2_tip_quat = psm2.data.body_link_quat_w[0][-1].cpu().numpy().tolist()
-
-    psm3_tip_pos = psm3.data.body_link_pos_w[0][-1].cpu().numpy().tolist()
-    psm3_tip_quat = psm3.data.body_link_quat_w[0][-1].cpu().numpy().tolist()
-
+def log_current_pose(env, log_dir, cube_keys=["cube_rigid_1", "cube_rigid_2", "cube_rigid_3", "cube_rigid_4"]):
     log_data = {
-        "cube": {
-            "position": pos,
-            "orientation": quat
-        },
-        "robot_1_tip": {
-            "position": psm1_tip_pos,
-            "orientation": psm1_tip_quat
-        },
-        "robot_2_tip": {
-            "position": psm2_tip_pos,
-            "orientation": psm2_tip_quat
-        },
-        "robot_3_tip": {
-            "position": psm3_tip_pos,
-            "orientation": psm3_tip_quat
-        },
         "meta": {
             "arm_names": ["PSM1", "PSM2", "PSM3"],
             "teleop1_connection": "MTML-PSM1",
@@ -77,50 +43,91 @@ def log_current_pose(env, log_dir, cube_key="cube_rigid"):
         }
     }
 
-    Path(log_dir).mkdir(parents=True, exist_ok=True)
+    # Get scene object properly
+    scene = env.unwrapped.scene if hasattr(env, 'unwrapped') else env.scene
+
+    # Log cube poses separately
+    for cube_key in cube_keys:
+        cube = scene[cube_key]
+        pos = cube.data.root_pos_w[0].cpu().numpy().tolist()
+        quat = cube.data.root_quat_w[0].cpu().numpy().tolist()
+        log_data[cube_key] = {
+            "position": pos,
+            "orientation": quat
+        }
+
+    # Log robot tip poses
+    psm1 = scene["robot_1"]
+    psm2 = scene["robot_2"]
+    psm3 = scene["robot_3"]
+
+    log_data["robot_1_tip"] = {
+        "position": psm1.data.body_link_pos_w[0][-1].cpu().numpy().tolist(),
+        "orientation": psm1.data.body_link_quat_w[0][-1].cpu().numpy().tolist()
+    }
+    log_data["robot_2_tip"] = {
+        "position": psm2.data.body_link_pos_w[0][-1].cpu().numpy().tolist(),
+        "orientation": psm2.data.body_link_quat_w[0][-1].cpu().numpy().tolist()
+    }
+    log_data["robot_3_tip"] = {
+        "position": psm3.data.body_link_pos_w[0][-1].cpu().numpy().tolist(),
+        "orientation": psm3.data.body_link_quat_w[0][-1].cpu().numpy().tolist()
+    }
+
+    os.makedirs(log_dir, exist_ok=True)
     json_path = os.path.join(log_dir, "pose.json")
     with open(json_path, "w") as f:
         json.dump(log_data, f, indent=4)
 
-    print(f"[LOG] Logged current cube and robot tip poses to {json_path}")
+    print(f"[LOG] Logged cube and robot tip poses to {json_path}")
 
 
-def reset_cube_pose_from_json(env, json_path, cube_key="cube_rigid"):
+
+
+def reset_cube_pose_from_json(env, json_path):
     """
-    Reset the cube in the simulation to the pose stored in a JSON file.
+    Reset cube_rigid_1 to cube_rigid_4 in the simulation to the poses stored in a JSON file.
+    Now works with JSON files where cube poses are stored at the top level.
 
     :param env: Isaac Lab environment.
-    :param json_path: Path to the JSON file with "cube", "robot_1_tip", "robot_2_tip" keys.
-    :param cube_key: Key for the cube in the scene dictionary (e.g., "cube_rigid" or "cube_deformable").
+    :param json_path: Path to the JSON file with cube poses stored at top level.
     """
     if not os.path.exists(json_path):
-        print(f"[WARNING] cube_pose.json not found at {json_path}. Skipping reset.")
+        print(f"[WARNING] pose.json not found at {json_path}. Skipping reset.")
         return
 
     with open(json_path, "r") as f:
         pose_data = json.load(f)
 
-    cube_pose = pose_data.get("cube", None)
-    if cube_pose is None:
-        print(f"[WARNING] 'cube' key not found in {json_path}. Skipping reset.")
-        return
+    # Get the scene object using the recommended approach
+    scene = env.unwrapped.scene if hasattr(env, 'unwrapped') else env.scene
 
-    position = cube_pose["position"]
-    orientation = cube_pose["orientation"]
+    # Get all available entities in the scene
+    scene_entities = list(scene.keys())  # This gets all available entity keys
 
-    cube = env.unwrapped.scene[cube_key]
-    device = cube.data.root_state_w.device
-    root_state = cube.data.root_state_w.clone()
+    for cube_key in ["cube_rigid_1", "cube_rigid_2", "cube_rigid_3", "cube_rigid_4"]:
+        # Check if cube exists in scene by looking in the list of entities
+        if cube_key not in scene_entities:
+            print(f"[WARNING] Cube '{cube_key}' not found in scene. Available entities: {scene_entities}. Skipping.")
+            continue
+        if cube_key not in pose_data:
+            print(f"[WARNING] Cube '{cube_key}' not found in JSON. Skipping.")
+            continue
 
-    root_state[:, 0:3] = torch.tensor(position, dtype=torch.float32, device=device)
-    root_state[:, 3:7] = torch.tensor(orientation, dtype=torch.float32, device=device)
-    root_state[:, 7:13] = 0.0  # zero velocities
+        cube_pose = pose_data[cube_key]
+        position = cube_pose["position"]
+        orientation = cube_pose["orientation"]
 
-    cube.write_root_state_to_sim(root_state)
+        cube = scene[cube_key]
+        device = cube.data.root_state_w.device
+        root_state = cube.data.root_state_w.clone()
 
-    print(f"[RESET] Cube pose loaded from JSON and applied: {json_path}")
+        root_state[:, 0:3] = torch.tensor(position, dtype=torch.float32, device=device)
+        root_state[:, 3:7] = torch.tensor(orientation, dtype=torch.float32, device=device)
+        root_state[:, 7:13] = 0.0  # zero linear and angular velocities
 
-
+        cube.write_root_state_to_sim(root_state)
+        print(f"[RESET] Cube '{cube_key}' reset to pose from JSON.")
 
 
 class RingBuffer:

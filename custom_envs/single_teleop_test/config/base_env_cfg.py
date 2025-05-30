@@ -102,14 +102,14 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
 
 
         # Define the cube and register it to the scene
-        self.scene.cube_rigid = RigidObjectCfg(
+        self.scene.cube_rigid_1 = RigidObjectCfg(
             prim_path="/World/Objects/CubeRigid",
             init_state=RigidObjectCfg.InitialStateCfg(
                 pos=(0.0, 0.0, 0.0),
                 rot=(1.0, 0.0, 0.0, 0.0),
             ),
             spawn=sim_utils.CuboidCfg(
-                size=(0.03, 0.003, 0.004),
+                size=(0.03, 0.004, 0.004),
                 rigid_props=sim_utils.RigidBodyPropertiesCfg(
                     linear_damping=0.05,
                     angular_damping=0.05,
