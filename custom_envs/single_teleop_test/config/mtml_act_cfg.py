@@ -1,3 +1,4 @@
+import global_cfg
 from omni.isaac.lab.controllers.differential_ik_cfg import DifferentialIKControllerCfg
 from omni.isaac.lab.envs.mdp.actions.actions_cfg import DifferentialInverseKinematicsActionCfg, JointPositionActionCfg
 from omni.isaac.lab.utils import configclass
@@ -17,6 +18,8 @@ class MTMLACTEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
         # post init of parent
         super().__post_init__()
 
+        model_control = global_cfg.model_control
+
         # Set PSM as robot
         # We switch here to a stiffer PD controller for IK tracking to be better.
         self.scene.robot_1 = PSM_FAST_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot_1")
@@ -32,33 +35,72 @@ class MTMLACTEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
         self.scene.robot_3 = None
         # Set actions for the specific robot type (PSM)
 
-        self.actions.arm_1_action = JointPositionActionCfg(
-            asset_name="robot_1",
-            joint_names=[
-                "psm_yaw_joint",
-                "psm_pitch_end_joint",
-                "psm_main_insertion_joint",
-                "psm_tool_roll_joint",
-                "psm_tool_pitch_joint",
-                "psm_tool_yaw_joint",
-            ],
-            scale=1.0,
-            use_default_offset=False,
-        )
+        
+        psm_joint_names = [
+            "psm_yaw_joint",
+            "psm_pitch_end_joint",
+            "psm_main_insertion_joint",
+            "psm_tool_roll_joint",
+            "psm_tool_pitch_joint",
+            "psm_tool_yaw_joint",
+        ]
 
-        self.actions.arm_2_action = DifferentialInverseKinematicsActionCfg(
-            asset_name="robot_2",
-            joint_names=[
-                "psm_yaw_joint",
-                "psm_pitch_end_joint",
-                "psm_main_insertion_joint",
-                "psm_tool_roll_joint",
-                "psm_tool_pitch_joint",
-                "psm_tool_yaw_joint",
-            ],
-            body_name="psm_tool_tip_link",
-            controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=False, ik_method="dls"),
-        )
+        if model_control == "psm1":
+            self.actions.arm_1_action = JointPositionActionCfg(
+                asset_name="robot_1",
+                joint_names=psm_joint_names,
+                scale=1.0,
+                use_default_offset=False,
+            )
+            self.actions.arm_2_action = DifferentialInverseKinematicsActionCfg(
+                asset_name="robot_2",
+                joint_names=psm_joint_names,
+                body_name="psm_tool_tip_link",
+                controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=False, ik_method="dls"),
+            )
+
+        elif model_control == "psm2":
+            self.actions.arm_1_action = DifferentialInverseKinematicsActionCfg(
+                asset_name="robot_1",
+                joint_names=psm_joint_names,
+                body_name="psm_tool_tip_link",
+                controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=False, ik_method="dls"),
+            )
+            self.actions.arm_2_action = JointPositionActionCfg(
+                asset_name="robot_2",
+                joint_names=psm_joint_names,
+                scale=1.0,
+                use_default_offset=False,
+            )
+
+        elif model_control == "both":
+            self.actions.arm_1_action = JointPositionActionCfg(
+                asset_name="robot_1",
+                joint_names=psm_joint_names,
+                scale=1.0,
+                use_default_offset=False,
+            )
+            self.actions.arm_2_action = JointPositionActionCfg(
+                asset_name="robot_2",
+                joint_names=psm_joint_names,
+                scale=1.0,
+                use_default_offset=False,
+            )
+
+        else:  # model_control == "none"
+            self.actions.arm_1_action = DifferentialInverseKinematicsActionCfg(
+                asset_name="robot_1",
+                joint_names=psm_joint_names,
+                body_name="psm_tool_tip_link",
+                controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=False, ik_method="dls"),
+            )
+            self.actions.arm_2_action = DifferentialInverseKinematicsActionCfg(
+                asset_name="robot_2",
+                joint_names=psm_joint_names,
+                body_name="psm_tool_tip_link",
+                controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=False, ik_method="dls"),
+            )
+
 
         self.actions.gripper_1_action = mdp.JointPositionActionCfg(
             asset_name="robot_1",
