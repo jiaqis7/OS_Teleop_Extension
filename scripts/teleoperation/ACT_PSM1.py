@@ -93,7 +93,6 @@ def get_jaw_angle(joint_pos):
     return abs(joint_pos[-2]) + abs(joint_pos[-1])
 
 
-
 def process_actions_psm1(psm1_joint_action, cam_T_psm2, w_T_psm2base, w_T_cam, gripper2_command, env):
     psm2base_T_psm2 = np.linalg.inv(w_T_psm2base) @ w_T_cam @ cam_T_psm2
     psm2_rel_pos, psm2_rel_quat = transformation_matrix_to_pose(psm2base_T_psm2)
@@ -260,6 +259,103 @@ def reorient_mtm_to_match_psm(
     print("[RESET] MTMR reoriented.")
 
 
+# def _compute_base_relative_action_psm1(env, psm1, psm2, jaw1, jaw2):
+#     """Helper to compute and return action tensor given PSMs and target jaw angles."""
+#     # Get world-frame tip poses
+#     psm1_tip_pos = psm1.data.body_link_pos_w[0][-1].cpu().numpy()
+#     psm1_tip_quat = psm1.data.body_link_quat_w[0][-1].cpu().numpy()
+#     psm2_tip_pos = psm2.data.body_link_pos_w[0][-1].cpu().numpy()
+#     psm2_tip_quat = psm2.data.body_link_quat_w[0][-1].cpu().numpy()
+#     world_T_psm1tip = pose_to_transformation_matrix(psm1_tip_pos, psm1_tip_quat)
+#     world_T_psm2tip = pose_to_transformation_matrix(psm2_tip_pos, psm2_tip_quat)
+
+#     # Get base transforms
+#     psm1_base_link_pos = psm1.data.body_link_pos_w[0][0].cpu().numpy()
+#     psm1_base_link_quat = psm1.data.body_link_quat_w[0][0].cpu().numpy()
+#     psm2_base_link_pos = psm2.data.body_link_pos_w[0][0].cpu().numpy()
+#     psm2_base_link_quat = psm2.data.body_link_quat_w[0][0].cpu().numpy()
+#     world_T_psm1_base = pose_to_transformation_matrix(psm1_base_link_pos, psm1_base_link_quat)
+#     world_T_psm2_base = pose_to_transformation_matrix(psm2_base_link_pos, psm2_base_link_quat)
+
+#     # Compute base-relative poses
+#     psm1_rel_pos, psm1_rel_quat = transformation_matrix_to_pose(np.linalg.inv(world_T_psm1_base) @ world_T_psm1tip)
+#     psm2_rel_pos, psm2_rel_quat = transformation_matrix_to_pose(np.linalg.inv(world_T_psm2_base) @ world_T_psm2tip)
+
+#     psm1_joint_action = psm1.data.joint_pos[0][:6].cpu().numpy()
+
+#     # Construct action tensor
+#     action_tensor = torch.tensor(
+#         np.concatenate([psm1_joint_action, jaw1, psm2_rel_pos, psm2_rel_quat, jaw2], dtype=np.float32),
+#         device=env.unwrapped.device
+#     ).unsqueeze(0)
+
+#     return action_tensor
+
+# def _compute_base_relative_action_psm2(env, psm1, psm2, jaw1, jaw2):
+#     """Helper to compute and return action tensor given PSMs and target jaw angles."""
+#     # Get world-frame tip poses
+#     psm1_tip_pos = psm1.data.body_link_pos_w[0][-1].cpu().numpy()
+#     psm1_tip_quat = psm1.data.body_link_quat_w[0][-1].cpu().numpy()
+#     psm2_tip_pos = psm2.data.body_link_pos_w[0][-1].cpu().numpy()
+#     psm2_tip_quat = psm2.data.body_link_quat_w[0][-1].cpu().numpy()
+#     world_T_psm1tip = pose_to_transformation_matrix(psm1_tip_pos, psm1_tip_quat)
+#     world_T_psm2tip = pose_to_transformation_matrix(psm2_tip_pos, psm2_tip_quat)
+
+#     # Get base transforms
+#     psm1_base_link_pos = psm1.data.body_link_pos_w[0][0].cpu().numpy()
+#     psm1_base_link_quat = psm1.data.body_link_quat_w[0][0].cpu().numpy()
+#     psm2_base_link_pos = psm2.data.body_link_pos_w[0][0].cpu().numpy()
+#     psm2_base_link_quat = psm2.data.body_link_quat_w[0][0].cpu().numpy()
+#     world_T_psm1_base = pose_to_transformation_matrix(psm1_base_link_pos, psm1_base_link_quat)
+#     world_T_psm2_base = pose_to_transformation_matrix(psm2_base_link_pos, psm2_base_link_quat)
+
+#     # Compute base-relative poses
+#     psm1_rel_pos, psm1_rel_quat = transformation_matrix_to_pose(np.linalg.inv(world_T_psm1_base) @ world_T_psm1tip)
+#     psm2_rel_pos, psm2_rel_quat = transformation_matrix_to_pose(np.linalg.inv(world_T_psm2_base) @ world_T_psm2tip)
+
+#     psm2_joint_action = psm2.data.joint_pos[0][:6].cpu().numpy()
+
+#     # Construct action tensor
+#     action_tensor = torch.tensor(
+#         np.concatenate([psm1_rel_pos, psm1_rel_quat, jaw1, psm2_joint_action, jaw2], dtype=np.float32),
+#         device=env.unwrapped.device
+#     ).unsqueeze(0)
+
+#     return action_tensor
+
+# def _compute_base_relative_action_both(env, psm1, psm2, jaw1, jaw2):
+#     """Helper to compute and return action tensor given PSMs and target jaw angles."""
+    
+#     psm1_joint_action = psm1.data.joint_pos[0][:6].cpu().numpy()
+#     psm2_joint_action = psm2.data.joint_pos[0][:6].cpu().numpy()
+
+#     # Construct action tensor
+#     action_tensor = torch.tensor(
+#         np.concatenate([psm1_joint_action, jaw1, psm2_joint_action, jaw2], dtype=np.float32),
+#         device=env.unwrapped.device
+#     ).unsqueeze(0)
+
+#     return action_tensor
+
+# def open_jaws(env, psm1, psm2, target=1.04):
+#     """Open PSM jaws to match a target angle."""
+#     jaw_angle = 0.52359 / (1.06 + 1.72) * (target + 1.72)
+#     jaw1 = [-jaw_angle, jaw_angle]
+#     jaw2 = [-jaw_angle, jaw_angle]
+
+#     print(f"[INIT] Opening jaws to approximate MTM input: {target} → [{jaw1[0]:.3f}, {jaw1[1]:.3f}]")
+#     if global_cfg.model_control == "psm1":
+#         action_tensor = _compute_base_relative_action_psm1(env, psm1, psm2, jaw1=jaw1, jaw2=jaw2)
+#     elif global_cfg.model_control == "psm2":
+#         action_tensor = _compute_base_relative_action_psm2(env, psm1, psm2, jaw1=jaw1, jaw2=jaw2)
+#     elif global_cfg.model_control == "both":
+#         action_tensor = _compute_base_relative_action_both(env, psm1, psm2, jaw1=jaw1, jaw2=jaw2)
+
+#     for _ in range(30):
+#         env.step(action_tensor)
+#     print("[INIT] PSM jaws opened.")
+
+
 
 def main():
     scale = args_cli.scale
@@ -296,7 +392,7 @@ def main():
     psm1 = env.unwrapped.scene["robot_1"]
     psm2 = env.unwrapped.scene["robot_2"]
 
-    # open_jaws(env, psm1, psm2, target=0.8)
+
 
     was_in_mtm_clutch = True
     orientation_aligned = False
@@ -341,6 +437,7 @@ def main():
             saved_psm1_tip_quat_w = psm1.data.body_link_quat_w[0][-1].cpu().numpy()
             saved_psm2_tip_pos_w = psm2.data.body_link_pos_w[0][-1].cpu().numpy()
             saved_psm2_tip_quat_w = psm2.data.body_link_quat_w[0][-1].cpu().numpy()
+            # open_jaws(env, psm1, psm2, target=0.8)
 
         psm1_base = pose_to_transformation_matrix(
             psm1.data.body_link_pos_w[0][0].cpu().numpy(),
@@ -404,7 +501,7 @@ def main():
             print("[RESET] Detected reset trigger. Resetting cube and both PSMs...")
 
             # Reset cube
-            cube_pos = [np.random.uniform(0.0, 0.1), np.random.uniform(-0.05, 0.05), 0.0]
+            cube_pos = [np.random.uniform(0.0, 0.05), np.random.uniform(-0.025, 0.025), 0.0]
             cube_yaw = np.random.uniform(-np.pi, np.pi)
             cube_quat = R.from_euler("z", cube_yaw).as_quat()
             cube_ori = [cube_quat[3], cube_quat[0], cube_quat[1], cube_quat[2]]
@@ -470,6 +567,8 @@ def main():
                     saved_psm2_tip_pos_w, saved_psm2_tip_quat_w,
                     cam_T_world
                 )
+
+            # open_jaws(env, psm1, psm2, target=0.8)
 
 
             # Reset clutch and state

@@ -109,7 +109,7 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
                 rot=(1.0, 0.0, 0.0, 0.0),
             ),
             spawn=sim_utils.CuboidCfg(
-                size=(0.03, 0.004, 0.004),
+                size=(0.03, 0.003, 0.004),
                 rigid_props=sim_utils.RigidBodyPropertiesCfg(
                     linear_damping=0.05,
                     angular_damping=0.05,
