@@ -1,7 +1,7 @@
 import argparse
 
 from omni.isaac.lab.app import AppLauncher
-from teleop_logger import TeleopLogger
+from scripts.teleoperation.teleop_logger_3_arm import TeleopLogger
 
 
 # add argparse arguments
@@ -61,7 +61,7 @@ sys.path.append(os.path.abspath("."))
 from teleop_interface.MTM.se3_mtm import MTMTeleop
 from teleop_interface.MTM.mtm_manipulator import MTMManipulator
 import custom_envs
-from teleop_logger import reset_cube_pose, log_current_pose
+from scripts.teleoperation.teleop_logger_2_arm import reset_cube_pose, log_current_pose
 
 # map mtm gripper joint angle to psm jaw gripper angles in simulation
 # def get_jaw_gripper_angles(gripper_command, env, robot_name="robot_2"):

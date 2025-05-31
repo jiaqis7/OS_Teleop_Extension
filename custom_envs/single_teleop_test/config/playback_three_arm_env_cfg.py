@@ -55,6 +55,41 @@ class PBThreeEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
         self.scene.robot_3.init_state.rot = (0.99144486, 0.13052619, 0.0, 0.0)
         # Set actions for the specific robot type (PSM)
 
+        self.scene.cube_rigid_1 = RigidObjectCfg(
+            prim_path="/World/Objects/CubeRigid",
+            init_state=RigidObjectCfg.InitialStateCfg(
+                pos=(0.0, 0.0, 0.0),
+                rot=(1.0, 0.0, 0.0, 0.0),
+            ),
+            spawn=sim_utils.CuboidCfg(
+                size=(0.02, 0.004, 0.004),
+                rigid_props=sim_utils.RigidBodyPropertiesCfg(
+                    linear_damping=0.05,
+                    angular_damping=0.05,
+                    solver_position_iteration_count=30,
+                    solver_velocity_iteration_count=10,
+                ),
+                mass_props=sim_utils.MassPropertiesCfg(
+                    mass=0.03,
+                ),
+                collision_props=sim_utils.CollisionPropertiesCfg(
+                    contact_offset=0.005,
+                    rest_offset=-0.001,
+                ),
+                visual_material=PreviewSurfaceCfg(
+                    diffuse_color=(0.8, 0.0, 0.0),
+                    roughness=0.4,
+                    metallic=0.0,
+                    opacity=1.0,
+                ),
+                physics_material=sim_utils.RigidBodyMaterialCfg(
+                    static_friction=3.0,
+                    dynamic_friction=3.0,
+                    restitution=0.0,
+                ),
+            )
+        )
+
 
         self.scene.cube_rigid_2 = RigidObjectCfg(
             prim_path="/World/Objects/CubeRigid2",

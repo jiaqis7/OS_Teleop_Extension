@@ -101,41 +101,6 @@ class SingleTeleopBaseEnv(SingleTeleopEnvCfg):
         # )
 
 
-        # Define the cube and register it to the scene
-        self.scene.cube_rigid_1 = RigidObjectCfg(
-            prim_path="/World/Objects/CubeRigid",
-            init_state=RigidObjectCfg.InitialStateCfg(
-                pos=(0.0, 0.0, 0.0),
-                rot=(1.0, 0.0, 0.0, 0.0),
-            ),
-            spawn=sim_utils.CuboidCfg(
-                size=(0.02, 0.004, 0.004),
-                rigid_props=sim_utils.RigidBodyPropertiesCfg(
-                    linear_damping=0.05,
-                    angular_damping=0.05,
-                    solver_position_iteration_count=30,
-                    solver_velocity_iteration_count=10,
-                ),
-                mass_props=sim_utils.MassPropertiesCfg(
-                    mass=0.03,
-                ),
-                collision_props=sim_utils.CollisionPropertiesCfg(
-                    contact_offset=0.005,
-                    rest_offset=-0.001,
-                ),
-                visual_material=PreviewSurfaceCfg(
-                    diffuse_color=(0.8, 0.0, 0.0),
-                    roughness=0.4,
-                    metallic=0.0,
-                    opacity=1.0,
-                ),
-                physics_material=sim_utils.RigidBodyMaterialCfg(
-                    static_friction=3.0,
-                    dynamic_friction=3.0,
-                    restitution=0.0,
-                ),
-            )
-        )
 
         # sensors
         self.scene.camera_left = CameraCfg(

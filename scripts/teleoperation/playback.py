@@ -27,7 +27,7 @@ from omni.isaac.lab_tasks.utils import parse_env_cfg
 # Utilities
 sys.path.append(os.path.abspath("."))
 import custom_envs
-from teleop_logger import reset_cube_pose_from_json
+from scripts.teleoperation.teleop_logger_2_arm import reset_cube_pose_from_json
 
 
 def main():

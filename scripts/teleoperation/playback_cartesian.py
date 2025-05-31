@@ -29,7 +29,7 @@ from omni.isaac.lab_tasks.utils import parse_env_cfg
 sys.path.append(os.path.abspath("."))
 from tf_utils import pose_to_transformation_matrix, transformation_matrix_to_pose
 import custom_envs
-from teleop_logger import reset_cube_pose_from_json
+from scripts.teleoperation.teleop_logger_3_arm import reset_cube_pose_from_json
 
 
 def main():

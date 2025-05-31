@@ -4,6 +4,24 @@ from omni.isaac.lab.utils import configclass
 import orbit.surgical.tasks.surgical.reach_dual.mdp as mdp
 from . import base_env_cfg
 
+
+import omni.isaac.lab.sim as sim_utils
+from omni.isaac.lab.assets import RigidObjectCfg, DeformableObjectCfg
+from omni.isaac.lab.assets import AssetBaseCfg
+from omni.isaac.lab.managers import EventTermCfg as EventTerm
+from omni.isaac.lab.managers import SceneEntityCfg
+from omni.isaac.lab.sensors import CameraCfg, FrameTransformerCfg
+from omni.isaac.lab.sim.schemas.schemas_cfg import RigidBodyPropertiesCfg, DeformableBodyPropertiesCfg
+from omni.isaac.lab.sim.spawners.from_files.from_files_cfg import UsdFileCfg
+from omni.isaac.lab.sim.spawners.shapes.shapes_cfg import CuboidCfg
+from omni.isaac.lab.sim.spawners.materials.physics_materials_cfg import RigidBodyMaterialCfg, DeformableBodyMaterialCfg
+from omni.isaac.lab.sim.spawners.materials.visual_materials_cfg import PreviewSurfaceCfg
+from omni.isaac.lab.sim.spawners.materials.visual_materials import spawn_preview_surface
+from omni.isaac.lab.sim.spawners.meshes.meshes_cfg import MeshCuboidCfg
+from omni.isaac.lab.utils import configclass
+
+
+
 ##
 # Pre-defined configs
 ##
@@ -32,6 +50,43 @@ class PBEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
 
         self.scene.robot_3 = None
         # Set actions for the specific robot type (PSM)
+
+
+        self.scene.cube_rigid = RigidObjectCfg(
+            prim_path="/World/Objects/CubeRigid",
+            init_state=RigidObjectCfg.InitialStateCfg(
+                pos=(0.0, 0.0, 0.0),
+                rot=(1.0, 0.0, 0.0, 0.0),
+            ),
+            spawn=sim_utils.CuboidCfg(
+                size=(0.03, 0.004, 0.004),
+                rigid_props=sim_utils.RigidBodyPropertiesCfg(
+                    linear_damping=0.05,
+                    angular_damping=0.05,
+                    solver_position_iteration_count=30,
+                    solver_velocity_iteration_count=10,
+                ),
+                mass_props=sim_utils.MassPropertiesCfg(
+                    mass=0.03,
+                ),
+                collision_props=sim_utils.CollisionPropertiesCfg(
+                    contact_offset=0.005,
+                    rest_offset=-0.001,
+                ),
+                visual_material=PreviewSurfaceCfg(
+                    diffuse_color=(0.8, 0.0, 0.0),
+                    roughness=0.4,
+                    metallic=0.0,
+                    opacity=1.0,
+                ),
+                physics_material=sim_utils.RigidBodyMaterialCfg(
+                    static_friction=3.0,
+                    dynamic_friction=3.0,
+                    restitution=0.0,
+                ),
+            )
+        )
+
         
         self.actions.arm_1_action = JointPositionActionCfg(
             asset_name="robot_1",

@@ -3,7 +3,7 @@ import argparse
 from omni.isaac.lab.app import AppLauncher
 
 
-from teleop_logger import TeleopLogger, log_current_pose, reset_cube_pose
+from scripts.teleoperation.teleop_logger_2_arm import TeleopLogger, log_current_pose, reset_cube_pose
 
 # add argparse arguments
 parser = argparse.ArgumentParser(description="MTMR + PO teleoperation for PSM2 and PSM1")

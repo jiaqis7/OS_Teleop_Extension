@@ -4,7 +4,7 @@ from omni.isaac.lab.app import AppLauncher
 
 
 
-from teleop_logger import TeleopLogger, reset_cube_pose, log_current_pose
+
 
 
 # add argparse arguments
@@ -64,6 +64,7 @@ from tf_utils import pose_to_transformation_matrix, transformation_matrix_to_pos
 from teleop_interface.MTM.se3_mtm import MTMTeleop
 from teleop_interface.phantomomni.se3_phantomomni import PhantomOmniTeleop
 from teleop_interface.MTM.mtm_manipulator import MTMManipulator
+from scripts.teleoperation.teleop_logger_2_arm import TeleopLogger, reset_cube_pose, log_current_pose
 import custom_envs
 
 import global_cfg
@@ -496,6 +497,43 @@ def main():
             cam_T_psm1tip = cam_T_world @ world_T_psm1tip
             cam_T_psm2tip = cam_T_world @ world_T_psm2tip
 
+
+        # === Check for trigger and start logging ===
+        teleop_logger.check_and_start_logging(env)
+
+        # === Stop logging only when time exceeds duration ===
+        teleop_logger.stop_logging()
+
+        # === If just started logging, log initial pose ===
+        if teleop_logger.enable_logging and teleop_logger.frame_num == 0:
+            log_current_pose(env, teleop_logger.log_dir)
+
+        # === Per-frame logging ===
+        if teleop_logger.enable_logging:
+            frame_num = teleop_logger.frame_num + 1
+            timestamp = time.time()
+
+            robot_states = {}
+            for psm, robot_name in psm_name_dict.items():
+                robot = env.unwrapped.scene[robot_name]
+                joint_positions = robot.data.joint_pos[0][:6].cpu().numpy()
+                jaw_angle = abs(robot.data.joint_pos[0][-2].cpu().numpy()) + abs(robot.data.joint_pos[0][-1].cpu().numpy())
+                ee_position = robot.data.body_link_pos_w[0][-1].cpu().numpy()
+                ee_quat = robot.data.body_link_quat_w[0][-1].cpu().numpy()
+                orientation_matrix = R.from_quat(np.concatenate([ee_quat[1:], [ee_quat[0]]])).as_matrix()
+
+                robot_states[psm] = {
+                    "joint_positions": joint_positions,
+                    "jaw_angle": jaw_angle,
+                    "ee_position": ee_position,
+                    "orientation_matrix": orientation_matrix
+                }
+
+            cam_l_img = camera_l.data.output["rgb"][0].cpu().numpy()
+            cam_r_img = camera_r.data.output["rgb"][0].cpu().numpy()
+
+            teleop_logger.enqueue(frame_num, timestamp, robot_states, cam_l_img, cam_r_img)
+            teleop_logger.frame_num = frame_num
 
         if os.path.exists("reset_trigger.txt"):
             print("[RESET] Detected reset trigger. Resetting cube and both PSMs...")

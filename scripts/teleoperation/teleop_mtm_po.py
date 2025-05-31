@@ -6,7 +6,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"
 
 import argparse
 from omni.isaac.lab.app import AppLauncher
-from teleop_logger import TeleopLogger, log_current_pose, reset_cube_pose
+from scripts.teleoperation.teleop_logger_3_arm import TeleopLogger, log_current_pose, reset_cube_pose
 
 parser = argparse.ArgumentParser(description="MTML+MTMR+PO Teleop")
 parser.add_argument("--disable_fabric", action="store_true", default=False)
@@ -347,9 +347,6 @@ def main():
             cube_quat4 = R.from_euler("z", cube_yaw4).as_quat()
             cube_ori4 = [cube_quat4[3], cube_quat4[0], cube_quat4[1], cube_quat4[2]]
             reset_cube_pose(env, "teleop_logs/cube_latest_4", cube_pos4, cube_ori4, cube_key="cube_rigid_4")
-
-
-
 
 
 
