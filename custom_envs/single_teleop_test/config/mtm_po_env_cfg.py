@@ -60,7 +60,7 @@ class MTMPOTeleopEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
                 rot=(1.0, 0.0, 0.0, 0.0),
             ),
             spawn=sim_utils.CuboidCfg(
-                size=(0.03, 0.004, 0.004),
+                size=(0.02, 0.004, 0.004),
                 rigid_props=sim_utils.RigidBodyPropertiesCfg(
                     linear_damping=0.05,
                     angular_damping=0.05,
@@ -96,7 +96,7 @@ class MTMPOTeleopEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
                 rot=(1.0, 0.0, 0.0, 0.0),
             ),
             spawn=sim_utils.CuboidCfg(
-                size=(0.03, 0.004, 0.004),
+                size=(0.02, 0.004, 0.004),
                 rigid_props=sim_utils.RigidBodyPropertiesCfg(
                     linear_damping=0.05,
                     angular_damping=0.05,
@@ -147,7 +147,7 @@ class MTMPOTeleopEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
                     rest_offset=-0.001,
                 ),
                 visual_material=PreviewSurfaceCfg(
-                    diffuse_color=(0.8, 0.0, 0.8),
+                    diffuse_color=(1.0, 1.0, 1.0),
                     roughness=0.4,
                     metallic=0.0,
                     opacity=1.0,

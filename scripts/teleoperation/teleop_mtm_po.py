@@ -145,7 +145,7 @@ def main():
     teleop_logger = TeleopLogger(
         trigger_file=args_cli.log_trigger_file,
         psm_name_dict=psm_name_dict,
-        log_duration=30.0  # seconds
+        log_duration=22.0  # seconds
     )
 
     scale = args_cli.scale
