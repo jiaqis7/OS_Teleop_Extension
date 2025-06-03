@@ -260,104 +260,6 @@ def reorient_mtm_to_match_psm(
     print("[RESET] MTMR reoriented.")
 
 
-# def _compute_base_relative_action_psm1(env, psm1, psm2, jaw1, jaw2):
-#     """Helper to compute and return action tensor given PSMs and target jaw angles."""
-#     # Get world-frame tip poses
-#     psm1_tip_pos = psm1.data.body_link_pos_w[0][-1].cpu().numpy()
-#     psm1_tip_quat = psm1.data.body_link_quat_w[0][-1].cpu().numpy()
-#     psm2_tip_pos = psm2.data.body_link_pos_w[0][-1].cpu().numpy()
-#     psm2_tip_quat = psm2.data.body_link_quat_w[0][-1].cpu().numpy()
-#     world_T_psm1tip = pose_to_transformation_matrix(psm1_tip_pos, psm1_tip_quat)
-#     world_T_psm2tip = pose_to_transformation_matrix(psm2_tip_pos, psm2_tip_quat)
-
-#     # Get base transforms
-#     psm1_base_link_pos = psm1.data.body_link_pos_w[0][0].cpu().numpy()
-#     psm1_base_link_quat = psm1.data.body_link_quat_w[0][0].cpu().numpy()
-#     psm2_base_link_pos = psm2.data.body_link_pos_w[0][0].cpu().numpy()
-#     psm2_base_link_quat = psm2.data.body_link_quat_w[0][0].cpu().numpy()
-#     world_T_psm1_base = pose_to_transformation_matrix(psm1_base_link_pos, psm1_base_link_quat)
-#     world_T_psm2_base = pose_to_transformation_matrix(psm2_base_link_pos, psm2_base_link_quat)
-
-#     # Compute base-relative poses
-#     psm1_rel_pos, psm1_rel_quat = transformation_matrix_to_pose(np.linalg.inv(world_T_psm1_base) @ world_T_psm1tip)
-#     psm2_rel_pos, psm2_rel_quat = transformation_matrix_to_pose(np.linalg.inv(world_T_psm2_base) @ world_T_psm2tip)
-
-#     psm1_joint_action = psm1.data.joint_pos[0][:6].cpu().numpy()
-
-#     # Construct action tensor
-#     action_tensor = torch.tensor(
-#         np.concatenate([psm1_joint_action, jaw1, psm2_rel_pos, psm2_rel_quat, jaw2], dtype=np.float32),
-#         device=env.unwrapped.device
-#     ).unsqueeze(0)
-
-#     return action_tensor
-
-# def _compute_base_relative_action_psm2(env, psm1, psm2, jaw1, jaw2):
-#     """Helper to compute and return action tensor given PSMs and target jaw angles."""
-#     # Get world-frame tip poses
-#     psm1_tip_pos = psm1.data.body_link_pos_w[0][-1].cpu().numpy()
-#     psm1_tip_quat = psm1.data.body_link_quat_w[0][-1].cpu().numpy()
-#     psm2_tip_pos = psm2.data.body_link_pos_w[0][-1].cpu().numpy()
-#     psm2_tip_quat = psm2.data.body_link_quat_w[0][-1].cpu().numpy()
-#     world_T_psm1tip = pose_to_transformation_matrix(psm1_tip_pos, psm1_tip_quat)
-#     world_T_psm2tip = pose_to_transformation_matrix(psm2_tip_pos, psm2_tip_quat)
-
-#     # Get base transforms
-#     psm1_base_link_pos = psm1.data.body_link_pos_w[0][0].cpu().numpy()
-#     psm1_base_link_quat = psm1.data.body_link_quat_w[0][0].cpu().numpy()
-#     psm2_base_link_pos = psm2.data.body_link_pos_w[0][0].cpu().numpy()
-#     psm2_base_link_quat = psm2.data.body_link_quat_w[0][0].cpu().numpy()
-#     world_T_psm1_base = pose_to_transformation_matrix(psm1_base_link_pos, psm1_base_link_quat)
-#     world_T_psm2_base = pose_to_transformation_matrix(psm2_base_link_pos, psm2_base_link_quat)
-
-#     # Compute base-relative poses
-#     psm1_rel_pos, psm1_rel_quat = transformation_matrix_to_pose(np.linalg.inv(world_T_psm1_base) @ world_T_psm1tip)
-#     psm2_rel_pos, psm2_rel_quat = transformation_matrix_to_pose(np.linalg.inv(world_T_psm2_base) @ world_T_psm2tip)
-
-#     psm2_joint_action = psm2.data.joint_pos[0][:6].cpu().numpy()
-
-#     # Construct action tensor
-#     action_tensor = torch.tensor(
-#         np.concatenate([psm1_rel_pos, psm1_rel_quat, jaw1, psm2_joint_action, jaw2], dtype=np.float32),
-#         device=env.unwrapped.device
-#     ).unsqueeze(0)
-
-#     return action_tensor
-
-# def _compute_base_relative_action_both(env, psm1, psm2, jaw1, jaw2):
-#     """Helper to compute and return action tensor given PSMs and target jaw angles."""
-    
-#     psm1_joint_action = psm1.data.joint_pos[0][:6].cpu().numpy()
-#     psm2_joint_action = psm2.data.joint_pos[0][:6].cpu().numpy()
-
-#     # Construct action tensor
-#     action_tensor = torch.tensor(
-#         np.concatenate([psm1_joint_action, jaw1, psm2_joint_action, jaw2], dtype=np.float32),
-#         device=env.unwrapped.device
-#     ).unsqueeze(0)
-
-#     return action_tensor
-
-# def open_jaws(env, psm1, psm2, target=1.04):
-#     """Open PSM jaws to match a target angle."""
-#     jaw_angle = 0.52359 / (1.06 + 1.72) * (target + 1.72)
-#     jaw1 = [-jaw_angle, jaw_angle]
-#     jaw2 = [-jaw_angle, jaw_angle]
-
-#     print(f"[INIT] Opening jaws to approximate MTM input: {target} → [{jaw1[0]:.3f}, {jaw1[1]:.3f}]")
-#     if global_cfg.model_control == "psm1":
-#         action_tensor = _compute_base_relative_action_psm1(env, psm1, psm2, jaw1=jaw1, jaw2=jaw2)
-#     elif global_cfg.model_control == "psm2":
-#         action_tensor = _compute_base_relative_action_psm2(env, psm1, psm2, jaw1=jaw1, jaw2=jaw2)
-#     elif global_cfg.model_control == "both":
-#         action_tensor = _compute_base_relative_action_both(env, psm1, psm2, jaw1=jaw1, jaw2=jaw2)
-
-#     for _ in range(30):
-#         env.step(action_tensor)
-#     print("[INIT] PSM jaws opened.")
-
-
-
 def main():
     scale = args_cli.scale
     mtm_manipulator = MTMManipulator()
@@ -373,13 +275,23 @@ def main():
     mtm_interface = MTMTeleop()
     mtm_interface.reset()
 
+    # controller = AutonomousController.from_train_dir(
+    #     train_dir="/home/stanford/Demo_collections1/Models/4_orbitsim_single_human_demos/Joint Control/20250516-053119_kind-opossum_train",
+    #     ckpt_path="/home/stanford/Demo_collections1/Models/4_orbitsim_single_human_demos/Joint Control/20250516-053119_kind-opossum_train/policy_epoch_10000_seed_0.ckpt",
+    #     ckpt_strategy="none",
+    #     device=args_cli.device
+    # )
+    # controller.reset()
+
     controller = AutonomousController.from_train_dir(
-        train_dir="/home/stanford/Demo_collections1/Models/4_orbitsim_single_human_demos/Joint Control/20250516-053119_kind-opossum_train",
-        ckpt_path="/home/stanford/Demo_collections1/Models/4_orbitsim_single_human_demos/Joint Control/20250516-053119_kind-opossum_train/policy_epoch_10000_seed_0.ckpt",
+        train_dir="/home/stanford/Demo_collections1/Models/4_orbitsim_single_human_demos/Joint Control/20250525-082117_elegant-mongoose_train",
+        ckpt_path="/home/stanford/Demo_collections1/Models/4_orbitsim_single_human_demos/Joint Control/20250525-082117_elegant-mongoose_train/policy_epoch_20000_seed_0.ckpt",
         ckpt_strategy="none",
         device=args_cli.device
     )
     controller.reset()
+
+    
 
     camera_l = env.unwrapped.scene["camera_left"]
     camera_r = env.unwrapped.scene["camera_right"]
