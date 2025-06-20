@@ -1,10 +1,13 @@
+# --------------------------------------------
+# 1. CLI ARGUMENTS AND ISAAC SIM LAUNCH SETUP
+# --------------------------------------------
+
 import argparse
-
 from omni.isaac.lab.app import AppLauncher
-from scripts.teleoperation.teleop_logger_3_arm import TeleopLogger
 
 
-# add argparse arguments
+
+# Parse CLI arguments
 parser = argparse.ArgumentParser(description="MTM teleoperation for Custom MultiArm dVRK environments.")
 parser.add_argument(
     "--disable_fabric", action="store_true", default=False, help="Disable fabric and use USD I/O operations."
@@ -18,63 +21,55 @@ parser.add_argument("--enable_logging", action="store_true", help="Enable loggin
 # parser.add_argument("--sim_time", type=float, default=30.0, help="Duration (in seconds) for teleoperation before auto exit.")
 parser.add_argument("--log_trigger_file", type=str, default="log_trigger.txt",
     help="Path to a file that enables logging when it exists.")
-
 parser.add_argument("--disable_viewport", action="store_true", help="Disable extra viewport windows.")
 parser.add_argument("--demo_name", type=str, default=None, help="Custom name for the logging folder (e.g., 'demo_1')")
-
-
-# append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
-# parse the arguments
 args_cli = parser.parse_args()
 
-# launch omniverse app
+
+# Launch Isaac Sim App
 app_launcher = AppLauncher(args_cli)
 simulation_app = app_launcher.app
 
-"""Rest everything follows."""
+
+
+# ---------------------------------------------------------
+# 2. IMPORTS AND INITIAL SETUP FOR TELEOP, ENV, LOGGING
+# ---------------------------------------------------------
 
 
 import gymnasium as gym
 import torch
-
 import carb
-
 from omni.isaac.lab_tasks.utils import parse_env_cfg
-
 import cv2
 from scipy.spatial.transform import Rotation as R
 import numpy as np
 import time
 from datetime import datetime
 import math
-
 import omni.kit.viewport.utility as vp_utils
 import omni.kit.commands
 from tf_utils import pose_to_transformation_matrix, transformation_matrix_to_pose
 from logger_utils import CSVLogger
-
 import sys
 import os
 import random
 sys.path.append(os.path.abspath("."))
+
+
+# Import MTM interface and environment setup
 from teleop_interface.MTM.se3_mtm import MTMTeleop
 from teleop_interface.MTM.mtm_manipulator import MTMManipulator
 import custom_envs
-from scripts.teleoperation.teleop_logger_2_arm import reset_cube_pose, log_current_pose
+from scripts.teleoperation.teleop_logger_2_arm import reset_cube_pose, log_current_pose, TeleopLogger
 
-# map mtm gripper joint angle to psm jaw gripper angles in simulation
-# def get_jaw_gripper_angles(gripper_command, env, robot_name="robot_2"):
-#     if gripper_command is None:
-#         gripper1_joint_angle = env.unwrapped[robot_name].data.joint_pos[0][-2].cpu().numpy()
-#         gripper2_joint_angle = env.unwrapped[robot_name].data.joint_pos[0][-1].cpu().numpy()
-#         return np.array([gripper1_joint_angle, gripper2_joint_angle])
-#         # return np.array([-0.52359, 0.52359])
-#     # input: -1.72 (closed), 1.06 (opened)
-#     # output: 0,0 (closed), -0.52359, 0.52359 (opened)
-#     gripper2_angle = 0.52359 / (1.06 + 1.72) * (gripper_command + 1.72)
-#     return np.array([-gripper2_angle, gripper2_angle])
 
+# -------------------------------
+# 3. TELEOP UTILITIES
+# -------------------------------
+
+# Convert normalized gripper command to robot jaw angles
 def get_jaw_gripper_angles(gripper_command, robot_name):
     if gripper_command is None:
         return np.array([0.0, 0.0])
@@ -83,7 +78,7 @@ def get_jaw_gripper_angles(gripper_command, robot_name):
     return np.array([-g2_angle, g2_angle])
 
 
-# process cam_T_psmtip to psmbase_T_psmtip and make usuable action input
+# Process SE(3) pose into base-relative position/quaternion + gripper actions
 def process_actions(cam_T_psm1, w_T_psm1base, cam_T_psm2, w_T_psm2base, w_T_cam, env, gripper1_command, gripper2_command) -> torch.Tensor:
     """Process actions for the environment."""
     psm1base_T_psm1 = np.linalg.inv(w_T_psm1base)@w_T_cam@cam_T_psm1
@@ -95,6 +90,7 @@ def process_actions(cam_T_psm1, w_T_psm1base, cam_T_psm2, w_T_psm2base, w_T_cam,
     actions = torch.tensor(actions, device=env.unwrapped.device).repeat(env.unwrapped.num_envs, 1)
     return actions
 
+# Reset PSMs to saved initial tip pose (used after clutch or reset)
 def reset_psm_to_initial_pose(
     env,
     saved_psm1_tip_pos_w, saved_psm1_tip_quat_w,
@@ -180,6 +176,7 @@ def _compute_base_relative_action(env, psm1, psm2, jaw1, jaw2):
 
     return action_tensor
 
+
 def open_jaws(env, psm1, psm2, target=1.04):
     """Open PSM jaws to match a target angle."""
     jaw_angle = 0.52359 / (1.06 + 1.72) * (target + 1.72)
@@ -206,34 +203,38 @@ def set_jaws_closed(env, psm1, psm2):
 
 def main():
 
+    # --------------------------
+    # 1. Initialize Flags and Variables
+    # --------------------------
+
+    # Save tip pose of PSMs for resetting
     saved_psm1_tip_pos_w = None
     saved_psm1_tip_quat_w = None
     saved_psm2_tip_pos_w = None
     saved_psm2_tip_quat_w = None
 
+    # Fetch command-line flags
     is_simulated = args_cli.is_simulated
     scale=args_cli.scale
     enable_logging = args_cli.enable_logging
 
+    # PSM name mapping dictionary
     psm_name_dict = {
         "PSM1": "robot_1",
         "PSM2": "robot_2"
     }
 
     
-
-    # logger = None
-    # frame_num = 0
+    # --------------------------
+    # 2. Initialize Logger, MTM, and Isaac Gym Env
+    # --------------------------
 
     teleop_logger = TeleopLogger(
         trigger_file="log_trigger.txt",
         psm_name_dict=psm_name_dict,
         log_duration=30.0,
     )
-
-
         
-    # Setup the MTM in the real world
     mtm_manipulator = MTMManipulator()
     mtm_manipulator.home()
 
@@ -251,11 +252,16 @@ def main():
     teleop_interface = MTMTeleop(is_simulated=is_simulated)
     teleop_interface.reset()
 
-    # Add a new flag to track if we have reset the PSMs
+
+    # --------------------------
+    # 3. Simulation/Teleop Session State Variables
+    # --------------------------
+
     has_synced_psms = False
     teleop_started = False
     logging_start_time = None
 
+    # Get stereo cameras from the scene
     camera_l = env.unwrapped.scene["camera_left"]
     camera_r = env.unwrapped.scene["camera_right"]
 
@@ -266,31 +272,36 @@ def main():
         view_port_r = vp_utils.create_viewport_window("Right Camera", width = 800, height = 600)
         view_port_r.viewport_api.camera_path = '/World/envs/env_0/Robot_4/ecm_end_link/camera_right' #camera_r.cfg.prim_path
 
-
+    # Get references to PSM robots
     psm1 = env.unwrapped.scene[psm_name_dict["PSM1"]]
     psm2 = env.unwrapped.scene[psm_name_dict["PSM2"]]
 
-    mtm_orientation_matched = False
-    was_in_clutch = True
-    init_mtml_position = None
-    init_psm1_tip_position = None
-    init_mtmr_position = None
-    init_psm2_tip_position = None
+
+    # --------------------------
+    # 4. Flags for PSM Teleop Logic
+    # --------------------------
+
+    mtm_orientation_matched = False  # First time matching
+    was_in_clutch = True             # Was clutch pressed last frame?
+    init_mtml_position = None        # Initial left MTM pos
+    init_psm1_tip_position = None    # Initial left PSM pos
+    init_mtmr_position = None        # Initial right MTM pos
+    init_psm2_tip_position = None     # Initial right PSM pos
 
 
     # simulate environment
     while simulation_app.is_running():
         start_time = time.time()
 
-        # process actions
+        # Compute world and camera transforms for action calculation
         camera_l_pos = camera_l.data.pos_w
         camera_r_pos = camera_r.data.pos_w
-        # get center of both cameras
         str_camera_pos = (camera_l_pos + camera_r_pos) / 2
         camera_quat = camera_l.data.quat_w_world  # forward x, up z
         world_T_cam = pose_to_transformation_matrix(str_camera_pos.cpu().numpy()[0], camera_quat.cpu().numpy()[0])
         cam_T_world = np.linalg.inv(world_T_cam)
 
+        # Perform MTM orientation alignment only once at startup
         if not mtm_orientation_matched:
             print("Start matching orientation of MTM with the PSMs in the simulation. May take a few seconds.")
             mtm_orientation_matched = True
@@ -344,14 +355,14 @@ def main():
         mtmr_orientation = np.concatenate([[mtmr_orientation[3]], mtmr_orientation[:3]])
 
 
-        # stop teleoperation if mono button is pressed
+        # MONO button pressed → exit teleoperation
         if mono:
             print("Mono button pressed. Stopping teleoperation.")
             mtm_manipulator.hold_position()
             break
 
         
-
+        # CLUTCH released → initialize new teleop session
         if not clutch:
             if was_in_clutch:
                 print("Released from clutch. Starting teleoperation again")
@@ -414,6 +425,8 @@ def main():
         env.step(actions)
 
 
+
+        # Check for RESET TRIGGER to randomize cube pose
         if os.path.exists("reset_trigger.txt"):
             print("[RESET-TRIGGER] reset_trigger.txt detected. Resetting environment...")
             env.reset()
@@ -482,11 +495,12 @@ def main():
             
             print("[RESET-TRIGGER] Reset complete. Please clutch to resume teleoperation.")
 
-        teleop_logger.check_and_start_logging(env)
 
+
+        # Logging logic: trigger-based
+        teleop_logger.check_and_start_logging(env)
         if teleop_logger.enable_logging and teleop_logger.frame_num == 0:
             log_current_pose(env, teleop_logger.log_dir)
-
         teleop_logger.stop_logging()
 
         if teleop_logger.enable_logging:
@@ -516,7 +530,7 @@ def main():
             teleop_logger.enqueue(frame_num, timestamp, robot_states, cam_l_img, cam_r_img)
             teleop_logger.frame_num = frame_num
 
-
+        # Sim loop rate control
         elapsed = time.time() - start_time
         sleep_time = max(0.0, (1/200.0) - elapsed)
         time.sleep(sleep_time)
@@ -529,9 +543,6 @@ def main():
 
 
 if __name__ == "__main__":
-    # run the main function
     main()
-    # close sim app
     teleop_logger.shutdown()
-
     simulation_app.close()

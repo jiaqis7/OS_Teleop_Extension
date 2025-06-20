@@ -1,11 +1,11 @@
-import argparse
+# --------------------------------------------
+# 1. CLI ARGUMENTS AND ISAAC SIM LAUNCH SETUP
+# --------------------------------------------
 
+import argparse
 from omni.isaac.lab.app import AppLauncher
 
-
-from scripts.teleoperation.teleop_logger_2_arm import TeleopLogger, log_current_pose, reset_cube_pose
-
-# add argparse arguments
+# Parse CLI arguments
 parser = argparse.ArgumentParser(description="MTMR + PO teleoperation for PSM2 and PSM1")
 parser.add_argument("--disable_fabric", action="store_true", default=False)
 parser.add_argument("--num_envs", type=int, default=1)
@@ -16,14 +16,18 @@ parser.add_argument("--enable_logging", action="store_true")
 parser.add_argument("--log_trigger_file", type=str, default="log_trigger.txt")
 parser.add_argument("--disable_viewport", action="store_true")
 parser.add_argument("--demo_name", type=str, default=None)
-
 AppLauncher.add_app_launcher_args(parser)
 args_cli = parser.parse_args()
 
-# launch omniverse app
+# Launch Isaac Sim App
 app_launcher = AppLauncher(args_cli)
 simulation_app = app_launcher.app
 
+
+
+# ---------------------------------------------------------
+# 2. IMPORTS AND INITIAL SETUP FOR TELEOP, ENV, LOGGING
+# ---------------------------------------------------------
 
 import gymnasium as gym
 import torch
@@ -43,17 +47,12 @@ from teleop_interface.MTM.se3_mtm import MTMTeleop
 from teleop_interface.phantomomni.se3_phantomomni import PhantomOmniTeleop
 from teleop_interface.MTM.mtm_manipulator import MTMManipulator
 import custom_envs
+from scripts.teleoperation.teleop_logger_2_arm import TeleopLogger, log_current_pose, reset_cube_pose
 
 
-
-# ---------- Init ----------
-psm_name_dict = {
-    "robot_1": "PSM1_PO",
-    "robot_2": "PSM2_MTM"
-}
-teleop_logger = TeleopLogger(trigger_file=args_cli.log_trigger_file, psm_name_dict=psm_name_dict)
-
-
+# -------------------------------
+# 3. TELEOP UTILITIES
+# -------------------------------
 
 def get_jaw_gripper_angles(gripper_command, robot_name):
     if gripper_command is None:
@@ -72,8 +71,6 @@ def process_actions(cam_T_psm1, w_T_psm1base, cam_T_psm2, w_T_psm2base, w_T_cam,
         psm2_rel_pos, psm2_rel_quat, get_jaw_gripper_angles(gripper2_command, 'robot_2')
     ])
     return torch.tensor(actions, device=env.unwrapped.device).repeat(env.unwrapped.num_envs, 1)
-
-
 
 
 def align_mtm_orientation_once(mtm_manipulator, mtm_interface, psm2, cam_T_world):
@@ -221,7 +218,36 @@ def set_jaws_closed(env, psm1, psm2):
 
 
 def main():
+
+    # --------------------------
+    # 1. Initialize Flags and Variables
+    # --------------------------
+    # Save tip pose of PSMs for resetting
+    saved_psm1_tip_pos_w = None
+    saved_psm1_tip_quat_w = None
+    saved_psm2_tip_pos_w = None
+    saved_psm2_tip_quat_w = None
+
+    # Command-line options
     scale = args_cli.scale
+    is_simulated = args_cli.is_simulated
+    enable_logging = args_cli.enable_logging
+
+    # PSM name mapping dictionary
+    psm_name_dict = {
+        "PSM1": "robot_1",
+        "PSM2": "robot_2"
+    }
+
+    # --------------------------
+    # 2. Initialize Logger, MTM, and Isaac Gym Env
+    # --------------------------
+
+    teleop_logger = TeleopLogger(
+        trigger_file="log_trigger.txt",
+        psm_name_dict=psm_name_dict,
+        log_duration=30.0,
+    )
 
     mtm_manipulator = MTMManipulator()
     mtm_manipulator.home()
@@ -238,6 +264,11 @@ def main():
     po_interface = PhantomOmniTeleop()
     po_interface.reset()
 
+
+    # --------------------------
+    # 3. Simulation/Teleop Session State Variables
+    # --------------------------
+
     camera_l = env.unwrapped.scene["camera_left"]
     camera_r = env.unwrapped.scene["camera_right"]
 
@@ -251,6 +282,11 @@ def main():
     psm1 = env.unwrapped.scene["robot_1"]
     psm2 = env.unwrapped.scene["robot_2"]
 
+
+    # --------------------------
+    # 4. Flags for PSM Teleop Logic
+    # --------------------------
+
     was_in_mtm_clutch = True
     was_in_po_clutch = True
     po_waiting_for_clutch = False
@@ -260,22 +296,6 @@ def main():
     init_mtmr_position = None
     init_stylus_position = None
     orientation_aligned = False
-
-    saved_psm1_tip_pos_w = None
-    saved_psm1_tip_quat_w = None
-    saved_psm2_tip_pos_w = None
-    saved_psm2_tip_quat_w = None
-
-    psm_name_dict = {
-        "PSM1": "robot_1",
-        "PSM2": "robot_2"
-    }
-
-    teleop_logger = TeleopLogger(
-        trigger_file="log_trigger.txt",
-        psm_name_dict=psm_name_dict,
-        log_duration=30.0,
-    )
 
     print("Press the clutch button and release to start teleoperation.")
     while simulation_app.is_running():
@@ -367,6 +387,9 @@ def main():
         actions = process_actions(cam_T_psm1tip, psm1_base, cam_T_psm2tip, psm2_base, world_T_cam, env, po_gripper, r_gripper_joint)
         env.step(actions)
 
+
+
+        # Check for RESET TRIGGER to randomize cube pose
         if os.path.exists("reset_trigger.txt"):
             print("[RESET] Detected reset trigger. Resetting cube and both PSMs...")
 
@@ -424,12 +447,10 @@ def main():
             continue
 
 
-
+        # Logging logic: trigger-based
         teleop_logger.check_and_start_logging(env)
-
         if teleop_logger.enable_logging and teleop_logger.frame_num == 0:
             log_current_pose(env, teleop_logger.log_dir)
-
         teleop_logger.stop_logging()
 
         if teleop_logger.enable_logging:
@@ -458,10 +479,12 @@ def main():
             teleop_logger.enqueue(frame_num, timestamp, robot_states, cam_l_img, cam_r_img)
             teleop_logger.frame_num = frame_num
 
+        # Sim loop rate control
         elapsed = time.time() - start_time
         sleep_time = max(0.0, (1/200.0) - elapsed)
         time.sleep(sleep_time)
 
+    # close the simulator
     env.close()
     if os.path.exists(args_cli.log_trigger_file):
         os.remove(args_cli.log_trigger_file)
@@ -470,6 +493,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+    teleop_logger.shutdown()
     simulation_app.close()
 
 

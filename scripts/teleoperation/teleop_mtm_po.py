@@ -1,13 +1,10 @@
-# --- [Argument Parsing + App Launcher] ---
-
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
-
+# --------------------------------------------
+# 1. CLI ARGUMENTS AND ISAAC SIM LAUNCH SETUP
+# --------------------------------------------
 import argparse
 from omni.isaac.lab.app import AppLauncher
-from scripts.teleoperation.teleop_logger_3_arm import TeleopLogger, log_current_pose, reset_cube_pose
 
+# Parse CLI arguments
 parser = argparse.ArgumentParser(description="MTML+MTMR+PO Teleop")
 parser.add_argument("--disable_fabric", action="store_true", default=False)
 parser.add_argument("--num_envs", type=int, default=1)
@@ -21,10 +18,18 @@ parser.add_argument("--demo_name", type=str, default=None)
 AppLauncher.add_app_launcher_args(parser)
 args_cli = parser.parse_args()
 
+# Launch Isaac Sim App
 app_launcher = AppLauncher(args_cli)
 simulation_app = app_launcher.app
 
-# --- [Imports] ---
+
+# ---------------------------------------------------------
+# 2. IMPORTS AND INITIAL SETUP FOR TELEOP, ENV, LOGGING
+# ---------------------------------------------------------
+
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 import gymnasium as gym
 import torch
@@ -39,6 +44,12 @@ from tf_utils import pose_to_transformation_matrix, transformation_matrix_to_pos
 from teleop_interface.MTM.se3_mtm import MTMTeleop
 from teleop_interface.MTM.mtm_manipulator import MTMManipulator
 from teleop_interface.phantomomni.se3_phantomomni import PhantomOmniTeleop
+from scripts.teleoperation.teleop_logger_3_arm import TeleopLogger, log_current_pose, reset_cube_pose
+
+
+# -------------------------------
+# 3. TELEOP UTILITIES
+# -------------------------------
 
 # --- [Gripper Map] ---
 def get_jaw_gripper_angles(gripper_command, robot_name):
@@ -284,39 +295,7 @@ def main():
         )
         env.step(actions)
 
-        # Logging logic
-        teleop_logger.check_and_start_logging(env)
-
-        if teleop_logger.enable_logging and teleop_logger.frame_num == 0:
-            log_current_pose(env, teleop_logger.log_dir)
-
-        teleop_logger.stop_logging()
-
-        if teleop_logger.enable_logging:
-            frame_num = teleop_logger.frame_num + 1
-            timestamp = time.time()
-            robot_states = {}
-            for psm, robot_name in psm_name_dict.items():
-                robot = env.unwrapped.scene[robot_name]
-                joint_positions = robot.data.joint_pos[0][:6].cpu().numpy()
-                jaw_angle = abs(robot.data.joint_pos[0][-2].cpu().numpy()) + abs(robot.data.joint_pos[0][-1].cpu().numpy())
-                ee_position = robot.data.body_link_pos_w[0][-1].cpu().numpy()
-                ee_quat = robot.data.body_link_quat_w[0][-1].cpu().numpy()
-                orientation_matrix = R.from_quat(np.concatenate([ee_quat[1:], [ee_quat[0]]])).as_matrix()
-                robot_states[psm] = {
-                    "joint_positions": joint_positions,
-                    "jaw_angle": jaw_angle,
-                    "ee_position": ee_position,
-                    "orientation_matrix": orientation_matrix
-                }
-
-            cam_l_img = cam_left.data.output["rgb"][0].cpu().numpy()
-            cam_r_img = cam_right.data.output["rgb"][0].cpu().numpy()
-
-            teleop_logger.enqueue(frame_num, timestamp, robot_states, cam_l_img, cam_r_img)
-            teleop_logger.frame_num = frame_num
-
-
+        # Check for RESET TRIGGER to randomize cube pose
         if os.path.exists("reset_trigger.txt"):
             print("[RESET] Trigger detected. Resetting cube and all PSMs...")
 
@@ -368,6 +347,37 @@ def main():
             init_psm3_tip_position = None
             os.remove("reset_trigger.txt")
             print("[READY] Reset complete. Reclutch MTM and PO to resume independently.")
+
+
+        # Logging logic: trigger-based
+        teleop_logger.check_and_start_logging(env)
+        if teleop_logger.enable_logging and teleop_logger.frame_num == 0:
+            log_current_pose(env, teleop_logger.log_dir)
+        teleop_logger.stop_logging()
+
+        if teleop_logger.enable_logging:
+            frame_num = teleop_logger.frame_num + 1
+            timestamp = time.time()
+            robot_states = {}
+            for psm, robot_name in psm_name_dict.items():
+                robot = env.unwrapped.scene[robot_name]
+                joint_positions = robot.data.joint_pos[0][:6].cpu().numpy()
+                jaw_angle = abs(robot.data.joint_pos[0][-2].cpu().numpy()) + abs(robot.data.joint_pos[0][-1].cpu().numpy())
+                ee_position = robot.data.body_link_pos_w[0][-1].cpu().numpy()
+                ee_quat = robot.data.body_link_quat_w[0][-1].cpu().numpy()
+                orientation_matrix = R.from_quat(np.concatenate([ee_quat[1:], [ee_quat[0]]])).as_matrix()
+                robot_states[psm] = {
+                    "joint_positions": joint_positions,
+                    "jaw_angle": jaw_angle,
+                    "ee_position": ee_position,
+                    "orientation_matrix": orientation_matrix
+                }
+
+            cam_l_img = cam_left.data.output["rgb"][0].cpu().numpy()
+            cam_r_img = cam_right.data.output["rgb"][0].cpu().numpy()
+
+            teleop_logger.enqueue(frame_num, timestamp, robot_states, cam_l_img, cam_r_img)
+            teleop_logger.frame_num = frame_num
 
 
         time.sleep(max(0.0, 1/30.0 - time.time() + start))
