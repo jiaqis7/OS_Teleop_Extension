@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 import torch
 from pathlib import Path
-from logger_utils import CSVLogger
+from scripts.teleoperation.logger_utils import CSVLogger
 
 from scipy.spatial.transform import Rotation as R
 import shutil

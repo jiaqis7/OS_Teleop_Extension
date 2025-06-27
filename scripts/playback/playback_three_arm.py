@@ -1,6 +1,13 @@
 import argparse
-from omni.isaac.lab.app import AppLauncher
+import os
+import sys
 import time
+
+# Append root directory to sys.path for relative imports
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
+# Isaac Sim App launcher
+from omni.isaac.lab.app import AppLauncher
 
 # CLI arguments
 parser = argparse.ArgumentParser(description="Playback teleop log using joint commands (3 PSMs).")
@@ -15,19 +22,19 @@ args_cli = parser.parse_args()
 app_launcher = AppLauncher(args_cli)
 simulation_app = app_launcher.app
 
-# IsaacLab imports
-import gymnasium as gym
+# Third-party libraries
 import torch
-import pandas as pd
 import numpy as np
-import sys
-import os
+import pandas as pd
+import gymnasium as gym
+
+# IsaacLab utilities
 from omni.isaac.lab_tasks.utils import parse_env_cfg
 
-# Utilities
-sys.path.append(os.path.abspath("."))
+# Local project-specific modules
 import custom_envs
 from scripts.teleoperation.teleop_logger_3_arm import reset_cube_pose_from_json
+
 
 
 def main():
