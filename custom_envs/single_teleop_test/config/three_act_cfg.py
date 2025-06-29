@@ -29,6 +29,16 @@ from omni.isaac.lab.utils import configclass
 ##
 from custom_assets.psm_fast import PSM_FAST_CFG
 
+# Control mode mapping for cleaner logic
+CONTROL_MODE_MAPPING = {
+    "psm1": {"PSM1": "model", "PSM2": "human", "PSM3": "human"},
+    "psm2": {"PSM1": "human", "PSM2": "model", "PSM3": "human"},
+    "psm3": {"PSM1": "human", "PSM2": "human", "PSM3": "model"},
+    "psm12": {"PSM1": "model", "PSM2": "model", "PSM3": "human"},
+    "all": {"PSM1": "model", "PSM2": "model", "PSM3": "model"},
+    "none": {"PSM1": "human", "PSM2": "human", "PSM3": "human"}
+}
+
 # Now using as controlling robot tip with absolute and gripper with joint angle
 # For teleoperation using MTM
 @configclass
@@ -45,18 +55,15 @@ class ThreeACTEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
         self.scene.robot_1.init_state.pos = (0.12, 0.0, 0.101)
         self.scene.robot_1.init_state.rot = (0.9659, 0.0, 0.2588, 0.0)
 
-
         self.scene.robot_2 = PSM_FAST_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot_2")
         self.scene.robot_2.init_state.pos = (-0.12, 0.0, 0.101)
         self.scene.robot_2.init_state.rot = (0.9659, 0.0, -0.2588, 0.0)
 
-
         self.scene.robot_3 = PSM_FAST_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot_3")
         self.scene.robot_3.init_state.pos = (0.0, -0.034, 0.093)
         self.scene.robot_3.init_state.rot = (0.99144486, 0.13052619, 0.0, 0.0)
-        # Set actions for the specific robot type (PSM)
 
-
+        # Set cube objects (unchanged)
         self.scene.cube_rigid_1 = RigidObjectCfg(
             prim_path="/World/Objects/CubeRigid",
             init_state=RigidObjectCfg.InitialStateCfg(
@@ -127,7 +134,6 @@ class ThreeACTEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
             )
         )
 
-
         self.scene.cube_rigid_3 = RigidObjectCfg(
             prim_path="/World/Objects/CubeRigid3",
             init_state=RigidObjectCfg.InitialStateCfg(
@@ -162,7 +168,6 @@ class ThreeACTEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
                 ),
             )
         )
-
 
         self.scene.cube_rigid_4 = RigidObjectCfg(
             prim_path="/World/Objects/CubeRigid4",
@@ -199,6 +204,7 @@ class ThreeACTEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
             )
         )
 
+        # PSM joint names
         psm_joint_names = [
             "psm_yaw_joint",
             "psm_pitch_end_joint",
@@ -208,64 +214,60 @@ class ThreeACTEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
             "psm_tool_yaw_joint",
         ]
 
+        # Get control configuration
+        if model_control in CONTROL_MODE_MAPPING:
+            control_config = CONTROL_MODE_MAPPING[model_control]
+        else:
+            print(f"[WARNING] Unknown model_control: {model_control}, using 'none'")
+            control_config = CONTROL_MODE_MAPPING["none"]
 
-        if model_control == "psm3":
-
-            self.actions.arm_1_action = DifferentialInverseKinematicsActionCfg(
-                asset_name="robot_1",
-                joint_names=psm_joint_names,
-                body_name="psm_tool_tip_link",
-                controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=False, ik_method="dls"),
-            )
-
-            self.actions.arm_2_action = DifferentialInverseKinematicsActionCfg(
-                asset_name="robot_2",
-                joint_names=psm_joint_names,
-                body_name="psm_tool_tip_link",
-                controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=False, ik_method="dls"),
-            )
-
-            self.actions.arm_3_action = JointPositionActionCfg(
-                asset_name="robot_3",
-                joint_names=psm_joint_names,
-                scale=1.0,
-                use_default_offset=False,
-            )
-
-        elif model_control == "all":
-
+        # Configure PSM1 action based on control mode
+        if control_config["PSM1"] == "model":
+            # Model control: 6D joint-space action
             self.actions.arm_1_action = JointPositionActionCfg(
                 asset_name="robot_1",
                 joint_names=psm_joint_names,
                 scale=1.0,
                 use_default_offset=False,
             )
-            self.actions.arm_2_action = JointPositionActionCfg(
-                asset_name="robot_2",
-                joint_names=psm_joint_names,
-                scale=1.0,
-                use_default_offset=False,
-            )
-            self.actions.arm_3_action = JointPositionActionCfg(
-                asset_name="robot_3",
-                joint_names=psm_joint_names,
-                scale=1.0,
-                use_default_offset=False,
-            )
-
-        else: 
+        else:
+            # Human control: 7D task-space action
             self.actions.arm_1_action = DifferentialInverseKinematicsActionCfg(
                 asset_name="robot_1",
                 joint_names=psm_joint_names,
                 body_name="psm_tool_tip_link",
                 controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=False, ik_method="dls"),
             )
+
+        # Configure PSM2 action based on control mode
+        if control_config["PSM2"] == "model":
+            # Model control: 6D joint-space action
+            self.actions.arm_2_action = JointPositionActionCfg(
+                asset_name="robot_2",
+                joint_names=psm_joint_names,
+                scale=1.0,
+                use_default_offset=False,
+            )
+        else:
+            # Human control: 7D task-space action
             self.actions.arm_2_action = DifferentialInverseKinematicsActionCfg(
                 asset_name="robot_2",
                 joint_names=psm_joint_names,
                 body_name="psm_tool_tip_link",
                 controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=False, ik_method="dls"),
             )
+
+        # Configure PSM3 action based on control mode
+        if control_config["PSM3"] == "model":
+            # Model control: 6D joint-space action
+            self.actions.arm_3_action = JointPositionActionCfg(
+                asset_name="robot_3",
+                joint_names=psm_joint_names,
+                scale=1.0,
+                use_default_offset=False,
+            )
+        else:
+            # Human control: 7D task-space action
             self.actions.arm_3_action = DifferentialInverseKinematicsActionCfg(
                 asset_name="robot_3",
                 joint_names=psm_joint_names,
@@ -273,8 +275,7 @@ class ThreeACTEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
                 controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=False, ik_method="dls"),
             )
 
-
-
+        # Gripper actions are always joint position control (2D each)
         self.actions.gripper_1_action = mdp.JointPositionActionCfg(
             asset_name="robot_1",
             joint_names=[
@@ -283,8 +284,8 @@ class ThreeACTEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
             ],
             scale=1.0,
             use_default_offset=False,
-  
         )
+
         self.actions.gripper_2_action = mdp.JointPositionActionCfg(
             asset_name="robot_2",
             joint_names=[
@@ -293,8 +294,8 @@ class ThreeACTEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
             ],
             scale=1.0,
             use_default_offset=False,
-
         )
+
         self.actions.gripper_3_action = mdp.JointPositionActionCfg(
             asset_name="robot_3",
             joint_names=[
@@ -303,10 +304,16 @@ class ThreeACTEnvCfg(base_env_cfg.SingleTeleopBaseEnv):
             ],
             scale=1.0,
             use_default_offset=False,
-
         )
 
+        # Print action configuration for debugging
+        total_dim = 0
+        for psm_name, control_mode in control_config.items():
+            if control_mode == "model":
+                total_dim += 8  # 6 joints + 2 gripper
+                print(f"[ENV_CONFIG] {psm_name}: Model control (6D joint + 2D gripper = 8D)")
+            else:
+                total_dim += 9  # 7 pose + 2 gripper  
+                print(f"[ENV_CONFIG] {psm_name}: Human control (7D pose + 2D gripper = 9D)")
         
-
-
-
+        print(f"[ENV_CONFIG] Total expected action dimension: {total_dim}D")
