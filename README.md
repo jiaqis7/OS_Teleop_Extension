@@ -1,3 +1,7 @@
+## Autonomous-Surgical-Robot-Isaacgym
+Project with CHARM and IPRL on the Da Vinci Surgical Robot. The project aims to automate one of the arms as an assistant (using imitation learning) to collaborate with the surgeon. 
+
+## Table of contents
 ## Requirements
 1. dVRK
 2. ORBIT-Surgical
@@ -10,65 +14,137 @@ conda install conda-forge::python-orocos-kdl
 
 If all requirements were installed properly, you should not have to resolve any additional errors when running scripts.
 
-Test the connection with existing packages by running the line below in the orbitsurgical conda environment.
+## Overview
+This repo mainly focus on the training & testing in isaacgym simulation environment. There are three functionalities - teleoperation, data collection and model rollout. The instructions have been described in detail below. It is assumed that the commands are executed from the SRC (Stanford Robotics Centre) computer in the Medical Bay connected to the Da Vinci Robot (Si Model).
+
+## File Structure
+
+## Teleoperation
+
+### Step 1: Launch the dvrk console (New Terminal)
 
 ```bash
-python scripts/example/zero_agent.py --task Isaac-CustomTest-v1
+roslaunch teleop arms_real.launch
 ```
 
-It should show a simulation window with two PSMs and one needle without any movements.
+You should see two windows appearing one after another. The first one is an RViz window and the second one is the console (the GUI to control the robot). The `arms_real.launch` launch files will run the `dvrk_console_json` node from the dVRK package and other static coordinate transformations that are required for the teleoperation.
 
-## Running Teleoperations
-All teleoperation environments and interfaces were developed to match hand-eye coordination. Therefore, they use additional cameras in the scene, and it is required to add --enable_cameras when running teleoperation environments.
-### MTM Teleoperation
-If you are using the real MTMs for teleoperation, run
-```bash
-python scripts/teleoperation/teleop_mtm.py --enable_cameras
-```
-MTM will automatically move to match the orientation of PSMs in the simulation. After that, you can press and release the clutch button for the first time to start teleoperation.
+### Step 2: Click the Power On button followed by the Home button in the console
 
-To terminate teleoperation, press the MONO button or simply use the keyboard interrupt by Ctrl + C.
+Clicking the `Power On button` turns the LED on the arms to blue. Clicking the `Home` button turns them green and you will notice the MTMs moving towards their home position. Wait for all the arms to turn green, sometimes it takes longer for SUJ to turn green.
 
-By default, it uses a teleoperation scaling of 0.4. You can change it by adding the argument. For example, if you want to run the teleoperation with a scale of 1.0, run
-```bash
-python scripts/teleoperation/teleop_mtm.py --scale 1.0 --enable_cameras
-```
-
-#### Using Simulated MTM Inputs
-It is also available to mimic the output from MTMs using the dvrk_model ROS package, through
-```bash
-roslaunch dvrk_model surgeon_console.launch
-```
-To output the clutch signal, you can use 
-```bash
-#clutch released
-rostopic pub /console/clutch sensor_msgs/Joy '{header: {stamp: {secs: 0, nsecs: 0}, frame_id: ""}, axes: [0.0, 0.0], buttons: [0]}'
-#clutch pressed
-rostopic pub /console/clutch sensor_msgs/Joy '{header: {stamp: {secs: 0, nsecs: 0}, frame_id: ""}, axes: [0.0, 0.0], buttons: [1]}' 
-```
-
-In this case, you have to run
-```bash
-python scripts/teleoperation/teleop_mtm.py --is_simulated True --enable_cameras
-```
-
-#### Enable Logging
-To enable logging, run 
-```bash
-python scripts/teleoperation/teleop_mtm.py --enable_logging True --enable_cameras
-```
-
-### PhantomOmni Teleoperation
-To run the teleoperation script for a PhantomOmni device, use
+### Step 3: Launching the Phantom Omni device (New Terminal)
 
 ```bash
-python scripts/teleoperation/teleop_po.py --enable_cameras
+roslaunch teleop phantom_real.launch
 ```
 
-### MTM + PhantomOmni Teleoperation
-To run the script for the teleoperation using both MTM and PhantomOmni simultaneously, run
+The `phantom_real.launch` file contains the nodes required to simulate the digital twin and publish the pose of the phantom omni's stylus with respect to it's base. You should be a simulated model of the phantom omni in RViz.
+
+Sometimes, this command can throw permission errors (when the phantom omni is re-plugged or the computer is restarted). Run the following command when that happens:
 
 ```bash
-python scripts/teleoperation/teleop_mtm_po.py --enable_cameras
+sudo chmod 777 /dev/ttyACM0
 ```
+
+and relaunch the `phantom_real.launch` using the command above.
+
+### Step 4: Launching the isaacgym simulation environment (New Terminal)
+
+There are three main control patterns for teleoperation:
+
+1. Two PSMs: Both PSMs in the simulation are controlled by Both MTMs
+```bash
+cd ~/OS_Teleop_Extension
+conda activate orbitsurgical
+python script/teleoperation/teleop_mtm.py --enable_cameras
+```
+
+2. Two PSMs: The left PSM in the simulation is controlled by the Phantom Omni, while the right PSM in the simulation is controlled by the right MTM
+```bash
+cd ~/OS_Teleop_Extension
+conda activate orbitsurgical
+python script/teleoperation/teleop_mtmr_po.py --enable_cameras
+```
+
+3. Three PSMs: Both left/right PSMs in the simulation are controlled by the left/right MTMs, while the central PSM in the simulation is controlled by the Phantom Omni
+```bash
+cd ~/OS_Teleop_Extension
+conda activate orbitsurgical
+python script/teleoperation/teleop_mtm_po.py --enable_cameras
+```
+
+After launching, there would be three windows, the bigger window shows the main view, while there are two small windows that show the view of left camera and right camera (the left camera view is hided behind the right camera view). In order to move these two small windows to the screen of comsol above the MTMs, here are the steps:
+
+1. Right click window of right camera view, click move to external window
+2. Right click window of left camera view, click move to external window
+3. Click window of left camera view, type `Win + Shift + <' **TWICE**
+4. Click window of right camera view, type `Win + Shift + <' **ONCE**
+
+Now both views of left camera and right camera would be on the comsol of MTMs, go and check them!
+
+The pose of MTM would be automatically set to match the orientation of PSM that it controls before clutch, while for Phantom Omni the user needs to hold it at the pose that almost match the orientation of PSM before clutch for better manipulation during teleoperation. To start teleoperation, press and release the `clutch` buttom under the MTMs to start MTM control, press the black button on the Phantom Omni to start PO control. 
+
+## Data Collection (New Terminal)
+
+During the teleoperation, users could launch the function of data collection to record the robot's states and camera views during teleoperation by sending the command
+```bash
+cd ~/OS_Teleop_Extension
+conda activate orbitsurgical
+touch log_trigger_demo_1.txt
+```
+That would create a folder called `demo_1` under `OS_Teleop_Extension` which include a csv file called `teleop_log.csv` that record the robot states, two folders record the images from left camera and right camera, and a json file record the environment related parameters during teleoperation. If not satisfied with this demo_1, just relaunch the script 
+```bash
+touch log_trigger_demo_1.txt
+```
+again and the new folder demo_1 would replace the old one. 
+
+## Reset (New Terminal)
+
+After one round of demo, we need to reset the environment to do the next one. By sending the command
+```bash
+cd ~/OS_Teleop_Extension
+conda activate orbitsurgical
+touch reset_trigger.txt
+```
+
+The pose of PSMs would be set back to the pose when first launching the simulation environment, while the pose of other objects in the environment would be randomly assigned due to the requirement of randomization of task environment. After resetting, both MTMs and Phantom Omni needs to be reclutched in order to restart the teleoperation.
+
+## Replay 
+
+In order to check whether the data in teleop_log.csv is valid for model training, we also add the function to playback the demo recorded by sending the command
+```bash
+cd ~/OS_Teleop_Extension
+conda activate orbitsurgical
+python scripts/playback/playback_three_arm.py --enable_cameras --csv_file demo_1/teleop_log.csv
+```
+
+Remember to kill the teleoperation environment before launching this replay environment!
+The motion of PSMs during the episode recorded would be replayed by reading the robot states data in the csv file. 
+
+## Model Rollout
+
+There are several schemes for the model rollout:
+1. Fully Autonomous: All 3 PSMs are controlled by the model
+```bash
+cd ~/OS_Teleop_Extension
+conda activate orbitsurgical
+python scripts/act/ACT_Three_Arm.py --enable_cameras --model_control all
+```
+2. Collaborative: The left/right PSMs are controlled by MTMs by human, the central PSM is controlled by model
+```bash
+cd ~/OS_Teleop_Extension
+conda activate orbitsurgical
+python scripts/act/ACT_Three_Arm.py --enable_cameras --model_control psm3
+```
+
+After launching the simulation environment, trigger the model control by sending the command
+```bash
+cd ~/OS_Teleop_Extension
+conda activate orbitsurgical
+touch model_trigger.txt
+```
+in a separate terminal. 
+
+
 
