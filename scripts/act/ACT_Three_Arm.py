@@ -1,85 +1,3 @@
-# import argparse
-# import os
-# import sys
-# import time
-# from omni.isaac.lab.app import AppLauncher
-
-# # add argparse arguments
-# parser = argparse.ArgumentParser(description="MTM+Model teleoperation for Custom MultiArm dVRK environments.")
-# parser.add_argument("--disable_fabric", action="store_true", default=False)
-# parser.add_argument("--num_envs", type=int, default=1)
-# parser.add_argument("--task", type=str, default="Isaac-Three-ACT-v0")
-# parser.add_argument("--scale", type=float, default=0.4)
-# parser.add_argument("--is_simulated", type=bool, default=False)
-# parser.add_argument("--enable_logging", action="store_true")
-# parser.add_argument("--log_trigger_file", type=str, default="log_trigger.txt")
-# parser.add_argument("--disable_viewport", action="store_true")
-# parser.add_argument("--demo_name", type=str, default=None)
-
-# # Model control argument
-# parser.add_argument(
-#     "--model_control",
-#     type=str,
-#     choices=["psm1", "psm2", "psm3", "psm12", "all", "none"],
-#     default="none",
-#     help="Choose which arm(s) are controlled by the model"
-# )
-
-# # Model paths
-# parser.add_argument("--model_train_dir", type=str, 
-#     default="/home/stanford/Demo_collections1/Models/4_orbitsim_single_human_demos/Joint Control/20250602-222005_stupendous-skunk_train",
-#     help="Path to model training directory")
-# parser.add_argument("--model_ckpt_path", type=str,
-#     default="/home/stanford/Demo_collections1/Models/4_orbitsim_single_human_demos/Joint Control/20250602-222005_stupendous-skunk_train/policy_epoch_20000_seed_0.ckpt",
-#     help="Path to model checkpoint")
-
-# AppLauncher.add_app_launcher_args(parser)
-# args_cli = parser.parse_args()
-
-# # launch omniverse app
-# app_launcher = AppLauncher(args_cli)
-# simulation_app = app_launcher.app
-
-# # Fix import path
-# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
-
-# import gymnasium as gym
-# import torch
-# import numpy as np
-# from scipy.spatial.transform import Rotation as R
-# import omni.kit.viewport.utility as vp_utils
-
-# from omni.isaac.lab_tasks.utils import parse_env_cfg
-# from scripts.teleoperation.tf_utils import pose_to_transformation_matrix, transformation_matrix_to_pose
-# from teleop_interface.MTM.se3_mtm import MTMTeleop
-# from teleop_interface.phantomomni.se3_phantomomni import PhantomOmniTeleop
-# from teleop_interface.MTM.mtm_manipulator import MTMManipulator
-# from scripts.teleoperation.teleop_logger_3_arm import TeleopLogger, reset_cube_pose, log_current_pose
-# import custom_envs
-
-# # Import model controller only if needed
-# try:
-#     from AdaptACT.procedures.controller import AutonomousController
-#     MODEL_AVAILABLE = True
-# except ImportError:
-#     print("[WARNING] AdaptACT not available. Model control disabled.")
-#     MODEL_AVAILABLE = False
-
-# # Configuration for control modes
-# CONTROL_CONFIGS = {
-#     "psm1": {"PSM1": "model", "PSM2": "human", "PSM3": "human"},
-#     "psm2": {"PSM1": "human", "PSM2": "model", "PSM3": "human"},
-#     "psm3": {"PSM1": "human", "PSM2": "human", "PSM3": "model"},
-#     "psm12": {"PSM1": "model", "PSM2": "model", "PSM3": "human"},
-#     "all": {"PSM1": "model", "PSM2": "model", "PSM3": "model"},
-#     "none": {"PSM1": "human", "PSM2": "human", "PSM3": "human"}
-# }
-
-# # Constants
-# MODEL_TRIGGER_PATH = os.path.join(os.path.dirname(__file__), "model_trigger.txt")
-# RESET_TRIGGER_PATH = "reset_trigger.txt"
-
-
 import argparse
 import os
 import sys
@@ -163,9 +81,14 @@ CONTROL_CONFIGS = {
     "none": {"PSM1": "human", "PSM2": "human", "PSM3": "human"}
 }
 
-# Constants
-MODEL_TRIGGER_PATH = os.path.join(os.path.dirname(__file__), "model_trigger.txt")
-RESET_TRIGGER_PATH = "reset_trigger.txt"
+# Constants - Modified to use current working directory
+MODEL_TRIGGER_PATH = os.path.join(os.getcwd(), "model_trigger.txt")
+RESET_TRIGGER_PATH = os.path.join(os.getcwd(), "reset_trigger.txt")
+
+# Print the paths for debugging
+print(f"[DEBUG] MODEL_TRIGGER_PATH: {MODEL_TRIGGER_PATH}")
+print(f"[DEBUG] RESET_TRIGGER_PATH: {RESET_TRIGGER_PATH}")
+print(f"[DEBUG] Current working directory: {os.getcwd()}")
 
 
 class TeleopActionGenerator:
@@ -359,22 +282,6 @@ class MixedController:
     
 
 
-# def reset_psms_to_initial_pose(env, saved_tips, base_matrices, num_steps=30):
-#     """Reset PSMs to initial poses"""
-#     actions = []
-#     for i in range(3):
-#         T_world_tip = pose_to_transformation_matrix(*saved_tips[i])
-#         T_base = base_matrices[i]
-#         base_T_tip = np.linalg.inv(T_base) @ T_world_tip
-#         pos, quat = transformation_matrix_to_pose(base_T_tip)
-#         jaw = [0.0, 0.0]
-#         actions.extend([*pos, *quat, *jaw])
-    
-#     action_tensor = torch.tensor(np.array(actions, dtype=np.float32), device=env.unwrapped.device).unsqueeze(0)
-#     for _ in range(num_steps):
-#         env.step(action_tensor)
-
-
 def reset_psms_to_initial_pose(env, saved_tips, base_matrices, control_config, num_steps=30):
     """Reset PSMs to initial poses with correct action dimensions"""
     actions = []
@@ -514,7 +421,7 @@ def main():
     teleop_logger = TeleopLogger(
         trigger_file=args_cli.log_trigger_file,
         psm_name_dict=psm_name_dict,
-        log_duration=22.0
+        log_duration=10.0
     )
     
     print("[INFO] System initialized. Waiting for input...")
@@ -637,11 +544,16 @@ def main():
                 'g3': g3
             }
         
-        # Handle model trigger
-        if os.path.exists(MODEL_TRIGGER_PATH) and not model_triggered:
-            print(f"[MODEL] Trigger detected. Starting ACT control.")
-            model_triggered = True
-            printed_trigger = True
+
+        if os.path.exists(MODEL_TRIGGER_PATH):
+            if not model_triggered:
+                print(f"[MODEL] Trigger detected. Starting ACT control.")
+                # Reset the controller before starting new rollout
+                if controller:
+                    controller.reset()
+                    print("[MODEL] Controller reset for new rollout.")
+                model_triggered = True
+                printed_trigger = True
             try:
                 os.remove(MODEL_TRIGGER_PATH)
             except Exception as e:
@@ -678,7 +590,8 @@ def main():
                     if printed_trigger:
                         print("[MODEL] ACT rollout completed. Freezing at last pose.")
                         printed_trigger = False
-                    model_triggered = False
+                    # Keep model_triggered as True so we can restart with new trigger
+                    # Don't set to False here - let the trigger handling reset it
                     model_output = last_model_output
                 else:
                     raise
@@ -695,6 +608,8 @@ def main():
         # Handle reset trigger
         if os.path.exists(RESET_TRIGGER_PATH):
             print("[RESET] Detected reset trigger. Resetting environment...")
+
+            
             
             # Reset cubes with randomization - Fix cube naming
             cube_configs = [
@@ -709,13 +624,15 @@ def main():
                 cube_quat = R.from_euler("z", cube_yaw).as_quat()
                 cube_ori = [cube_quat[3], cube_quat[0], cube_quat[1], cube_quat[2]]
                 reset_cube_pose(env, log_path, cube_pos, cube_ori, cube_key=cube_key)
-            
+
             # Reset PSMs
-            reset_psms_to_initial_pose(env, saved_tips, world_T_b, control_config, num_steps=30)
+            reset_psms_to_initial_pose(env, saved_tips, world_T_b, control_config, num_steps=20)
             
             # Reset controllers
             if controller:
                 controller.reset()
+                print("[RESET] Model controller reset.")
+
             
             if needs_human_control:
                 mtm_manipulator.home()
@@ -732,11 +649,15 @@ def main():
             po_waiting_for_clutch = True
             model_triggered = False
             printed_trigger = False
+            # last_model_output = None
             
             os.remove(RESET_TRIGGER_PATH)
             print("[RESET] Reset complete. System ready.")
             continue
         
+
+
+
         # Handle logging
         teleop_logger.check_and_start_logging(env)
         if teleop_logger.enable_logging and teleop_logger.frame_num == 0:
