@@ -15,6 +15,13 @@ parser.add_argument("--disable_viewport", action="store_true")
 parser.add_argument("--log_trigger_file", type=str, default="log_trigger.txt")
 parser.add_argument("--enable_logging", action="store_true")
 parser.add_argument("--demo_name", type=str, default=None)
+
+parser.add_argument(
+    "--log_duration", type=float, default=22.0,
+    help="Duration of logging in seconds"
+)
+
+
 AppLauncher.add_app_launcher_args(parser)
 args_cli = parser.parse_args()
 
@@ -30,6 +37,11 @@ simulation_app = app_launcher.app
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+
+
+# CRITICAL: Set global config BEFORE launching app and creating environment
+import global_cfg
+global_cfg.log_duration = args_cli.log_duration
 
 import gymnasium as gym
 import torch
@@ -156,7 +168,7 @@ def main():
     teleop_logger = TeleopLogger(
         trigger_file=args_cli.log_trigger_file,
         psm_name_dict=psm_name_dict,
-        log_duration=22.0  # seconds
+        log_duration=args_cli.log_duration  # seconds
     )
 
     scale = args_cli.scale
@@ -186,6 +198,8 @@ def main():
     was_in_mtm_clutch, was_in_po_clutch = True, True
     po_waiting_for_clutch = False
     mtm_synced = False
+
+    
 
     print("[INFO] Waiting for MTM and PO clutch to initialize...")
 

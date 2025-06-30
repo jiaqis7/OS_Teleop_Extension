@@ -25,6 +25,9 @@ parser.add_argument(
     help="Choose which arm(s) are controlled by the model"
 )
 
+parser.add_argument("--log_duration", type=float, default=22.0,
+    help="Duration of logging in seconds")
+
 # Model paths
 parser.add_argument("--model_train_dir", type=str,
     default="/home/stanford/Demo_collections1/Models/4_orbitsim_single_human_demos/Joint Control/20250602-222005_stupendous-skunk_train",
@@ -41,6 +44,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")
 # CRITICAL: Set global config BEFORE launching app and creating environment
 import global_cfg
 global_cfg.model_control = args_cli.model_control
+global_cfg.log_duration = args_cli.log_duration
+
 
 # launch omniverse app
 app_launcher = AppLauncher(args_cli)
@@ -393,6 +398,9 @@ def main():
     model_triggered = False
     printed_trigger = False
 
+    init_stylus_position = None
+    init_psm3_tip_position = None
+
 
     # Initialize saved poses
     saved_poses = {}
@@ -421,7 +429,7 @@ def main():
     teleop_logger = TeleopLogger(
         trigger_file=args_cli.log_trigger_file,
         psm_name_dict=psm_name_dict,
-        log_duration=10.0
+        log_duration=global_cfg.log_duration
     )
     
     print("[INFO] System initialized. Waiting for input...")
@@ -447,8 +455,7 @@ def main():
                 robot.data.body_link_quat_w[0][0].cpu().numpy()
             )
         world_T_b = [get_T_base(r) for r in [psm1, psm2, psm3]]
-        
-        # Handle human teleoperation data
+
         human_data = None
         if needs_human_control:
             # Get MTM data
@@ -457,7 +464,13 @@ def main():
                 time.sleep(0.05)
                 continue
             
-            # MTM synchronization
+            # Get Phantom Omni data
+            stylus_pose, g3, po_clutch = po_teleop.advance()
+            if po_clutch is None:
+                time.sleep(0.05)
+                continue
+            
+            # MTM synchronization - only sync MTMs for PSMs that need human control
             if not mtm_synced:
                 print("[SYNC] Aligning MTM orientation to PSM tips...")
                 def tip_T(robot):
@@ -465,10 +478,31 @@ def main():
                         robot.data.body_link_pos_w[0][-1].cpu().numpy(),
                         robot.data.body_link_quat_w[0][-1].cpu().numpy()
                     )
-                mtm_manipulator.adjust_orientation(
-                    mtm_interface.simpose2hrsvpose(cam_T_world @ tip_T(psm1)),
-                    mtm_interface.simpose2hrsvpose(cam_T_world @ tip_T(psm2))
-                )
+                
+                # Determine which PSMs need MTM control based on your desired mapping
+                if control_config["PSM1"] == "model":  # PSM1 is model controlled
+                    if control_config["PSM2"] == "human":  # PSM2 needs human control (right MTM)
+                        # Align right MTM to PSM2, left MTM can be aligned to PSM2 as well
+                        mtm_manipulator.adjust_orientation(
+                            mtm_interface.simpose2hrsvpose(cam_T_world @ tip_T(psm2)),
+                            mtm_interface.simpose2hrsvpose(cam_T_world @ tip_T(psm2))
+                        )
+                    else:  # Both PSM1 and PSM2 are model controlled, no MTM alignment needed
+                        pass
+                        
+                elif control_config["PSM2"] == "model":  # PSM2 is model controlled
+                    if control_config["PSM1"] == "human":  # PSM1 needs human control (left MTM)
+                        # Align left MTM to PSM1, right MTM can be aligned to PSM1 as well
+                        mtm_manipulator.adjust_orientation(
+                            mtm_interface.simpose2hrsvpose(cam_T_world @ tip_T(psm1)),
+                            mtm_interface.simpose2hrsvpose(cam_T_world @ tip_T(psm1))
+                        )
+                        
+                else:  # Both PSM1 and PSM2 need human control (original case)
+                    mtm_manipulator.adjust_orientation(
+                        mtm_interface.simpose2hrsvpose(cam_T_world @ tip_T(psm1)),
+                        mtm_interface.simpose2hrsvpose(cam_T_world @ tip_T(psm2))
+                    )
                 
                 # Save initial poses
                 for i, psm in enumerate([psm1, psm2, psm3]):
@@ -490,7 +524,21 @@ def main():
             mtm_q2 = R.from_rotvec(mtmr_rot).as_quat()
             mtm_q2 = np.concatenate([[mtm_q2[3]], mtm_q2[:3]])
             
-            # MTM clutch handling
+            # Initialize transforms for all PSMs with current positions
+            cam_T_psm1 = cam_T_world @ pose_to_transformation_matrix(
+                psm1.data.body_link_pos_w[0][-1].cpu().numpy(),
+                psm1.data.body_link_quat_w[0][-1].cpu().numpy()
+            )
+            cam_T_psm2 = cam_T_world @ pose_to_transformation_matrix(
+                psm2.data.body_link_pos_w[0][-1].cpu().numpy(),
+                psm2.data.body_link_quat_w[0][-1].cpu().numpy()
+            )
+            cam_T_psm3 = cam_T_world @ pose_to_transformation_matrix(
+                psm3.data.body_link_pos_w[0][-1].cpu().numpy(),
+                psm3.data.body_link_quat_w[0][-1].cpu().numpy()
+            )
+            
+            # MTM clutch handling with dynamic assignment
             if not mtm_clutch:
                 if was_in_mtm_clutch:
                     init_mtml_pos = mtml_pos
@@ -503,31 +551,84 @@ def main():
                     init_psm1_tip_pos = init_tip(psm1)
                     init_psm2_tip_pos = init_tip(psm2)
                 
-                p1_target = init_psm1_tip_pos + (mtml_pos - init_mtml_pos) * args_cli.scale
-                p2_target = init_psm2_tip_pos + (mtmr_pos - init_mtmr_pos) * args_cli.scale
-                cam_T_psm1 = pose_to_transformation_matrix(p1_target, mtm_q1)
-                cam_T_psm2 = pose_to_transformation_matrix(p2_target, mtm_q2)
+                # Apply MTM control based on your desired mapping
+                if control_config["PSM1"] == "model":  # model_control psm1
+                    # PSM2 controlled by right MTM
+                    if control_config["PSM2"] == "human":
+                        p2_target = init_psm2_tip_pos + (mtmr_pos - init_mtmr_pos) * args_cli.scale
+                        cam_T_psm2 = pose_to_transformation_matrix(p2_target, mtm_q2)
+                    # PSM1 keeps current position (will be overridden by model)
+                    
+                elif control_config["PSM2"] == "model":  # model_control psm2
+                    # PSM1 controlled by left MTM
+                    if control_config["PSM1"] == "human":
+                        p1_target = init_psm1_tip_pos + (mtml_pos - init_mtml_pos) * args_cli.scale
+                        cam_T_psm1 = pose_to_transformation_matrix(p1_target, mtm_q1)
+                    # PSM2 keeps current position (will be overridden by model)
+                    
+                elif control_config["PSM3"] == "model":  # model_control psm3
+                    # PSM1 controlled by left MTM, PSM2 controlled by right MTM
+                    if control_config["PSM1"] == "human":
+                        p1_target = init_psm1_tip_pos + (mtml_pos - init_mtml_pos) * args_cli.scale
+                        cam_T_psm1 = pose_to_transformation_matrix(p1_target, mtm_q1)
+                    if control_config["PSM2"] == "human":
+                        p2_target = init_psm2_tip_pos + (mtmr_pos - init_mtmr_pos) * args_cli.scale
+                        cam_T_psm2 = pose_to_transformation_matrix(p2_target, mtm_q2)
+                        
+                else:  # model_control none - all human controlled
+                    # Original mapping: left MTM → PSM1, right MTM → PSM2
+                    p1_target = init_psm1_tip_pos + (mtml_pos - init_mtml_pos) * args_cli.scale
+                    p2_target = init_psm2_tip_pos + (mtmr_pos - init_mtmr_pos) * args_cli.scale
+                    cam_T_psm1 = pose_to_transformation_matrix(p1_target, mtm_q1)
+                    cam_T_psm2 = pose_to_transformation_matrix(p2_target, mtm_q2)
+                
                 was_in_mtm_clutch = False
             else:
                 was_in_mtm_clutch = True
-                def cur_tip(robot):
-                    return cam_T_world @ pose_to_transformation_matrix(
-                        robot.data.body_link_pos_w[0][-1].cpu().numpy(),
-                        robot.data.body_link_quat_w[0][-1].cpu().numpy()
-                    )
-                cam_T_psm1 = cur_tip(psm1)
-                cam_T_psm2 = cur_tip(psm2)
+                # When in clutch, all PSMs keep current positions (already set above)
             
-            # Phantom Omni handling
-            stylus_pose, g3, po_clutch = po_teleop.advance()
-            if po_clutch is None:
-                time.sleep(0.05)
-                continue
+            # Phantom Omni handling for PSM3 - ALWAYS active if PSM3 is human controlled
+            if control_config["PSM3"] == "human":
+                # Initialize cam_T_psm3 with current position first
+                cam_T_psm3 = cam_T_world @ pose_to_transformation_matrix(
+                    psm3.data.body_link_pos_w[0][-1].cpu().numpy(),
+                    psm3.data.body_link_quat_w[0][-1].cpu().numpy()
+                )
+                
+                if not po_clutch:
+                    if po_waiting_for_clutch:
+                        pass  # Do nothing while waiting for clutch
+                    elif was_in_po_clutch:
+                        print("[PO] Clutch released. Initializing teleoperation.")
+                        init_stylus_position = stylus_pose[:3]
+                        tip_pose = psm3.data.body_link_pos_w[0][-1].cpu().numpy()
+                        tip_quat = psm3.data.body_link_quat_w[0][-1].cpu().numpy()
+                        world_T_psm3tip = pose_to_transformation_matrix(tip_pose, tip_quat)
+                        cam_T_psm3tip_init = cam_T_world @ world_T_psm3tip
+                        init_psm3_tip_position = cam_T_psm3tip_init[:3, 3]
+                        was_in_po_clutch = False
+
+                    # Apply Phantom Omni control if initialized
+                    if 'init_stylus_position' in locals() and init_stylus_position is not None and \
+                    'init_psm3_tip_position' in locals() and init_psm3_tip_position is not None:
+                        stylus_orientation = R.from_rotvec(stylus_pose[3:]).as_quat()
+                        stylus_orientation = np.concatenate([[stylus_orientation[3]], stylus_orientation[:3]])
+                        psm3_target = init_psm3_tip_position + (stylus_pose[:3] - init_stylus_position) * args_cli.scale
+                        cam_T_psm3 = pose_to_transformation_matrix(psm3_target, stylus_orientation)
+
+                else:  # po_clutch is True
+                    if po_waiting_for_clutch:
+                        print("[PO] Clutch pressed after reset. Ready to resume.")
+                        po_waiting_for_clutch = False
+                        was_in_po_clutch = True
+                    if not was_in_po_clutch:
+                        print("[PO] Clutch pressed. Freezing teleop.")
+                    was_in_po_clutch = True
             
-            cam_T_psm3 = cam_T_world @ pose_to_transformation_matrix(
-                psm3.data.body_link_pos_w[0][-1].cpu().numpy(),
-                psm3.data.body_link_quat_w[0][-1].cpu().numpy()
-            )
+            # Set gripper values based on control configuration
+            final_g1 = g1 if control_config["PSM1"] == "human" else 0.0
+            final_g2 = g2 if control_config["PSM2"] == "human" else 0.0  
+            final_g3 = g3 if control_config["PSM3"] == "human" else 0.0
             
             # Prepare human data for controller
             human_data = {
@@ -539,9 +640,9 @@ def main():
                 'w_T_psm3base': world_T_b[2],
                 'w_T_cam': world_T_cam,
                 'env': env,
-                'g1': g1,
-                'g2': g2,
-                'g3': g3
+                'g1': final_g1,
+                'g2': final_g2,
+                'g3': final_g3
             }
         
 
@@ -646,16 +747,18 @@ def main():
             # Reset state
             was_in_mtm_clutch = True
             was_in_po_clutch = True
-            po_waiting_for_clutch = True
+
             model_triggered = False
             printed_trigger = False
+            init_stylus_position = None
+            init_psm3_tip_position = None
+            po_waiting_for_clutch = True
             # last_model_output = None
             
             os.remove(RESET_TRIGGER_PATH)
             print("[RESET] Reset complete. System ready.")
             continue
-        
-
+    
 
 
         # Handle logging
