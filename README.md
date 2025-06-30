@@ -122,6 +122,11 @@ The motion of PSMs during the episode recorded would be replayed by reading the 
 
 ## Model Rollout
 
+In order to rollout the model, the first step is to add the Adapt-ACT package to the PYTHONPATH, allowing it to be imported in scripts. In other words, import AdaptACT will work as expected.
+```bash
+export PYTHONPATH=$PYTHONPATH:/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot/Models/Adapt-ACT
+```
+
 There are several schemes for the model rollout:
 1. Fully Autonomous: All 3 PSMs are controlled by the model
 ```bash
