@@ -78,8 +78,8 @@ After launching, there would be three windows, the bigger window shows the main 
 
 1. Right click window of right camera view, click move to external window
 2. Right click window of left camera view, click move to external window
-3. Click window of left camera view, type `Win + Shift + <' **TWICE**
-4. Click window of right camera view, type `Win + Shift + <' **ONCE**
+3. Click window of left camera view, type `Win + Shift + <` **TWICE**
+4. Click window of right camera view, type `Win + Shift + <` **ONCE**
 
 Now both views of left camera and right camera would be on the comsol of MTMs, go and check them!
 
@@ -90,7 +90,6 @@ The pose of MTM would be automatically set to match the orientation of PSM that 
 During the teleoperation, users could launch the function of data collection to record the robot's states and camera views during teleoperation by sending the command
 ```bash
 cd ~/OS_Teleop_Extension
-conda activate orbitsurgical
 touch log_trigger_demo_1.txt
 ```
 That would create a folder called `demo_1` under `OS_Teleop_Extension` which include a csv file called `teleop_log.csv` that record the robot states, two folders record the images from left camera and right camera, and a json file record the environment related parameters during teleoperation. If not satisfied with this demo_1, just relaunch the script 
@@ -104,7 +103,6 @@ again and the new folder demo_1 would replace the old one.
 After one round of demo, we need to reset the environment to do the next one. By sending the command
 ```bash
 cd ~/OS_Teleop_Extension
-conda activate orbitsurgical
 touch reset_trigger.txt
 ```
 
@@ -131,20 +129,31 @@ cd ~/OS_Teleop_Extension
 conda activate orbitsurgical
 python scripts/act/ACT_Three_Arm.py --enable_cameras --model_control all
 ```
-2. Collaborative: The left/right PSMs are controlled by MTMs by human, the central PSM is controlled by model
+2. Collaborative: The PSM set in `--model_control` is controlled by the model, while others are controlled by the human
 ```bash
 cd ~/OS_Teleop_Extension
 conda activate orbitsurgical
 python scripts/act/ACT_Three_Arm.py --enable_cameras --model_control psm3
 ```
+in which `psm3` here could be chosen from `psm1/psm2/psm3/psm12/all/none`. If PSM3 is controlled by human, it's controlled by the Phantom Omni. If PSM1 or PSM2 is controlled by human, it's controlled by MTMs.
 
 After launching the simulation environment, trigger the model control by sending the command
 ```bash
 cd ~/OS_Teleop_Extension
-conda activate orbitsurgical
 touch model_trigger.txt
 ```
 in a separate terminal. 
 
+In order to record the model process, the user could launch the data collection function in a new terminal by sending the command
+```bash
+cd ~/OS_Teleop_Extension
+touch log_trigger_rollout_1.txt
+```
+The logic is same as data collection during teleoperation, and it could be replayed if needed by
+```bash
+cd ~/OS_Teleop_Extension
+conda activate orbitsurgical
+python scripts/playback/playback_three_arm.py --enable_cameras --csv_file rollout_1/teleop_log.csv
+```
 
 
