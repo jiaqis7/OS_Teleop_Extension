@@ -1,0 +1,3 @@
+[console_scripts]
+usd_to_graphviz = nvidia.srl.from_usd.usd_to_graphviz_cli:main
+usd_to_urdf = nvidia.srl.from_usd.usd_to_urdf_cli:main

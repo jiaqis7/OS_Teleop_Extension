@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 import time
+import json
 from omni.isaac.lab.app import AppLauncher
 
 # add argparse arguments
@@ -15,6 +16,12 @@ parser.add_argument("--enable_logging", action="store_true")
 parser.add_argument("--log_trigger_file", type=str, default="log_trigger.txt")
 parser.add_argument("--disable_viewport", action="store_true")
 parser.add_argument("--demo_name", type=str, default=None)
+
+# Cube position arguments
+parser.add_argument("--cube_poses_json", type=str, default=None,
+    help="Path to JSON file with cube poses (e.g., pose.json from a demo). Used for both initial setup and resets.")
+parser.add_argument("--demos_folder", type=str, default=None,
+    help="Path to folder containing multiple demos with success.json and pose.json files. Will test all failed demos.")
 
 # Model control argument
 parser.add_argument(
@@ -30,7 +37,7 @@ parser.add_argument("--log_duration", type=float, default=22.0,
 
 # Model paths
 parser.add_argument("--model_train_dir", type=str,
-    default="/home/stanford/Demo_collections1/Models/4_orbitsim_single_human_demos/Joint Control/20250602-222005_stupendous-skunk_train",
+    default="/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/6_three_arm_collab/joint control/20250601-235431_lovely-bat_train",
     help="Path to model training directory")
 parser.add_argument("--model_ckpt_path", type=str,
     default="/home/stanford/Demo_collections1/Models/4_orbitsim_single_human_demos/Joint Control/20250602-222005_stupendous-skunk_train/policy_epoch_20000_seed_0.ckpt",
@@ -38,6 +45,10 @@ parser.add_argument("--model_ckpt_path", type=str,
 
 AppLauncher.add_app_launcher_args(parser)
 args_cli = parser.parse_args()
+
+# Debug: Print all parsed arguments
+print(f"[DEBUG] Parsed arguments: {args_cli}")
+print(f"[DEBUG] cube_poses_json = {args_cli.cube_poses_json}")
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
@@ -287,6 +298,82 @@ class MixedController:
     
 
 
+def load_cube_poses_from_json(json_path):
+    """Load cube poses from a JSON file for reset operations"""
+    if not json_path or not os.path.exists(json_path):
+        return None
+    
+    try:
+        with open(json_path, 'r') as f:
+            data = json.load(f)
+        
+        cube_poses = {}
+        for i in range(1, 5):  # cubes 1-4
+            cube_key = f"cube_rigid_{i}"
+            if cube_key in data:
+                cube_poses[cube_key] = {
+                    "position": data[cube_key]["position"],
+                    "orientation": data[cube_key]["orientation"]
+                }
+        
+        print(f"[RESET] Loaded cube poses from {json_path}")
+        return cube_poses
+    
+    except Exception as e:
+        print(f"[ERROR] Failed to load cube poses from JSON: {e}")
+        return None
+
+
+def scan_demos_folder(demos_folder):
+    """Scan demos folder and build tally of failed demos"""
+    if not demos_folder or not os.path.exists(demos_folder):
+        return None
+    
+    failed_demos_tally = []
+    total_demos = 0
+    
+    # Get all subdirectories in the demos folder
+    demo_dirs = [d for d in os.listdir(demos_folder) 
+                 if os.path.isdir(os.path.join(demos_folder, d))]
+    demo_dirs.sort()  # Sort for consistent ordering
+    
+    for demo_dir in demo_dirs:
+        demo_path = os.path.join(demos_folder, demo_dir)
+        success_path = os.path.join(demo_path, "success.json")
+        pose_path = os.path.join(demo_path, "pose.json")
+        
+        # Check if both files exist
+        if os.path.exists(success_path) and os.path.exists(pose_path):
+            total_demos += 1
+            
+            # Check if demo was successful
+            try:
+                with open(success_path, 'r') as f:
+                    success_data = json.load(f)
+                    if not success_data.get("success", True):  # Default to True if not specified
+                        # Load the pose data for this failed demo
+                        cube_poses = load_cube_poses_from_json(pose_path)
+                        if cube_poses:
+                            failed_demos_tally.append({
+                                "demo_name": demo_dir,
+                                "demo_path": demo_path,
+                                "cube_poses": cube_poses,
+                                "index": len(failed_demos_tally) + 1
+                            })
+            except Exception as e:
+                print(f"[WARNING] Failed to read success.json for {demo_dir}: {e}")
+    
+    print(f"[TALLY] Scanned {total_demos} demos in {demos_folder}")
+    print(f"[TALLY] Found {len(failed_demos_tally)} failed demos to retest")
+    
+    if failed_demos_tally:
+        print("[TALLY] Failed demos list:")
+        for i, demo in enumerate(failed_demos_tally, 1):
+            print(f"  {i}. {demo['demo_name']}")
+    
+    return failed_demos_tally
+
+
 def reset_psms_to_initial_pose(env, saved_tips, base_matrices, control_config, num_steps=30):
     """Reset PSMs to initial poses with correct action dimensions"""
     actions = []
@@ -312,6 +399,29 @@ def reset_psms_to_initial_pose(env, saved_tips, base_matrices, control_config, n
 
 
 def main():
+    # Load cube poses from JSON or scan demos folder
+    custom_cube_poses = None
+    failed_demos_tally = None
+    
+    if args_cli.demos_folder:
+        # Mode 3: Scan folder for failed demos
+        print(f"[CONFIG] Scanning demos folder: {args_cli.demos_folder}")
+        failed_demos_tally = scan_demos_folder(args_cli.demos_folder)
+        if failed_demos_tally:
+            print(f"[CONFIG] Ready to test {len(failed_demos_tally)} failed demos")
+            print("[CONFIG] Use reset_trigger1.txt, reset_trigger2.txt, etc. to test specific demos")
+        else:
+            print(f"[CONFIG] No failed demos found in folder")
+    elif args_cli.cube_poses_json:
+        # Mode 2: Single JSON file
+        print(f"[CONFIG] Attempting to load cube poses from: {args_cli.cube_poses_json}")
+        custom_cube_poses = load_cube_poses_from_json(args_cli.cube_poses_json)
+        if custom_cube_poses:
+            print(f"[CONFIG] Successfully loaded {len(custom_cube_poses)} cube poses from JSON")
+        else:
+            print(f"[CONFIG] Failed to load cube poses from JSON")
+    # Mode 1: Random positions (default - no additional setup needed)
+    
     # Initialize control configuration
     control_config = CONTROL_CONFIGS[args_cli.model_control]
     needs_human_control = any(mode == "human" for mode in control_config.values())
@@ -358,12 +468,56 @@ def main():
     
     if needs_model_control:
         try:
-            controller = AutonomousController.from_train_dir(
-                train_dir=args_cli.model_train_dir,
-                ckpt_path=args_cli.model_ckpt_path,
+            # controller = AutonomousController.from_train_dir(
+            #     train_dir="/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250730-084503_resounding-mountaingoat_train",
+            #     ckpt_path="/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250730-084503_resounding-mountaingoat_train/policy_epoch_20000_seed_0.ckpt",
+            #     ckpt_strategy="none",
+            #     device=args_cli.device
+            # )
+
+            controller = AutonomousController.from_multiple_train_dirs(
+                train_dirs=["/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/D1/data1/adaptact/runs/orbitsim_collab_threearm_2025-08-08/joint/20250811-132943_fun-dog_train", "/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/D2/data1/adaptact/runs/orbitsim_collab_threearm_2025-08-08/joint/20250808-222403_skillful-alligator_train","/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/D3/data1/adaptact/runs/orbitsim_collab_threearm_2025-08-08/joint/20250811-133056_beautiful-reptile_train"],
                 ckpt_strategy="none",
+                ckpt_paths=["/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/D1/data1/adaptact/runs/orbitsim_collab_threearm_2025-08-08/joint/20250811-132943_fun-dog_train/policy_epoch_10000_seed_0.ckpt", "/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/D2/data1/adaptact/runs/orbitsim_collab_threearm_2025-08-08/joint/20250808-222403_skillful-alligator_train/policy_epoch_20000_seed_0.ckpt", "/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/D3/data1/adaptact/runs/orbitsim_collab_threearm_2025-08-08/joint/20250811-133056_beautiful-reptile_train/policy_epoch_20000_seed_0.ckpt"],
                 device=args_cli.device
             )
+
+            # controller = AutonomousController.from_multiple_train_dirs(
+            #     train_dirs=["/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250803-182412_wonderful-moose_train", "/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250803-182425_wondrous-armadillo_train","/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250804-194718_fabulous-kangaroo_train"],
+            #     ckpt_strategy="none",
+            #     ckpt_paths=["/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250803-182412_wonderful-moose_train/policy_epoch_20000_seed_0.ckpt", "/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250803-182425_wondrous-armadillo_train/policy_epoch_20000_seed_0.ckpt", "/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250804-194718_fabulous-kangaroo_train/policy_epoch_20000_seed_0.ckpt"],
+            #     device=args_cli.device
+            # )
+
+            # controller = AutonomousController.from_multiple_train_dirs(
+            #     train_dirs=["/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250727-203746_bravo-lamb_train", "/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250727-203951_wondrous-porcupine_train", "/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250729-040951_magical-walrus_train"],
+            #     ckpt_strategy="none",
+            #     ckpt_paths=["/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250727-203746_bravo-lamb_train/policy_epoch_20000_seed_0.ckpt", "/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250727-203951_wondrous-porcupine_train/policy_epoch_20000_seed_0.ckpt", "/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250729-040951_magical-walrus_train/policy_epoch_20000_seed_0.ckpt"],
+            #     device=args_cli.device
+            # )
+
+            # controller = AutonomousController.from_multiple_train_dirs(
+            #     train_dirs=["/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250708-003733_original-finch_train", "/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250708-005418_sweet-mole_train", "/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250709-171313_lovely-panther_train"],
+            #     ckpt_strategy="none",
+            #     ckpt_paths=["/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250708-003733_original-finch_train/policy_epoch_20000_seed_0.ckpt", "/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250708-005418_sweet-mole_train/policy_epoch_20000_seed_0.ckpt", "/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250709-171313_lovely-panther_train/policy_epoch_20000_seed_0.ckpt"],
+            #     device=args_cli.device
+            # )
+
+            # controller = AutonomousController.from_multiple_train_dirs(
+            #     train_dirs=["/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250721-113601_stupendous-lizard_train", "/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250721-113618_cool-mandrill_train", "/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250722-065349_fantastic-salamander_train"],
+            #     ckpt_strategy="none",
+            #     ckpt_paths=["/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250721-113601_stupendous-lizard_train/policy_epoch_20000_seed_0.ckpt", "/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250721-113618_cool-mandrill_train/policy_epoch_20000_seed_0.ckpt", "/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250722-065349_fantastic-salamander_train/policy_epoch_20000_seed_0.ckpt"],
+            #     device=args_cli.device
+            # )
+
+
+
+            # controller = AutonomousController.from_multiple_train_dirs(
+            #     train_dirs=["/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250622-103258_fun-capybara_train", "/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250627-193247_resounding-porpoise_train", "/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250627-193301_thoughtful-turtle_train"],
+            #     ckpt_strategy="none",
+            #     ckpt_paths=["/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250622-103258_fun-capybara_train/policy_epoch_20000_seed_0.ckpt", "/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250627-193247_resounding-porpoise_train/policy_epoch_20000_seed_0.ckpt", "/home/stanford/catkin_ws/src/Autonomous-Surgical-Robot-Data/Models/20250627-193301_thoughtful-turtle_train/policy_epoch_20000_seed_0.ckpt"],
+            #     device=args_cli.device
+            # )
             controller.reset()
             print("[MODEL] Controller loaded successfully")
         except Exception as e:
@@ -385,6 +539,14 @@ def main():
     psm2 = env.unwrapped.scene["robot_2"] 
     psm3 = env.unwrapped.scene["robot_3"]
     psms = {"PSM1": psm1, "PSM2": psm2, "PSM3": psm3}
+    
+    # Save initial cube root states for clean resets (BEFORE any manipulation)
+    initial_cube_states = {}
+    for i in range(1, 5):
+        cube_key = f"cube_rigid_{i}"
+        cube = env.unwrapped.scene[cube_key]
+        initial_cube_states[cube_key] = cube.data.root_state_w.clone()
+    print("[INIT] Saved initial cube root states for clean resets")
     
     # Initialize mixed controller
     mixed_controller = MixedController(env, control_config, args_cli.scale)
@@ -679,7 +841,7 @@ def main():
                 
                 imgs = np.stack([
                     camera_l.data.output["rgb"][0].cpu().numpy(),
-                    camera_r.data.output["rgb"][0].cpu().numpy()
+                    # camera_r.data.output["rgb"][0].cpu().numpy()
                 ]) / 255.0
                 
                 # Model inference
@@ -706,25 +868,82 @@ def main():
         
         env.step(actions)
         
-        # Handle reset trigger
-        if os.path.exists(RESET_TRIGGER_PATH):
+        # Handle reset triggers - check for numbered triggers first, then default
+        reset_triggered = False
+        trigger_index = None
+        
+        # Check for numbered reset triggers (for demos tally mode)
+        if failed_demos_tally:
+            for i in range(1, len(failed_demos_tally) + 1):
+                numbered_trigger = os.path.join(os.getcwd(), f"reset_trigger{i}.txt")
+                if os.path.exists(numbered_trigger):
+                    reset_triggered = True
+                    trigger_index = i
+                    os.remove(numbered_trigger)
+                    break
+        
+        # Check for default reset trigger (only if NOT in demo_folder mode)
+        if not failed_demos_tally and not reset_triggered and os.path.exists(RESET_TRIGGER_PATH):
+            reset_triggered = True
+            os.remove(RESET_TRIGGER_PATH)
+        
+        if reset_triggered:
             print("[RESET] Detected reset trigger. Resetting environment...")
-
             
-            
-            # Reset cubes with randomization - Fix cube naming
-            cube_configs = [
-                ([np.random.uniform(-0.01, 0.01), np.random.uniform(-0.01, 0.01), 0.0], "teleop_logs/cube_latest_1", "cube_rigid_1"),
-                ([np.random.uniform(0.045, 0.055), np.random.uniform(0.0, 0.03), 0.0], "teleop_logs/cube_latest_2", "cube_rigid_2"),
-                ([np.random.uniform(-0.055, -0.045), np.random.uniform(0.0, 0.03), 0.0], "teleop_logs/cube_latest_3", "cube_rigid_3"),
-                ([0.0, 0.055, 0.0], "teleop_logs/cube_latest_4", "cube_rigid_4")
-            ]
-            
-            for i, (cube_pos, log_path, cube_key) in enumerate(cube_configs):
-                cube_yaw = np.random.uniform(-np.pi/2, np.pi/2) if i < 3 else 0
-                cube_quat = R.from_euler("z", cube_yaw).as_quat()
-                cube_ori = [cube_quat[3], cube_quat[0], cube_quat[1], cube_quat[2]]
-                reset_cube_pose(env, log_path, cube_pos, cube_ori, cube_key=cube_key)
+            # Handle different reset modes
+            if failed_demos_tally and trigger_index:
+                # Mode 3: Use specific demo from tally
+                demo_info = failed_demos_tally[trigger_index - 1]
+                print(f"[RESET] Testing failed demo: {demo_info['demo_name']}")
+                print(f"[RESET] Tally position: {trigger_index} of {len(failed_demos_tally)}")
+                
+                # Force a simulation update before resetting cubes
+                env.sim.step(render=False)
+                
+                for i in range(1, 5):
+                    cube_key = f"cube_rigid_{i}"
+                    if cube_key in demo_info['cube_poses']:
+                        cube_pos = demo_info['cube_poses'][cube_key]["position"]
+                        cube_ori = demo_info['cube_poses'][cube_key]["orientation"]
+                        log_path = f"teleop_logs/cube_latest_{i}"
+                        # Pass the clean initial state for this cube
+                        initial_state = initial_cube_states.get(cube_key)
+                        reset_cube_pose(env, log_path, cube_pos, cube_ori, cube_key=cube_key, initial_state=initial_state)
+                
+                # Force simulation updates after setting all cubes
+                for _ in range(3):
+                    env.sim.step(render=False)
+                        
+            elif custom_cube_poses:
+                print("[RESET] Using cube poses from JSON file")
+                for i in range(1, 5):
+                    cube_key = f"cube_rigid_{i}"
+                    if cube_key in custom_cube_poses:
+                        cube_pos = custom_cube_poses[cube_key]["position"]
+                        cube_ori = custom_cube_poses[cube_key]["orientation"]
+                        log_path = f"teleop_logs/cube_latest_{i}"
+                        initial_state = initial_cube_states.get(cube_key)
+                        reset_cube_pose(env, log_path, cube_pos, cube_ori, cube_key=cube_key, initial_state=initial_state)
+            else:
+                print("[RESET] Using randomized cube positions")
+                # Reset cubes with randomization - Fix cube naming
+                cube_configs = [
+                    ([np.random.uniform(-0.01, 0.01), np.random.uniform(-0.01, 0.01), 0.0], "teleop_logs/cube_latest_1", "cube_rigid_1"),
+                    ([np.random.uniform(0.045, 0.055), np.random.uniform(0.0, 0.03), 0.0], "teleop_logs/cube_latest_2", "cube_rigid_2"),
+                    ([np.random.uniform(-0.055, -0.045), np.random.uniform(0.0, 0.03), 0.0], "teleop_logs/cube_latest_3", "cube_rigid_3"),
+                    ([0.0, 0.055, 0.0], "teleop_logs/cube_latest_4", "cube_rigid_4")
+                ]
+                
+                for i, (cube_pos, log_path, cube_key) in enumerate(cube_configs):
+                    if i < 3:  # Colored blocks - random orientation
+                        cube_yaw = np.random.uniform(-np.pi/2, np.pi/2)
+                    else:  # White block (cube_rigid_4) - fixed orientation
+                        cube_yaw = 0.0
+                    cube_quat = R.from_euler("z", cube_yaw).as_quat()
+                    # Quaternion format: [w, x, y, z] for Isaac Sim
+                    cube_ori = [cube_quat[3], cube_quat[0], cube_quat[1], cube_quat[2]]
+                    initial_state = initial_cube_states.get(cube_key)
+                    reset_cube_pose(env, log_path, cube_pos, cube_ori, cube_key=cube_key, initial_state=initial_state)
 
             # Reset PSMs
             reset_psms_to_initial_pose(env, saved_tips, world_T_b, control_config, num_steps=20)
@@ -755,7 +974,6 @@ def main():
             po_waiting_for_clutch = True
             # last_model_output = None
             
-            os.remove(RESET_TRIGGER_PATH)
             print("[RESET] Reset complete. System ready.")
             continue
     
@@ -765,7 +983,7 @@ def main():
         teleop_logger.check_and_start_logging(env)
         if teleop_logger.enable_logging and teleop_logger.frame_num == 0:
             log_current_pose(env, teleop_logger.log_dir)
-        teleop_logger.stop_logging()
+        teleop_logger.stop_logging(env)
         
         if teleop_logger.enable_logging:
             frame_num = teleop_logger.frame_num + 1
@@ -792,6 +1010,9 @@ def main():
             
             teleop_logger.enqueue(frame_num, timestamp, robot_states, cam_l_img, cam_r_img)
             teleop_logger.frame_num = frame_num
+            
+            # Check contacts and log success if all blocks are in contact
+            teleop_logger.check_contacts(env)
         
         # Control loop timing
         time.sleep(max(0.0, 1/30.0 - (time.time() - start_time)))

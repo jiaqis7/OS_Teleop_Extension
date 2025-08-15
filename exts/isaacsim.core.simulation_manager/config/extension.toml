@@ -1,0 +1,44 @@
+# Extension configuration file.
+# Visit the "Extension configuration file (extension.toml)" section for more details:
+# https://docs.omniverse.nvidia.com/kit/docs/kit-manual/latest/guide/extensions_advanced.html
+#
+
+[core]
+reloadable = true
+order = 0
+
+[package]
+version = "0.3.3"
+category = "Simulation"
+title = "Isaac Sim Core Simulation Manager"
+description = "The Core Simulation Manager extension provides a set of APIs to control and query the simulation's state and the different callbacks available."
+changelog = "docs/CHANGELOG.md"
+readme = "docs/README.md"
+preview_image = "data/preview.png"
+icon = "data/icon.png"
+
+
+[dependencies]
+"omni.physx.stageupdate" = {}
+"omni.physx.tensors" = {}
+"isaacsim.core.utils" = {}
+
+# define the Python module that the extension provides
+[[python.module]]
+name = "isaacsim.core.simulation_manager"
+
+# define the Python module for tests
+[[python.module]]
+name = "isaacsim.core.simulation_manager.tests"
+
+# define the C++ plugins that the extension provides
+[[native.plugin]]
+path = "bin/*.plugin"
+recursive = false
+
+[[test]]
+enabled = true
+dependencies = [
+    "omni.kit.test",
+    "omni.physx.ui",
+]

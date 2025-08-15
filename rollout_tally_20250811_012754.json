@@ -1,0 +1,314 @@
+{
+    "total_demos": 50,
+    "total_success": 18,
+    "red_success": 40,
+    "green_success": 34,
+    "blue_success": 33,
+    "demo_results": {
+        "demo_01": {
+            "success": false,
+            "red_contact": false,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_02": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_03": {
+            "success": false,
+            "red_contact": false,
+            "green_contact": false,
+            "blue_contact": false
+        },
+        "demo_04": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": true
+        },
+        "demo_05": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": false
+        },
+        "demo_06": {
+            "success": false,
+            "red_contact": false,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_07": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": true
+        },
+        "demo_08": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_09": {
+            "success": false,
+            "red_contact": false,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_10": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_11": {
+            "success": false,
+            "red_contact": false,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_12": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": false
+        },
+        "demo_13": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": false
+        },
+        "demo_14": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": false
+        },
+        "demo_15": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": false
+        },
+        "demo_16": {
+            "success": false,
+            "red_contact": false,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_17": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": false
+        },
+        "demo_18": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_19": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_20": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_21": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_22": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_23": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_24": {
+            "success": false,
+            "red_contact": false,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_25": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": true
+        },
+        "demo_26": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": false
+        },
+        "demo_27": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_28": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": false
+        },
+        "demo_29": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_30": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": true
+        },
+        "demo_31": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_32": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": false
+        },
+        "demo_33": {
+            "success": false,
+            "red_contact": false,
+            "green_contact": false,
+            "blue_contact": true
+        },
+        "demo_34": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_35": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": false
+        },
+        "demo_36": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": false
+        },
+        "demo_37": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": true
+        },
+        "demo_38": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": false
+        },
+        "demo_39": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_40": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_41": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": true
+        },
+        "demo_42": {
+            "success": false,
+            "red_contact": false,
+            "green_contact": true,
+            "blue_contact": false
+        },
+        "demo_43": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": false
+        },
+        "demo_44": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_45": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_46": {
+            "success": false,
+            "red_contact": false,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_47": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": true
+        },
+        "demo_48": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": false
+        },
+        "demo_49": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_50": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": false
+        }
+    },
+    "success_percentage": 36.0,
+    "red_percentage": 80.0,
+    "green_percentage": 68.0,
+    "blue_percentage": 66.0,
+    "timestamp": "2025-08-11T01:27:54.544617"
+}

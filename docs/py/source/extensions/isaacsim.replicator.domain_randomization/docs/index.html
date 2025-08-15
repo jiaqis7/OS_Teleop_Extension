@@ -1,0 +1,1558 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>[isaacsim.replicator.domain_randomization] Isaac Sim Replicator Domain Randomization &#8212; isaac_sim</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/nvidia-sphinx-theme.css?v=c5edffae" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=7abaf8bc" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/api.css?v=6f210184" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../../_static/documentation_options.js?v=dbe1b9c2"></script>
+    <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/scrollspy-patch.js?v=edc4054a"></script>
+    <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'source/extensions/isaacsim.replicator.domain_randomization/docs/index';</script>
+    <script src="../../../../_static/version-patch.js?v=c24f8c5d"></script>
+    <link rel="icon" href="../../../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="Count" href="ogn/OgnCountIndices.html" />
+    <link rel="prev" title="[isaacsim.replicator.behavior.ui] Isaac Sim Replicator Behavior Scripts UI" href="../../isaacsim.replicator.behavior.ui/docs/index.html" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+    <meta name="docbuild:last-update" content="Jan 28, 2025"/>
+
+
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+
+<a class="navbar-brand logo" href="http://omniverse-docs.s3-website-us-east-1.amazonaws.com">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="isaac_sim - Home"/>
+    <script>document.write(`<img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark" alt="isaac_sim - Home"/>`);</script>
+  
+  
+    <p class="title logo__title">isaac_sim</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://twitter.com/nvidiaomniverse" title="twitter" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-twitter fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">twitter</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://www.youtube.com/channel/UCSKUoczbGAcMld7HjpCR8OA" title="youtube" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-youtube fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">youtube</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://www.instagram.com/nvidiaomniverse" title="instagram" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-instagram fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">instagram</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://www.nvidia.com/en-us/omniverse/" title="www" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-globe fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">www</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://www.linkedin.com/showcase/nvidia-omniverse" title="linkedin" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-linkedin fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">linkedin</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://www.twitch.tv/nvidiaomniverse" title="twitch" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-twitch fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">twitch</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+
+
+  
+
+<a class="navbar-brand logo" href="http://omniverse-docs.s3-website-us-east-1.amazonaws.com">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="isaac_sim - Home"/>
+    <script>document.write(`<img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark" alt="isaac_sim - Home"/>`);</script>
+  
+  
+    <p class="title logo__title">isaac_sim</p>
+  
+</a>
+
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://twitter.com/nvidiaomniverse" title="twitter" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-twitter fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">twitter</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://www.youtube.com/channel/UCSKUoczbGAcMld7HjpCR8OA" title="youtube" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-youtube fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">youtube</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://www.instagram.com/nvidiaomniverse" title="instagram" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-instagram fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">instagram</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://www.nvidia.com/en-us/omniverse/" title="www" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-globe fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">www</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://www.linkedin.com/showcase/nvidia-omniverse" title="linkedin" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-linkedin fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">linkedin</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://www.twitch.tv/nvidiaomniverse" title="twitch" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-twitch fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">twitch</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Table of Contents">
+  <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">C++ API</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../api/isaac_sim_api.html">C++ API</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/classes.html">Classes</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../api/macros.html">Macros</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api/define_Ros2Macros_8h_1a591936b59562d2c68ce0302ae49e3cf3.html">RCL_ERROR_MSG</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api/define_Ros2Macros_8h_1a5039369afbe3c57399cdf5da78dc9ab7.html">RCL_WARN_MSG</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/enumerations.html">Enumerations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/functions.html">Functions</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../api/namespaces.html">Namespaces</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../api/namespace_isaacsim.html">isaacsim</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api/namespace_isaacsim__ros2.html">ros2</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../api/namespace_omni.html">omni</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api/namespace_omni__physics.html">physics</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/structs.html">Structs</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../CODING.html">Coding Style Guide</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Extensions (App)</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.app.about/docs/index.html">[isaacsim.app.about] Isaac Sim About Window</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.app.selector/docs/index.html">[isaacsim.app.selector] Isaac Sim App Selector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.app.setup/docs/index.html">[isaacsim.app.setup] Isaac Sim Setup</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Extensions (Asset)</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.asset.browser/docs/index.html">[isaacsim.asset.browser] Isaac Sim Asset Browser</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.asset.exporter.urdf/docs/index.html">[isaacsim.asset.exporter.urdf] Isaac Sim USD to URDF exporter</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../isaacsim.asset.gen.conveyor/docs/index.html">[isaacsim.asset.gen.conveyor] Isaac Sim Conveyor belt utility</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.asset.gen.conveyor/docs/ogn/OgnIsaacConveyor.html">Conveyor Belt</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.asset.gen.conveyor.ui/docs/index.html">[isaacsim.asset.gen.conveyor.ui] Isaac Sim Conveyor belt utility UI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.asset.gen.omap/docs/index.html">[isaacsim.asset.gen.omap] Isaac Sim Occupancy Map</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.asset.gen.omap.ui/docs/index.html">[isaacsim.asset.gen.omap.ui] UI components for the Isaac Sim Occupancy Map</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.asset.importer.heightmap/docs/index.html">[isaacsim.asset.importer.heightmap] Height Map extension for Isaac Sim Occupancy Map</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Extensions (Benchmark)</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.benchmark.examples/docs/index.html">[isaacsim.benchmark.examples] Benchmark</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.benchmark.services/docs/index.html">[isaacsim.benchmark.services] Benchmark Services</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Extensions (Code Editor)</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.code_editor.jupyter/docs/index.html">[isaacsim.code_editor.jupyter] Jupyter notebook integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.code_editor.vscode/docs/index.html">[isaacsim.code_editor.vscode] VS Code integration</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Extensions (Core)</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.core.api/docs/index.html">[isaacsim.core.api] Isaac Sim Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.core.cloner/docs/index.html">[isaacsim.core.cloner] Isaac Sim Cloner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.core.deprecation_manager/docs/index.html">[isaacsim.core.deprecation_manager] Deprecation manager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.core.includes/docs/index.html">[isaacsim.core.includes] Isaac Sim Common Includes</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../isaacsim.core.nodes/docs/index.html">[isaacsim.core.nodes] Isaac Sim Core OmniGraph Nodes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.core.nodes/docs/ogn/OgnIsaacArticulationController.html">Articulation Controller</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.core.nodes/docs/ogn/OgnIsaacArticulationState.html">Articulation State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.core.nodes/docs/ogn/OgnIsaacComputeOdometry.html">Isaac Compute Odometry Node</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.core.nodes/docs/ogn/OgnIsaacConvertDepthToPointCloud.html">Isaac Depth to Point Cloud</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.core.nodes/docs/ogn/OgnIsaacConvertRGBAToRGB.html">Isaac RGBA to RGB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.core.nodes/docs/ogn/OgnIsaacCreateRenderProduct.html">Isaac Create Render Product</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.core.nodes/docs/ogn/OgnIsaacCreateViewport.html">Isaac Create Viewport</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.core.nodes/docs/ogn/OgnIsaacGenerate32FC1.html">Isaac Generate 32FC1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.core.nodes/docs/ogn/OgnIsaacGenerateRGBA.html">Isaac Generate RGBA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.core.nodes/docs/ogn/OgnIsaacGetViewportRenderProduct.html">Isaac Get Viewport Render Product</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.core.nodes/docs/ogn/OgnIsaacJointNameResolver.html">Isaac Joint Name Resolver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.core.nodes/docs/ogn/OgnIsaacPassthroughImagePtr.html">Isaac Passthrough Image Pointer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.core.nodes/docs/ogn/OgnIsaacReadCameraInfo.html">Isaac Read Camera Info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.core.nodes/docs/ogn/OgnIsaacReadEnvVar.html">Isaac Read Env Var</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.core.nodes/docs/ogn/OgnIsaacReadFilePath.html">Isaac Read File Path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.core.nodes/docs/ogn/OgnIsaacReadSimulationTime.html">Isaac Read Simulation Time</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.core.nodes/docs/ogn/OgnIsaacReadSystemTime.html">Isaac Read System Time</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.core.nodes/docs/ogn/OgnIsaacReadTimes.html">Isaac Read Times</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.core.nodes/docs/ogn/OgnIsaacReadWorldPose.html">Isaac Read World Pose</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.core.nodes/docs/ogn/OgnIsaacRealTimeFactor.html">Isaac Real Time Factor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.core.nodes/docs/ogn/OgnIsaacRunOneSimulationFrame.html">Isaac Run One Simulation Frame</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.core.nodes/docs/ogn/OgnIsaacScaleToFromStageUnit.html">Scale To/From Stage Units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.core.nodes/docs/ogn/OgnIsaacSetCameraOnRenderProduct.html">Isaac Set Camera</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.core.nodes/docs/ogn/OgnIsaacSetViewportResolution.html">Isaac Set Viewport Resolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.core.nodes/docs/ogn/OgnIsaacSimulationGate.html">Isaac Simulation Gate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.core.nodes/docs/ogn/OgnIsaacTestNode.html">Isaac Test Node</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.core.nodes/docs/ogn/OgnIsaacTimeSplitter.html">Isaac Time Splitter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.core.nodes/docs/ogn/OgnOnPhysicsStep.html">On Physics Step</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.core.prims/docs/index.html">[isaacsim.core.prims] Isaac Sim Core API (Prims)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.core.simulation_manager/docs/index.html">[isaacsim.core.simulation_manager] Isaac Sim Core Simulation Manager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.core.throttling/docs/index.html">[isaacsim.core.throttling] Isaac Sim Throlling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.core.utils/docs/index.html">[isaacsim.core.utils] Isaac Sim Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.core.version/docs/index.html">[isaacsim.core.version] Isaac Sim Version</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Extensions (Cortex)</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.cortex.behaviors/docs/index.html">[isaacsim.cortex.behaviors] Isaac Cortex Sample Behaviors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.cortex.framework/docs/index.html">[isaacsim.cortex.framework] Omni Isaac Cortex</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Extensions (Examples)</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.examples.browser/docs/index.html">[isaacsim.examples.browser] Isaac Sim Example Browser</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.examples.extension/docs/index.html">[isaacsim.examples.extension] Generate Extension</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.examples.interactive/docs/index.html">[isaacsim.examples.interactive] Isaac Sim Samples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.examples.ui/docs/index.html">[isaacsim.examples.ui] Isaac Sim UI Example</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Extensions (GUI)</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.gui.components/docs/index.html">[isaacsim.gui.components] Isaac Sim UI Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.gui.menu/docs/index.html">[isaacsim.gui.menu] Isaac Sim Menus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.gui.property/docs/index.html">[isaacsim.gui.property] Isaac Sim Property Extensions</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Extensions (Replicator)</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.replicator.behavior/docs/index.html">[isaacsim.replicator.behavior] Isaac Sim Replicator Behavior Scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.replicator.behavior.ui/docs/index.html">[isaacsim.replicator.behavior.ui] Isaac Sim Replicator Behavior Scripts UI</a></li>
+<li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">[isaacsim.replicator.domain_randomization] Isaac Sim Replicator Domain Randomization</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="ogn/OgnCountIndices.html">Count</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ogn/OgnIntervalFiltering.html">Interval Filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ogn/OgnOnRLFrame.html">On Frame</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ogn/OgnRandom3f.html">Random 3f</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ogn/OgnWritePhysicsArticulationView.html">Write Physics Attribute using Tensor API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ogn/OgnWritePhysicsRigidPrimView.html">Write Physics Attribute using Tensor API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ogn/OgnWritePhysicsSimulationContext.html">Write Physics Attribute using Tensor API</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../isaacsim.replicator.examples/docs/index.html">[isaacsim.replicator.examples] Isaac Sim Replicator Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.replicator.examples/docs/ogn/OgnSampleBetweenSpheres.html">Sample Between Spheres</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.replicator.examples/docs/ogn/OgnSampleInSphere.html">Sample In Sphere</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.replicator.examples/docs/ogn/OgnSampleOnSphere.html">Sample On Sphere</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.replicator.scene_blox/docs/index.html">[isaacsim.replicator.scene_blox] Isaac Sim Replicator Scene Blox</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.replicator.synthetic_recorder/docs/index.html">[isaacsim.replicator.synthetic_recorder] Isaac Sim Replicator Synthetic Data Recorder</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../isaacsim.replicator.writers/docs/index.html">[isaacsim.replicator.writers] Isaac Sim Replicator Writers</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.replicator.writers/docs/ogn/OgnDope.html">Dope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.replicator.writers/docs/ogn/OgnPose.html">Pose</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Extensions (Robot Motion &amp; Setup)</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.robot_motion.lula/docs/index.html">[isaacsim.robot_motion.lula] Isaac Sim Lula</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.robot_motion.lula_test_widget/docs/index.html">[isaacsim.robot_motion.lula_test_widget] Lula Test Widget</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.robot_motion.motion_generation/docs/index.html">[isaacsim.robot_motion.motion_generation] Isaac Sim Motion Generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.robot_setup.assembler/docs/index.html">[isaacsim.robot_setup.assembler] Robot Assembler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.robot_setup.gain_tuner/docs/index.html">[isaacsim.robot_setup.gain_tuner] Gain Tuner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.robot_setup.grasp_editor/docs/index.html">[isaacsim.robot_setup.grasp_editor] Grasp Editor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.robot_setup.import_wizard/docs/index.html">[isaacsim.robot_setup.import_wizard] Isaac Sim Import Wizard [alpha]</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.robot_setup.xrdf_editor/docs/index.html">[isaacsim.robot_setup.xrdf_editor] Robot Description Editor</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Extensions (Robot)</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../isaacsim.robot.manipulators/docs/index.html">[isaacsim.robot.manipulators] Isaac Sim Manipulators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.robot.manipulators/docs/ogn/OgnIsaacGripperController.html">Isaac Gripper Controller Node</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.robot.manipulators.examples/docs/index.html">[isaacsim.robot.manipulators.examples] Manipulators Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.robot.manipulators.ui/docs/index.html">[isaacsim.robot.manipulators.ui] Isaac Sim Manipulators UI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.robot.policy.examples/docs/index.html">[isaacsim.robot.policy.examples] Reinforcement Learning Inference Example for Robots in Isaac Sim</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.robot.schema/docs/index.html">[isaacsim.robot.schema] Isaac USD schema</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../isaacsim.robot.surface_gripper/docs/index.html">[isaacsim.robot.surface_gripper] Isaac Sim Surface Gripper</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.robot.surface_gripper/docs/ogn/OgnSurfaceGripper.html">Surface Gripper</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.robot.surface_gripper.ui/docs/index.html">[isaacsim.robot.surface_gripper.ui] Isaac Sim Surface Gripper UI Components</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../isaacsim.robot.wheeled_robots/docs/index.html">[isaacsim.robot.wheeled_robots] Wheeled Robots</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.robot.wheeled_robots/docs/ogn/OgnAckermann.html">Ackermann Steering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.robot.wheeled_robots/docs/ogn/OgnAckermannController.html">Ackermann Controller</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.robot.wheeled_robots/docs/ogn/OgnAckermannControllerDeprecated.html">Ackermann Controller Deprecated</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.robot.wheeled_robots/docs/ogn/OgnCheckGoal2D.html">Check Goal 2D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.robot.wheeled_robots/docs/ogn/OgnDifferentialController.html">Differential Controller</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.robot.wheeled_robots/docs/ogn/OgnHolonomicController.html">Holonomic Controller</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.robot.wheeled_robots/docs/ogn/OgnHolonomicRobotUsdSetup.html">Usd Setup Holonomic Robot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.robot.wheeled_robots/docs/ogn/OgnQuinticPathPlanner.html">Quintic Path Planner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.robot.wheeled_robots/docs/ogn/OgnStanleyControlPID.html">Stanley Control PID</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.robot.wheeled_robots.ui/docs/index.html">[isaacsim.robot.wheeled_robots.ui] Wheeled Robots UI</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Extensions (ROS 1 &amp; 2)</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../isaacsim.ros1.bridge/docs/index.html">[isaacsim.ros1.bridge] ROS Bridge</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros1.bridge/docs/ogn/OgnROS1CameraHelper.html">ROS1 Camera Helper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros1.bridge/docs/ogn/OgnROS1Master.html">ROS1 Master Status</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros1.bridge/docs/ogn/OgnROS1PublishAckermann.html">ROS1 Publish AckermannDrive</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros1.bridge/docs/ogn/OgnROS1PublishBbox2D.html">ROS1 Publish Bbox2D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros1.bridge/docs/ogn/OgnROS1PublishBbox3D.html">ROS1 Publish Bbox3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros1.bridge/docs/ogn/OgnROS1PublishCameraInfo.html">ROS1 Publish Camera Info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros1.bridge/docs/ogn/OgnROS1PublishClock.html">ROS1 Publish Clock</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros1.bridge/docs/ogn/OgnROS1PublishImage.html">ROS1 Publish Image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros1.bridge/docs/ogn/OgnROS1PublishImu.html">ROS1 Publish Imu</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros1.bridge/docs/ogn/OgnROS1PublishJointState.html">ROS1 Publish Joint State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros1.bridge/docs/ogn/OgnROS1PublishLaserScan.html">ROS1 Publish Laser Scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros1.bridge/docs/ogn/OgnROS1PublishOdometry.html">ROS1 Publish Odometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros1.bridge/docs/ogn/OgnROS1PublishPointCloud.html">ROS1 Publish Point Cloud</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros1.bridge/docs/ogn/OgnROS1PublishRawTransformTree.html">ROS1 Publish Raw Transform Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros1.bridge/docs/ogn/OgnROS1PublishSemanticLabels.html">ROS1 Publish Semantic Labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros1.bridge/docs/ogn/OgnROS1PublishTransformTree.html">ROS1 Publish Transform Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros1.bridge/docs/ogn/OgnROS1RtxLidarHelper.html">ROS1 RTX Lidar Helper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros1.bridge/docs/ogn/OgnROS1ServiceTeleport.html">ROS1 Teleport Service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros1.bridge/docs/ogn/OgnROS1SubscribeAckermann.html">ROS1 Subscribe AckermannDrive</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros1.bridge/docs/ogn/OgnROS1SubscribeClock.html">ROS1 Subscribe Clock</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros1.bridge/docs/ogn/OgnROS1SubscribeJointState.html">ROS1 Subscribe Joint State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros1.bridge/docs/ogn/OgnROS1SubscribeTwist.html">ROS1 Subscribe Twist</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/index.html">[isaacsim.ros2.bridge] ROS 2 Bridge</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2CameraHelper.html">ROS2 Camera Helper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2CameraInfoHelper.html">ROS2 Camera Info Helper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2Context.html">ROS2 Context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2PublishAckermann.html">ROS2 Publish AckermannDrive</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2PublishBbox2D.html">ROS2 Publish Bbox2D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2PublishBbox3D.html">ROS2 Publish Bbox3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2PublishCameraInfo.html">ROS2 Publish Camera Info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2PublishClock.html">ROS2 Publish Clock</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2PublishImage.html">ROS2 Publish Image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2PublishImu.html">ROS2 Publish Imu</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2PublishJointState.html">ROS2 Publish Joint State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2PublishLaserScan.html">ROS2 Publish Laser Scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2PublishOdometry.html">ROS2 Publish Odometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2PublishPointCloud.html">ROS2 Publish Point Cloud</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2PublishRawTransformTree.html">ROS2 Publish Raw Transform Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2PublishSemanticLabels.html">ROS2 Publish Semantic Labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2PublishTransformTree.html">ROS2 Publish Transform Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2Publisher.html">ROS2 Publisher</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2QoSProfile.html">ROS2 QoS Profile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2RtxLidarHelper.html">ROS2 RTX Lidar Helper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2ServiceClient.html">ROS2 Service Client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2ServicePrim.html">ROS2 Service Prim</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2ServiceServerRequest.html">ROS2 Service Server Request</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2ServiceServerResponse.html">ROS2 Service Server Response</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2SubscribeAckermann.html">ROS2 Subscribe AckermannDrive</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2SubscribeClock.html">ROS2 Subscribe Clock</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2SubscribeJointState.html">ROS2 Subscribe Joint State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2SubscribeTransformTree.html">ROS2 Subscribe Transform Tree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2SubscribeTwist.html">ROS2 Subscribe Twist</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.ros2.bridge/docs/ogn/OgnROS2Subscriber.html">ROS2 Subscriber</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.ros2.tf_viewer/docs/index.html">[isaacsim.ros2.tf_viewer] TF Viewer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.ros2.urdf/docs/index.html">[isaacsim.ros2.urdf] Ros2 Robot Description URDF Importer</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Extensions (Sensors)</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.sensors.camera/docs/index.html">[isaacsim.sensors.camera] Isaac Sim Camera Simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.sensors.camera.ui/docs/index.html">[isaacsim.sensors.camera.ui] Isaac Sim Camera Simulation UI Components</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../isaacsim.sensors.physics/docs/index.html">[isaacsim.sensors.physics] Isaac Sim Physics Sensor Simulation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.sensors.physics/docs/ogn/OgnIsaacReadContactSensor.html">Isaac Read Contact Sensor Node</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.sensors.physics/docs/ogn/OgnIsaacReadEffortSensor.html">Isaac Read Effort Node</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.sensors.physics/docs/ogn/OgnIsaacReadIMU.html">Isaac Read IMU Node</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.sensors.physics.examples/docs/index.html">[isaacsim.sensors.physics.examples] Isaac Sim Physics Sensor Simulation Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.sensors.physics.ui/docs/index.html">[isaacsim.sensors.physics.ui] Isaac Sim Physics Sensor Simulation UI Components</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../isaacsim.sensors.physx/docs/index.html">[isaacsim.sensors.physx] Isaac Sim PhysX Sensors</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.sensors.physx/docs/ogn/OgnIsaacReadLidarBeams.html">Isaac Read Lidar Beams Node</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.sensors.physx/docs/ogn/OgnIsaacReadLidarPointCloud.html">Isaac Read Lidar Point Cloud Node</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.sensors.physx/docs/ogn/OgnIsaacReadLightBeamSensor.html">Isaac Read LightBeam Sensor Node</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.sensors.physx.examples/docs/index.html">[isaacsim.sensors.physx.examples] Isaac Sim PhysX Sensor Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.sensors.physx.ui/docs/index.html">[isaacsim.sensors.physx.ui] Isaac Sim PhysX Sensor UI components</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../isaacsim.sensors.rtx/docs/index.html">[isaacsim.sensors.rtx] Isaac Sim Isaac Sensor Simulation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.sensors.rtx/docs/ogn/OgnIsaacComputeRTXLidarFlatScan.html">Isaac Compute RTX Lidar Flat Scan Node</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.sensors.rtx/docs/ogn/OgnIsaacComputeRTXLidarPointCloud.html">Isaac Compute RTX Lidar Point Cloud Node</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.sensors.rtx/docs/ogn/OgnIsaacComputeRTXRadarPointCloud.html">Isaac Compute RTX Radar Point Cloud Node</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.sensors.rtx/docs/ogn/OgnIsaacCreateRTXLidarScanBuffer.html">Isaac Create RTX Lidar Scan Buffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.sensors.rtx/docs/ogn/OgnIsaacPrintRTXSensorInfo.html">Isaac Print RTX Sensor Info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.sensors.rtx/docs/ogn/OgnIsaacReadRTXLidarData.html">Isaac Read RTX Lidar Point Data</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.sensors.rtx.ui/docs/index.html">[isaacsim.sensors.rtx.ui] Isaac Sim RTX Sensor Simulation UI Components</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Extensions (Simulation)</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.simulation_app/docs/index.html">[isaacsim.simulation_app] Isaac Sim Kit Helpers</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Extensions (Storage)</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.storage.native/docs/index.html">[isaacsim.storage.native] Isaac Sim Native Storage</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Extensions (Test)</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.test.collection/docs/index.html">[isaacsim.test.collection] Isaac Sim Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.test.docstring/docs/index.html">[isaacsim.test.docstring] Isaac Sim DocTest</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Extensions (Util)</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.util.camera_inspector/docs/index.html">[isaacsim.util.camera_inspector] Camera Inspector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.util.clash_detection/docs/index.html">[isaacsim.util.clash_detection] Isaac Sim Clash Detection</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../isaacsim.util.debug_draw/docs/index.html">[isaacsim.util.debug_draw] Isaac Sim Debug Drawing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.util.debug_draw/docs/ogn/OgnDebugDrawPointCloud.html">Isaac Debug Draw Point Cloud</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.util.debug_draw/docs/ogn/OgnDebugDrawRayCast.html">Isaac Debug Draw RayCast</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.util.debug_draw/docs/ogn/OgnIsaacXPrimAxisVisualizer.html">Isaac xPrim Axis Visualizer Node</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../isaacsim.util.debug_draw/docs/ogn/OgnIsaacXPrimRadiusVisualizer.html">Isaac xPrim Radius Visualizer Node</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.util.merge_mesh/docs/index.html">[isaacsim.util.merge_mesh] Isaac Sim Merge Mesh</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.util.physics/docs/index.html">[isaacsim.util.physics] Isaac Sim Physics API Editor</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Extensions (XR)</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../isaacsim.xr.openxr/docs/index.html">[isaacsim.xr.openxr] Isaac Sim OpenXR support</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Other Extensions</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../deprecated/omni.isaac.dynamic_control/docs/index.html">[omni.isaac.dynamic_control] Isaac Sim Dynamic Control</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../omni.kit.loop-isaac/docs/index.html">[omni.kit.loop-isaac] Isaac Loop Runner</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">[isaacsim.re...</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <span class="target" id="ext-isaacsim-replicator-domain-randomization"></span><section id="isaacsim-replicator-domain-randomization-isaac-sim-replicator-domain-randomization">
+<h1>[isaacsim.replicator.domain_randomization] Isaac Sim Replicator Domain Randomization<a class="headerlink" href="#isaacsim-replicator-domain-randomization-isaac-sim-replicator-domain-randomization" title="Link to this heading">#</a></h1>
+<p><strong>Version</strong>: <span class="guilabel">1.0.2</span></p>
+<p>The extension provides various Domain Randomization scripts and OmniGraph nodes for randomizing simulation environments.</p>
+<section id="enable-extension">
+<h2>Enable Extension<a class="headerlink" href="#enable-extension" title="Link to this heading">#</a></h2>
+<p>The extension can be enabled (if not already) in one of the following ways:</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="tab" data-sync-id="tab_cli" for="sd-tab-item-0">
+Command-line interface</label><div class="sd-tab-content docutils">
+<p>Define the next entry as an application argument from a terminal.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>APP_SCRIPT.<span class="o">(</span>sh<span class="p">|</span>bat<span class="o">)</span><span class="w"> </span>--enable<span class="w"> </span>isaacsim.replicator.domain_randomization
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="tab" data-sync-id="tab_toml" for="sd-tab-item-1">
+Experience/extension configuration</label><div class="sd-tab-content docutils">
+<p>Define the next entry under <code class="docutils literal notranslate"><span class="pre">[dependencies]</span></code> in an experience (<code class="docutils literal notranslate"><span class="pre">.kit</span></code>) file or an extension configuration (<code class="docutils literal notranslate"><span class="pre">extension.toml</span></code>) file.</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[dependencies]</span>
+<span class="na">&quot;isaacsim.replicator.domain_randomization&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">{}</span>
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-2" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" data-sync-group="tab" data-sync-id="tab_gui" for="sd-tab-item-2">
+Extension Manager UI</label><div class="sd-tab-content docutils">
+<p>Open the <em>Window &gt; Extensions</em> menu in a running application instance and search for <code class="docutils literal notranslate"><span class="pre">isaacsim.replicator.domain_randomization</span></code>.
+Then, toggle the enable control button if it is not already active.</p>
+</div>
+</div>
+</section>
+<section id="reinforcement-learning-domain-randomization">
+<h2>Reinforcement Learning Domain Randomization<a class="headerlink" href="#reinforcement-learning-domain-randomization" title="Link to this heading">#</a></h2>
+<p>The following methods provide randomization functionalities of various parameters
+pertaining to <code class="docutils literal notranslate"><span class="pre">isaacsim.core.prims.RigidPrim</span></code>, <code class="docutils literal notranslate"><span class="pre">isaacsim.core.prims.Articulation</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">isaacsim.core.api.SimulationContext</span></code>. These methods are designed to perform randomizations in
+simulations where <em>update to USD</em> is disabled for faster simulation speed. These methods directly
+set randomized values to PhysX as opposed to existing methods in omni.replicator.core,
+such as <code class="docutils literal notranslate"><span class="pre">omni.replicator.core.modify.pose</span></code> or <code class="docutils literal notranslate"><span class="pre">omni.replicator.core.physics.physics_material</span></code>, which
+utilizes USD APIs to set values and hence cannot be used when <em>update to USD</em> is disabled.
+Therefore, the following methods provided in <code class="docutils literal notranslate"><span class="pre">isaacsim.replicator.domain_randomization</span></code> are particularly useful
+for domain randomization in Reinforcement Learning (RL) as RL use cases benefit immensely from
+disabling <em>update to USD</em> to achieve faster simulation speed.</p>
+<p>The following is a simple demo that showcases the workflow and the various features of
+<code class="docutils literal notranslate"><span class="pre">isaacsim.replicator</span></code> for domain randomization. This demo script can be launched as
+a standalone example, which can be found by going to Isaac Sim’s root directory and
+go to <code class="docutils literal notranslate"><span class="pre">standalone_examples/api/isaacsim.replicator.domain_randomization/randomization_demo.py</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">isaacsim.replicator</span></code> extension for domain randomization functions by constructing
+an OmniGraph action graph, which consists of nodes that generate random values, regulate
+frequency intervals of various randomization properties, and write the random values to PhysX.
+This action graph gets executed according to the way in which the triggers are set up. Note
+that it is necessary to register the views to be randomized before constructing this action graph.</p>
+<p>The first step is to create an entry point of the action graph using <code class="docutils literal notranslate"><span class="pre">with</span> <span class="pre">dr.trigger.on_rl_frame(num_envs=num_envs):</span></code>.
+It is worth noting that all views to be used with this extension must have the same number of
+encapsulated prims, equaling <code class="docutils literal notranslate"><span class="pre">num_envs</span></code> that is passed as an argument to the <code class="docutils literal notranslate"><span class="pre">on_rl_frame</span></code> trigger.</p>
+<p>After creating this entry point, there are two types of gates that determine when the nodes can write
+to PhysX: <code class="docutils literal notranslate"><span class="pre">on_interval(interval)</span></code> and <code class="docutils literal notranslate"><span class="pre">on_env_reset()</span></code>; these gates work in conjunction with
+<code class="docutils literal notranslate"><span class="pre">isaacsim.replicator.physics_view.step_randomization(reset_inds)</span></code>. There exists an internal
+step counter for every environment in the views. Every time the <code class="docutils literal notranslate"><span class="pre">step_randomization</span></code> method is called,
+it resets the counter to zero for every environment listed in the <code class="docutils literal notranslate"><span class="pre">reset_inds</span></code> argument while
+incrementing the counter for every other environment. The <code class="docutils literal notranslate"><span class="pre">on_interval(interval)</span></code> gate then ensures
+the nodes to write to PhysX whenever the counter for an environment is a multiple of the <code class="docutils literal notranslate"><span class="pre">interval</span></code>
+argument. The <code class="docutils literal notranslate"><span class="pre">on_env_reset()</span></code> gate writes to PhysX whenever an environment’s counter gets reset by
+the <code class="docutils literal notranslate"><span class="pre">reset_inds</span></code> argument passed in the <code class="docutils literal notranslate"><span class="pre">step_randomization</span></code> method.</p>
+<p>Within each gate, the following methods can be used to randomize view properties: <code class="docutils literal notranslate"><span class="pre">randomize_simulation_context</span></code>,
+<code class="docutils literal notranslate"><span class="pre">randomize_rigid_prim_view</span></code> and <code class="docutils literal notranslate"><span class="pre">randomize_articulation_view</span></code>. For each of these methods, there
+exists an <code class="docutils literal notranslate"><span class="pre">operation</span></code> argument, which can be set to <code class="docutils literal notranslate"><span class="pre">direct</span></code>, <code class="docutils literal notranslate"><span class="pre">additive</span></code>, or <code class="docutils literal notranslate"><span class="pre">scaling</span></code>. <code class="docutils literal notranslate"><span class="pre">direct</span></code>
+sets the random values directly to PhysX, while the behavior of <code class="docutils literal notranslate"><span class="pre">additive</span></code> and <code class="docutils literal notranslate"><span class="pre">scaling</span></code> depends on
+the gate it is controlled by. Under <code class="docutils literal notranslate"><span class="pre">on_env_reset()</span></code>, <code class="docutils literal notranslate"><span class="pre">additive</span></code> adds the random values to the default
+values of a given attribute of the view, and <code class="docutils literal notranslate"><span class="pre">scaling</span></code> multiplies the random values to the default values.
+Under <code class="docutils literal notranslate"><span class="pre">on_interval(interval)</span></code>, <code class="docutils literal notranslate"><span class="pre">additive</span></code> and <code class="docutils literal notranslate"><span class="pre">scaling</span></code> adds or multiplies the random values to the
+last values set during <code class="docutils literal notranslate"><span class="pre">on_env_reset()</span></code>. In essence, <code class="docutils literal notranslate"><span class="pre">on_env_reset()</span></code> randomization should be treated
+as <em>correlated noise</em> that lasts until the next reset, while <code class="docutils literal notranslate"><span class="pre">on_interval(interval)</span></code> randomization should
+be treated as <em>uncorrelated noise</em>.</p>
+<p>After setting up this action graph, it is necessary to run <code class="docutils literal notranslate"><span class="pre">omni.replicator.core.orchestrator.run()</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">isaacsim</span> <span class="kn">import</span> <span class="n">SimulationApp</span>
+<span class="n">simulation_app</span> <span class="o">=</span> <span class="n">SimulationApp</span><span class="p">({</span><span class="s2">&quot;headless&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">isaacsim.core.api</span> <span class="kn">import</span> <span class="n">World</span>
+<span class="kn">from</span> <span class="nn">isaacsim.core.prims</span> <span class="kn">import</span> <span class="n">Articulation</span><span class="p">,</span> <span class="n">RigidPrim</span>
+<span class="kn">from</span> <span class="nn">isaacsim.core.utils.prims</span> <span class="kn">import</span> <span class="n">get_prim_at_path</span><span class="p">,</span> <span class="n">define_prim</span>
+<span class="kn">from</span> <span class="nn">isaacsim.core.utils.stage</span> <span class="kn">import</span> <span class="n">get_current_stage</span><span class="p">,</span> <span class="n">add_reference_to_stage</span>
+<span class="kn">from</span> <span class="nn">isaacsim.storage.native</span> <span class="kn">import</span> <span class="n">get_assets_root_path</span>
+<span class="kn">from</span> <span class="nn">isaacsim.core.api.objects</span> <span class="kn">import</span> <span class="n">DynamicSphere</span>
+<span class="kn">from</span> <span class="nn">isaacsim.core.cloner</span> <span class="kn">import</span> <span class="n">GridCloner</span>
+
+<span class="c1"># create the world</span>
+<span class="n">world</span> <span class="o">=</span> <span class="n">World</span><span class="p">(</span><span class="n">stage_units_in_meters</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">physics_prim_path</span><span class="o">=</span><span class="s2">&quot;/physicsScene&quot;</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;numpy&quot;</span><span class="p">)</span>
+<span class="n">world</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">add_default_ground_plane</span><span class="p">()</span>
+
+<span class="c1"># set up grid cloner</span>
+<span class="n">cloner</span> <span class="o">=</span> <span class="n">GridCloner</span><span class="p">(</span><span class="n">spacing</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
+<span class="n">cloner</span><span class="o">.</span><span class="n">define_base_env</span><span class="p">(</span><span class="s2">&quot;/World/envs&quot;</span><span class="p">)</span>
+<span class="n">define_prim</span><span class="p">(</span><span class="s2">&quot;/World/envs/env_0&quot;</span><span class="p">)</span>
+
+<span class="c1"># set up the first environment</span>
+<span class="n">DynamicSphere</span><span class="p">(</span><span class="n">prim_path</span><span class="o">=</span><span class="s2">&quot;/World/envs/env_0/object&quot;</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">]))</span>
+<span class="n">add_reference_to_stage</span><span class="p">(</span>
+    <span class="n">usd_path</span><span class="o">=</span><span class="n">get_assets_root_path</span><span class="p">()</span><span class="o">+</span> <span class="s2">&quot;/Isaac/Robots/Franka/franka.usd&quot;</span><span class="p">,</span>
+    <span class="n">prim_path</span><span class="o">=</span><span class="s2">&quot;/World/envs/env_0/franka&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># clone environments</span>
+<span class="n">num_envs</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="n">prim_paths</span> <span class="o">=</span> <span class="n">cloner</span><span class="o">.</span><span class="n">generate_paths</span><span class="p">(</span><span class="s2">&quot;/World/envs/env&quot;</span><span class="p">,</span> <span class="n">num_envs</span><span class="p">)</span>
+<span class="n">env_pos</span> <span class="o">=</span> <span class="n">cloner</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="n">source_prim_path</span><span class="o">=</span><span class="s2">&quot;/World/envs/env_0&quot;</span><span class="p">,</span> <span class="n">prim_paths</span><span class="o">=</span><span class="n">prim_paths</span><span class="p">)</span>
+
+<span class="c1"># creates the views and set up world</span>
+<span class="n">object_view</span> <span class="o">=</span> <span class="n">RigidPrim</span><span class="p">(</span><span class="n">prim_paths_expr</span><span class="o">=</span><span class="s2">&quot;/World/envs/*/object&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;object_view&quot;</span><span class="p">)</span>
+<span class="n">franka_view</span> <span class="o">=</span> <span class="n">Articulation</span><span class="p">(</span><span class="n">prim_paths_expr</span><span class="o">=</span><span class="s2">&quot;/World/envs/*/franka&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;franka_view&quot;</span><span class="p">)</span>
+<span class="n">world</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">object_view</span><span class="p">)</span>
+<span class="n">world</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">franka_view</span><span class="p">)</span>
+<span class="n">world</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+<span class="n">num_dof</span> <span class="o">=</span> <span class="n">franka_view</span><span class="o">.</span><span class="n">num_dof</span>
+
+<span class="c1"># set up randomization with isaacsim.replicator, imported as dr</span>
+<span class="kn">import</span> <span class="nn">isaacsim.replicator.domain_randomization</span> <span class="k">as</span> <span class="nn">dr</span>
+<span class="kn">import</span> <span class="nn">omni.replicator.core</span> <span class="k">as</span> <span class="nn">rep</span>
+
+<span class="n">dr</span><span class="o">.</span><span class="n">physics_view</span><span class="o">.</span><span class="n">register_simulation_context</span><span class="p">(</span><span class="n">world</span><span class="p">)</span>
+<span class="n">dr</span><span class="o">.</span><span class="n">physics_view</span><span class="o">.</span><span class="n">register_rigid_prim_view</span><span class="p">(</span><span class="n">object_view</span><span class="p">)</span>
+<span class="n">dr</span><span class="o">.</span><span class="n">physics_view</span><span class="o">.</span><span class="n">register_articulation_view</span><span class="p">(</span><span class="n">franka_view</span><span class="p">)</span>
+
+<span class="k">with</span> <span class="n">dr</span><span class="o">.</span><span class="n">trigger</span><span class="o">.</span><span class="n">on_rl_frame</span><span class="p">(</span><span class="n">num_envs</span><span class="o">=</span><span class="n">num_envs</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">dr</span><span class="o">.</span><span class="n">gate</span><span class="o">.</span><span class="n">on_interval</span><span class="p">(</span><span class="n">interval</span><span class="o">=</span><span class="mi">20</span><span class="p">):</span>
+        <span class="n">dr</span><span class="o">.</span><span class="n">physics_view</span><span class="o">.</span><span class="n">randomize_simulation_context</span><span class="p">(</span>
+            <span class="n">operation</span><span class="o">=</span><span class="s2">&quot;scaling&quot;</span><span class="p">,</span>
+            <span class="n">gravity</span><span class="o">=</span><span class="n">rep</span><span class="o">.</span><span class="n">distribution</span><span class="o">.</span><span class="n">uniform</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)),</span>
+        <span class="p">)</span>
+    <span class="k">with</span> <span class="n">dr</span><span class="o">.</span><span class="n">gate</span><span class="o">.</span><span class="n">on_interval</span><span class="p">(</span><span class="n">interval</span><span class="o">=</span><span class="mi">50</span><span class="p">):</span>
+        <span class="n">dr</span><span class="o">.</span><span class="n">physics_view</span><span class="o">.</span><span class="n">randomize_rigid_prim_view</span><span class="p">(</span>
+            <span class="n">view_name</span><span class="o">=</span><span class="n">object_view</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">operation</span><span class="o">=</span><span class="s2">&quot;direct&quot;</span><span class="p">,</span>
+            <span class="n">force</span><span class="o">=</span><span class="n">rep</span><span class="o">.</span><span class="n">distribution</span><span class="o">.</span><span class="n">uniform</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">)),</span>
+        <span class="p">)</span>
+    <span class="k">with</span> <span class="n">dr</span><span class="o">.</span><span class="n">gate</span><span class="o">.</span><span class="n">on_interval</span><span class="p">(</span><span class="n">interval</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="n">dr</span><span class="o">.</span><span class="n">physics_view</span><span class="o">.</span><span class="n">randomize_articulation_view</span><span class="p">(</span>
+            <span class="n">view_name</span><span class="o">=</span><span class="n">franka_view</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">operation</span><span class="o">=</span><span class="s2">&quot;direct&quot;</span><span class="p">,</span>
+            <span class="n">joint_velocities</span><span class="o">=</span><span class="n">rep</span><span class="o">.</span><span class="n">distribution</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="nb">tuple</span><span class="p">([</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="n">num_dof</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">([</span><span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="n">num_dof</span><span class="p">)),</span>
+        <span class="p">)</span>
+    <span class="k">with</span> <span class="n">dr</span><span class="o">.</span><span class="n">gate</span><span class="o">.</span><span class="n">on_env_reset</span><span class="p">():</span>
+        <span class="n">dr</span><span class="o">.</span><span class="n">physics_view</span><span class="o">.</span><span class="n">randomize_rigid_prim_view</span><span class="p">(</span>
+            <span class="n">view_name</span><span class="o">=</span><span class="n">object_view</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">operation</span><span class="o">=</span><span class="s2">&quot;additive&quot;</span><span class="p">,</span>
+            <span class="n">position</span><span class="o">=</span><span class="n">rep</span><span class="o">.</span><span class="n">distribution</span><span class="o">.</span><span class="n">normal</span><span class="p">((</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span>
+            <span class="n">velocity</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">dr</span><span class="o">.</span><span class="n">physics_view</span><span class="o">.</span><span class="n">randomize_articulation_view</span><span class="p">(</span>
+            <span class="n">view_name</span><span class="o">=</span><span class="n">franka_view</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">operation</span><span class="o">=</span><span class="s2">&quot;additive&quot;</span><span class="p">,</span>
+            <span class="n">joint_positions</span><span class="o">=</span><span class="n">rep</span><span class="o">.</span><span class="n">distribution</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="nb">tuple</span><span class="p">([</span><span class="o">-</span><span class="mf">0.5</span><span class="p">]</span><span class="o">*</span><span class="n">num_dof</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">([</span><span class="mf">0.5</span><span class="p">]</span><span class="o">*</span><span class="n">num_dof</span><span class="p">)),</span>
+            <span class="n">position</span><span class="o">=</span><span class="n">rep</span><span class="o">.</span><span class="n">distribution</span><span class="o">.</span><span class="n">normal</span><span class="p">((</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span>
+        <span class="p">)</span>
+<span class="n">rep</span><span class="o">.</span><span class="n">orchestrator</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+
+<span class="n">frame_idx</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">while</span> <span class="n">simulation_app</span><span class="o">.</span><span class="n">is_running</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">world</span><span class="o">.</span><span class="n">is_playing</span><span class="p">():</span>
+        <span class="n">reset_inds</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">frame_idx</span> <span class="o">%</span> <span class="mi">200</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># triggers reset every 200 steps</span>
+            <span class="n">reset_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">num_envs</span><span class="p">)</span>
+        <span class="n">dr</span><span class="o">.</span><span class="n">physics_view</span><span class="o">.</span><span class="n">step_randomization</span><span class="p">(</span><span class="n">reset_inds</span><span class="p">)</span>
+        <span class="n">world</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">render</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">frame_idx</span> <span class="o">+=</span> <span class="mi">1</span>
+</pre></div>
+</div>
+</section>
+<section id="api">
+<h2>API<a class="headerlink" href="#api" title="Link to this heading">#</a></h2>
+<section id="python-api">
+<h3>Python API<a class="headerlink" href="#python-api" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#module-isaacsim.replicator.domain_randomization.scripts.trigger" title="isaacsim.replicator.domain_randomization.scripts.trigger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scripts.trigger</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#module-isaacsim.replicator.domain_randomization.scripts.gate" title="isaacsim.replicator.domain_randomization.scripts.gate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scripts.gate</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#module-isaacsim.replicator.domain_randomization.scripts.physics_view" title="isaacsim.replicator.domain_randomization.scripts.physics_view"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scripts.physics_view</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#module-isaacsim.replicator.domain_randomization.scripts.utils" title="isaacsim.replicator.domain_randomization.scripts.utils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scripts.utils</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<section id="module-isaacsim.replicator.domain_randomization.scripts.trigger">
+<span id="trigger"></span><h4>trigger<a class="headerlink" href="#module-isaacsim.replicator.domain_randomization.scripts.trigger" title="Link to this heading">#</a></h4>
+<dl class="py function">
+<dt class="sig sig-object py" id="isaacsim.replicator.domain_randomization.scripts.trigger.on_rl_frame">
+<span class="sig-name descname"><span class="pre">on_rl_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_envs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#isaacsim.replicator.domain_randomization.scripts.trigger.on_rl_frame" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>num_envs</strong> (<em>int</em>) – The number of environments corresponding to the number of prims
+encapsulated in the RigidPrimViews and ArticulationViews.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-isaacsim.replicator.domain_randomization.scripts.gate">
+<span id="gate"></span><h4>gate<a class="headerlink" href="#module-isaacsim.replicator.domain_randomization.scripts.gate" title="Link to this heading">#</a></h4>
+<dl class="py function">
+<dt class="sig sig-object py" id="isaacsim.replicator.domain_randomization.scripts.gate.on_interval">
+<span class="sig-name descname"><span class="pre">on_interval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#isaacsim.replicator.domain_randomization.scripts.gate.on_interval" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>interval</strong> (<em>int</em>) – The frequency interval for randomization. The interval is incremented
+by isaacsim.replicator.domain_randomization.physics_view.step_randomization() call.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="isaacsim.replicator.domain_randomization.scripts.gate.on_env_reset">
+<span class="sig-name descname"><span class="pre">on_env_reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isaacsim.replicator.domain_randomization.scripts.gate.on_env_reset" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-isaacsim.replicator.domain_randomization.scripts.physics_view">
+<span id="physics-view"></span><h4>physics_view<a class="headerlink" href="#module-isaacsim.replicator.domain_randomization.scripts.physics_view" title="Link to this heading">#</a></h4>
+<dl class="py function">
+<dt class="sig sig-object py" id="isaacsim.replicator.domain_randomization.scripts.physics_view.register_simulation_context">
+<span class="sig-name descname"><span class="pre">register_simulation_context</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">simulation_context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../isaacsim.core.api/docs/index.html#isaacsim.core.api.simulation_context.SimulationContext" title="isaacsim.core.api.simulation_context.simulation_context.SimulationContext"><span class="pre">SimulationContext</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../isaacsim.core.api/docs/index.html#isaacsim.core.api.world.World" title="isaacsim.core.api.world.world.World"><span class="pre">World</span></a></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#isaacsim.replicator.domain_randomization.scripts.physics_view.register_simulation_context" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>simulation_context</strong> (<em>Union</em><em>[</em><em>isaacsim.core.api.SimulationContext</em><em>, </em><em>isaacsim.core.api.World</em><em>]</em>) – Registering the SimulationContext.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="isaacsim.replicator.domain_randomization.scripts.physics_view.register_rigid_prim_view">
+<span class="sig-name descname"><span class="pre">register_rigid_prim_view</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">rigid_prim_view</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../isaacsim.core.prims/docs/index.html#isaacsim.core.prims.RigidPrim" title="isaacsim.core.prims.impl.rigid_prim.RigidPrim"><span class="pre">RigidPrim</span></a></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#isaacsim.replicator.domain_randomization.scripts.physics_view.register_rigid_prim_view" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>rigid_prim_view</strong> (<a class="reference internal" href="../../isaacsim.core.prims/docs/index.html#isaacsim.core.prims.RigidPrim" title="isaacsim.core.prims.RigidPrim"><em>isaacsim.core.prims.RigidPrim</em></a>) – Registering the RigidPrim to be randomized.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="isaacsim.replicator.domain_randomization.scripts.physics_view.register_articulation_view">
+<span class="sig-name descname"><span class="pre">register_articulation_view</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">articulation_view</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../isaacsim.core.prims/docs/index.html#isaacsim.core.prims.Articulation" title="isaacsim.core.prims.impl.articulation.Articulation"><span class="pre">Articulation</span></a></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#isaacsim.replicator.domain_randomization.scripts.physics_view.register_articulation_view" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>articulation_view</strong> (<a class="reference internal" href="../../isaacsim.core.prims/docs/index.html#isaacsim.core.prims.Articulation" title="isaacsim.core.prims.Articulation"><em>Articulation</em></a>) – Registering the Articulation to be randomized.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="isaacsim.replicator.domain_randomization.scripts.physics_view.step_randomization">
+<span class="sig-name descname"><span class="pre">step_randomization</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">reset_inds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#isaacsim.replicator.domain_randomization.scripts.physics_view.step_randomization" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>reset_inds</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>list</em><em>, </em><em>np.ndarray</em><em>, </em><em>torch.Tensor</em><em>]</em><em>]</em>) – The indices corresonding to the prims to be reset in the views.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="isaacsim.replicator.domain_randomization.scripts.physics_view.randomize_rigid_prim_view">
+<span class="sig-name descname"><span class="pre">randomize_rigid_prim_view</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">view_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">operation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'direct'</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">num_buckets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">position</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">orientation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">linear_velocity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">angular_velocity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">velocity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">mass</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">inertia</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">material_properties</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">contact_offset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">rest_offset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#isaacsim.replicator.domain_randomization.scripts.physics_view.randomize_rigid_prim_view" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>view_name</strong> (<em>str</em>) – The name of a registered RigidPrimView.</p></li>
+<li><p><strong>operation</strong> (<em>str</em>) – Can be “direct”, “additive”, or “scaling”.
+“direct” means random values are directly written into the view.
+“additive” means random values are added to the default values.
+“scaling” means random values are multiplied to the default values.</p></li>
+<li><p><strong>num_buckets</strong> (<em>int</em>) – Number of buckets to sample values from for material_properties randomization.</p></li>
+<li><p><strong>position</strong> (<em>ReplicatorItem</em>) – Randomizes the position of the prims.</p></li>
+<li><p><strong>orientation</strong> (<em>ReplicatorItem</em>) – Randomizes the orientation of the prims using euler angles (rad).</p></li>
+<li><p><strong>linear_velocity</strong> (<em>ReplicatorItem</em>) – Randomizes the linear velocity of the prims.</p></li>
+<li><p><strong>angular_velocity</strong> (<em>ReplicatorItem</em>) – Randomizes the angular velocity of the prims.</p></li>
+<li><p><strong>velocity</strong> (<em>ReplicatorItem</em>) – Randomizes the linear and angular velocity of the prims.</p></li>
+<li><p><strong>force</strong> (<em>ReplicatorItem</em>) – Applies a random force to the prims.</p></li>
+<li><p><strong>mass</strong> (<em>ReplicatorItem</em>) – Randomizes the mass of the prims. CPU pipeline only.</p></li>
+<li><p><strong>inertia</strong> (<em>ReplicatorItem</em>) – Randomizes the inertia of the prims. Takes in three values for the
+replicator distribution, corresponding to the diagonal elements of
+the inertia matrix. CPU pipeline only.</p></li>
+<li><p><strong>material_properties</strong> (<em>ReplicatorItem</em>) – Takes in three values for the replicator distriution,
+corresponding to static friction, dynamic friction,
+and restitution.</p></li>
+<li><p><strong>contact_offset</strong> (<em>ReplicatorItem</em>) – Randomizes the contact offset of the prims.</p></li>
+<li><p><strong>rest_offset</strong> (<em>ReplicatorItem</em>) – Randomizes the rest offset of the prims.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="isaacsim.replicator.domain_randomization.scripts.physics_view.randomize_articulation_view">
+<span class="sig-name descname"><span class="pre">randomize_articulation_view</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">view_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">operation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'direct'</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">num_buckets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">stiffness</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">damping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">joint_friction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">position</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">orientation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">linear_velocity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">angular_velocity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">velocity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">joint_positions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">joint_velocities</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">lower_dof_limits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">upper_dof_limits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">max_efforts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">joint_armatures</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">joint_max_velocities</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">joint_efforts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">body_masses</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">body_inertias</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">material_properties</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">tendon_stiffnesses</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">tendon_dampings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">tendon_limit_stiffnesses</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">tendon_lower_limits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">tendon_upper_limits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">tendon_rest_lengths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">tendon_offsets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#isaacsim.replicator.domain_randomization.scripts.physics_view.randomize_articulation_view" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>view_name</strong> (<em>str</em>) – The name of a registered Articulation.</p></li>
+<li><p><strong>operation</strong> (<em>str</em>) – Can be “direct”, “additive”, or “scaling”.
+“direct” means random values are directly written into the view.
+“additive” means random values are added to the default values.
+“scaling” means random values are multiplied to the default values.</p></li>
+<li><p><strong>num_buckets</strong> (<em>int</em>) – Number of buckets to sample values from for material_properties randomization.</p></li>
+<li><p><strong>stiffness</strong> (<em>ReplicatorItem</em>) – Randomizes the stiffness of the joints in the articulation prims.</p></li>
+<li><p><strong>damping</strong> (<em>ReplicatorItem</em>) – Randomizes the damping of the joints in the articulation prims.</p></li>
+<li><p><strong>joint_friction</strong> (<em>ReplicatorItem</em>) – Randomizes the friction of the joints in the articulation prims.</p></li>
+<li><p><strong>position</strong> (<em>ReplicatorItem</em>) – Randomizes the root position of the prims.</p></li>
+<li><p><strong>orientation</strong> (<em>ReplicatorItem</em>) – Randomizes the root orientation of the prims using euler angles (rad).</p></li>
+<li><p><strong>linear_velocity</strong> (<em>ReplicatorItem</em>) – Randomizes the root linear velocity of the prims.</p></li>
+<li><p><strong>angular_velocity</strong> (<em>ReplicatorItem</em>) – Randomizes the root angular velocity of the prims.</p></li>
+<li><p><strong>velocity</strong> (<em>ReplicatorItem</em>) – Randomizes the root linear and angular velocity of the prims.</p></li>
+<li><p><strong>joint_positions</strong> (<em>ReplicatorItem</em>) – Randomizes the joint positions of the articulation prims.</p></li>
+<li><p><strong>joint_velocities</strong> (<em>ReplicatorItem</em>) – Randomizes the joint velocities of the articulation prims.</p></li>
+<li><p><strong>lower_dof_limits</strong> (<em>ReplicatorItem</em>) – Randomizes the lower joint limits of the articulation prims.</p></li>
+<li><p><strong>upper_dof_limits</strong> (<em>ReplicatorItem</em>) – Randomizes the upper joint limits of the articulation prims.</p></li>
+<li><p><strong>max_efforts</strong> (<em>ReplicatorItem</em>) – Randomizes the maximum joint efforts of the articulation prims.</p></li>
+<li><p><strong>joint_armatures</strong> (<em>ReplicatorItem</em>) – Randomizes the joint armatures of the articulation prims.</p></li>
+<li><p><strong>joint_max_velocities</strong> (<em>ReplicatorItem</em>) – Randomizes the maximum joint velocities of the articulation prims.</p></li>
+<li><p><strong>joint_efforts</strong> (<em>ReplicatorItem</em>) – Randomizes the joint efforts of the articulation prims.</p></li>
+<li><p><strong>body_masses</strong> (<em>ReplicatorItem</em>) – Randomizes the mass of each body in the articulation prims. The
+replicator distribution takes in K values, where K is the number of
+bodies in the articulation.</p></li>
+<li><p><strong>body_inertias</strong> (<em>ReplicatorItem</em>) – Randomizes the inertia of each body in the articulation prims. The
+replicator distribution takes in K * 3 values, where K is the number of
+bodies in the articulation.</p></li>
+<li><p><strong>material_properties</strong> (<em>ReplicatorItem</em>) – Randomizes the material properties of the bodies in the articulation.</p></li>
+<li><p><strong>tendon_stiffnesses</strong> (<em>ReplicatorItem</em>) – Randomizes the stiffnesses of the fixed tendons in the articulation.
+The replicator distribution takes in T values, where T is the number
+of tendons in the articulation.</p></li>
+<li><p><strong>tendon_dampings</strong> (<em>ReplicatorItem</em>) – Randomizes the dampings of the fixed tendons in the articulation.
+The replicator distribution takes in T values, where T is the number
+of tendons in the articulation.</p></li>
+<li><p><strong>tendon_limit_stiffnesses</strong> (<em>ReplicatorItem</em>) – Randomizes the limit stiffnesses of the fixed tendons in
+the articulation. The replicator distribution takes in T values,
+where T is the number of tendons in the articulation.</p></li>
+<li><p><strong>tendon_lower_limits</strong> (<em>ReplicatorItem</em>) – Randomizes the lower limits of the fixed tendons in
+the articulation. The replicator distribution takes in T values,
+where T is the number of tendons in the articulation.</p></li>
+<li><p><strong>tendon_upper_limits</strong> (<em>ReplicatorItem</em>) – Randomizes the upper limits of the fixed tendons in
+the articulation. The replicator distribution takes in T values,
+where T is the number of tendons in the articulation.</p></li>
+<li><p><strong>tendon_rest_lengths</strong> (<em>ReplicatorItem</em>) – Randomizes the rest lengths of the fixed tendons in
+the articulation. The replicator distribution takes in T values,
+where T is the number of tendons in the articulation.</p></li>
+<li><p><strong>tendon_offsets</strong> (<em>ReplicatorItem</em>) – Randomizes the offsets of the fixed tendons in
+the articulation. The replicator distribution takes in T values,
+where T is the number of tendons in the articulation.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="isaacsim.replicator.domain_randomization.scripts.physics_view.randomize_simulation_context">
+<span class="sig-name descname"><span class="pre">randomize_simulation_context</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">operation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'direct'</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">gravity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#isaacsim.replicator.domain_randomization.scripts.physics_view.randomize_simulation_context" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>operation</strong> (<em>str</em>) – Can be “direct”, “additive”, or “scaling”.
+“direct” means random values are directly written into the view.
+“additive” means random values are added to the default values.
+“scaling” means random values are multiplied to the default values.</p></li>
+<li><p><strong>gravity</strong> (<em>ReplicatorItem</em>) – Randomizes the gravity vector of the simulation.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-isaacsim.replicator.domain_randomization.scripts.utils">
+<span id="utils"></span><h4>utils<a class="headerlink" href="#module-isaacsim.replicator.domain_randomization.scripts.utils" title="Link to this heading">#</a></h4>
+<dl class="py function">
+<dt class="sig sig-object py" id="isaacsim.replicator.domain_randomization.scripts.utils.set_distribution_params">
+<span class="sig-name descname"><span class="pre">set_distribution_params</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">distribution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#isaacsim.replicator.domain_randomization.scripts.utils.set_distribution_params" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>distribution</strong> (<em>ReplicatorItem</em>) – The replicator distribution object to be modified.</p></li>
+<li><p><strong>parameters</strong> (<em>Dict</em>) – A dictionary where the keys are the names of the replicator
+distribution parameters and the values are the parameter values
+to be set.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="isaacsim.replicator.domain_randomization.scripts.utils.get_distribution_params">
+<span class="sig-name descname"><span class="pre">get_distribution_params</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">distribution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">omni.replicator.core.utils.ReplicatorItem</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span></span></span><a class="headerlink" href="#isaacsim.replicator.domain_randomization.scripts.utils.get_distribution_params" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>distribution</strong> (<em>ReplicatorItem</em>) – A replicator distribution object.</p></li>
+<li><p><strong>parameters</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – A list of the names of the replicator distribution parameters.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of the distribution parameters of the given replicator distribution object.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="isaacsim.replicator.domain_randomization.scripts.utils.get_semantics">
+<span class="sig-name descname"><span class="pre">get_semantics</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">num_semantics</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">num_semantic_tokens</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">instance_semantic_map</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">min_semantic_idx</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">max_semantic_hierarchy_depth</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">semantic_token_map</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">required_semantic_types</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#isaacsim.replicator.domain_randomization.scripts.utils.get_semantics" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="isaacsim.replicator.domain_randomization.scripts.utils.get_image_space_points">
+<span class="sig-name descname"><span class="pre">get_image_space_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">view_proj_matrix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#isaacsim.replicator.domain_randomization.scripts.utils.get_image_space_points" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> – numpy array of N points (N, 3) in the world space. Points will be projected into the image space.</p></li>
+<li><p><strong>view_proj_matrix</strong> – Desired view projection matrix, transforming points from world frame to image space of desired camera</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>numpy array of shape (N, 3) of points projected into the image space.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="isaacsim.replicator.domain_randomization.scripts.utils.calculate_truncation_ratio_simple">
+<span class="sig-name descname"><span class="pre">calculate_truncation_ratio_simple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corners</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_height</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#isaacsim.replicator.domain_randomization.scripts.utils.calculate_truncation_ratio_simple" title="Link to this definition">#</a></dt>
+<dd><p>Calculate the truncation ratio of a cuboid using a simplified bounding box method.
+:param corners: (9, 2) numpy array containing the projected corners of the cuboid.
+:param img_width: width of image
+:param img_height: height of image</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The truncation ratio of the cuboid.
+1 means object is fully truncated and 0 means object is fully within screen.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="isaacsim.replicator.domain_randomization.scripts.utils.NumpyEncoder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NumpyEncoder</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">skipkeys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">ensure_ascii</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">check_circular</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">allow_nan</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">sort_keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">separators</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#isaacsim.replicator.domain_randomization.scripts.utils.NumpyEncoder" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">JSONEncoder</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="isaacsim.replicator.domain_randomization.scripts.utils.NumpyEncoder.default">
+<span class="sig-name descname"><span class="pre">default</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#isaacsim.replicator.domain_randomization.scripts.utils.NumpyEncoder.default" title="Link to this definition">#</a></dt>
+<dd><p>Implement this method in a subclass such that it returns
+a serializable object for <code class="docutils literal notranslate"><span class="pre">o</span></code>, or calls the base implementation
+(to raise a <code class="docutils literal notranslate"><span class="pre">TypeError</span></code>).</p>
+<p>For example, to support arbitrary iterators, you could
+implement default like this:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">def</span><span class="w"> </span><span class="k">default</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">o</span><span class="p">)</span><span class="o">:</span>
+<span class="w">    </span><span class="nl">try</span><span class="p">:</span>
+<span class="w">        </span><span class="n">iterable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">iter</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+<span class="w">    </span><span class="n">except</span><span class="w"> </span><span class="n">TypeError</span><span class="o">:</span>
+<span class="w">        </span><span class="n">pass</span>
+<span class="w">    </span><span class="nl">else</span><span class="p">:</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">list</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span>
+<span class="w">    </span><span class="cp"># Let the base class default method raise the TypeError</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">JSONEncoder</span><span class="p">.</span><span class="k">default</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">o</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+</section>
+<section id="omnigraph-nodes">
+<h2>Omnigraph Nodes<a class="headerlink" href="#omnigraph-nodes" title="Link to this heading">#</a></h2>
+<p>The extension exposes the following Omnigraph nodes:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ogn/OgnCountIndices.html">Count</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ogn/OgnIntervalFiltering.html">Interval Filter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ogn/OgnOnRLFrame.html">On Frame</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ogn/OgnRandom3f.html">Random 3f</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ogn/OgnWritePhysicsArticulationView.html">Write Physics Attribute using Tensor API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ogn/OgnWritePhysicsRigidPrimView.html">Write Physics Attribute using Tensor API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ogn/OgnWritePhysicsSimulationContext.html">Write Physics Attribute using Tensor API</a></li>
+</ul>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../../isaacsim.replicator.behavior.ui/docs/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">[isaacsim.replicator.behavior.ui] Isaac Sim Replicator Behavior Scripts UI</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="ogn/OgnCountIndices.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Count</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#enable-extension">Enable Extension</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reinforcement-learning-domain-randomization">Reinforcement Learning Domain Randomization</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#api">API</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#python-api">Python API</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#module-isaacsim.replicator.domain_randomization.scripts.trigger">trigger</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#isaacsim.replicator.domain_randomization.scripts.trigger.on_rl_frame"><code class="docutils literal notranslate"><span class="pre">on_rl_frame()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#module-isaacsim.replicator.domain_randomization.scripts.gate">gate</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#isaacsim.replicator.domain_randomization.scripts.gate.on_interval"><code class="docutils literal notranslate"><span class="pre">on_interval()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#isaacsim.replicator.domain_randomization.scripts.gate.on_env_reset"><code class="docutils literal notranslate"><span class="pre">on_env_reset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#module-isaacsim.replicator.domain_randomization.scripts.physics_view">physics_view</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#isaacsim.replicator.domain_randomization.scripts.physics_view.register_simulation_context"><code class="docutils literal notranslate"><span class="pre">register_simulation_context()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#isaacsim.replicator.domain_randomization.scripts.physics_view.register_rigid_prim_view"><code class="docutils literal notranslate"><span class="pre">register_rigid_prim_view()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#isaacsim.replicator.domain_randomization.scripts.physics_view.register_articulation_view"><code class="docutils literal notranslate"><span class="pre">register_articulation_view()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#isaacsim.replicator.domain_randomization.scripts.physics_view.step_randomization"><code class="docutils literal notranslate"><span class="pre">step_randomization()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#isaacsim.replicator.domain_randomization.scripts.physics_view.randomize_rigid_prim_view"><code class="docutils literal notranslate"><span class="pre">randomize_rigid_prim_view()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#isaacsim.replicator.domain_randomization.scripts.physics_view.randomize_articulation_view"><code class="docutils literal notranslate"><span class="pre">randomize_articulation_view()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#isaacsim.replicator.domain_randomization.scripts.physics_view.randomize_simulation_context"><code class="docutils literal notranslate"><span class="pre">randomize_simulation_context()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#module-isaacsim.replicator.domain_randomization.scripts.utils">utils</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#isaacsim.replicator.domain_randomization.scripts.utils.set_distribution_params"><code class="docutils literal notranslate"><span class="pre">set_distribution_params()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#isaacsim.replicator.domain_randomization.scripts.utils.get_distribution_params"><code class="docutils literal notranslate"><span class="pre">get_distribution_params()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#isaacsim.replicator.domain_randomization.scripts.utils.get_semantics"><code class="docutils literal notranslate"><span class="pre">get_semantics()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#isaacsim.replicator.domain_randomization.scripts.utils.get_image_space_points"><code class="docutils literal notranslate"><span class="pre">get_image_space_points()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#isaacsim.replicator.domain_randomization.scripts.utils.calculate_truncation_ratio_simple"><code class="docutils literal notranslate"><span class="pre">calculate_truncation_ratio_simple()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#isaacsim.replicator.domain_randomization.scripts.utils.NumpyEncoder"><code class="docutils literal notranslate"><span class="pre">NumpyEncoder</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h6 nav-item toc-entry"><a class="reference internal nav-link" href="#isaacsim.replicator.domain_randomization.scripts.utils.NumpyEncoder.default"><code class="docutils literal notranslate"><span class="pre">default()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#omnigraph-nodes">Omnigraph Nodes</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+<a class="footer-brand logo" href="https://www.nvidia.com">
+  <img src="../../../../_static/nvidia-logo-horiz-rgb-1c-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA"/>
+  <img src="../../../../_static/nvidia-logo-horiz-rgb-1c-wht-for-screen.svg" class="logo__image only-dark" alt="NVIDIA"/>
+</a></div>
+      
+        <div class="footer-item">
+
+
+
+  <p class="copyright">
+    
+      Copyright © 2018-2025, NVIDIA Corporation.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item"><p class="last-updated">
+  Last updated on Jan 28, 2025.
+  <br/>
+</p></div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

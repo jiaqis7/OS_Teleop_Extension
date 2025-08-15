@@ -1,0 +1,224 @@
+{
+    "total_demos": 35,
+    "total_success": 23,
+    "red_success": 35,
+    "green_success": 28,
+    "blue_success": 29,
+    "demo_results": {
+        "demo_16": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_17": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": false
+        },
+        "demo_18": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_19": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_20": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_21": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_22": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_23": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_24": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": false
+        },
+        "demo_25": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_26": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": true
+        },
+        "demo_27": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_28": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_29": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_30": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": false
+        },
+        "demo_31": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": true
+        },
+        "demo_32": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": false
+        },
+        "demo_33": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_34": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_35": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_36": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": false
+        },
+        "demo_37": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_38": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_39": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_40": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_41": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_42": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": true
+        },
+        "demo_43": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_44": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": true
+        },
+        "demo_45": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": true
+        },
+        "demo_46": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_47": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": true
+        },
+        "demo_48": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": false
+        },
+        "demo_49": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_50": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        }
+    },
+    "success_percentage": 65.71428571428571,
+    "red_percentage": 100.0,
+    "green_percentage": 80.0,
+    "blue_percentage": 82.85714285714286,
+    "timestamp": "2025-08-10T23:00:18.953495"
+}

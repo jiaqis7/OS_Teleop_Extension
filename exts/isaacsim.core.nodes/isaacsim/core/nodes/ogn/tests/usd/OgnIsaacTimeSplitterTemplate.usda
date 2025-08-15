@@ -1,0 +1,40 @@
+#usda 1.0
+(
+    doc ="""Generated from node description file OgnIsaacTimeSplitter.ogn
+Contains templates for node types found in that file."""
+)
+
+def OmniGraph "TestGraph"
+{
+    token evaluator:type = "push"
+    int2 fileFormatVersion = (1, 3)
+    token flatCacheBacking = "Shared"
+    token pipelineStage = "pipelineStageSimulation"
+
+    def OmniGraphNode "Template_isaacsim_core_nodes_IsaacTimeSplitter" (
+        docs="""Spit time values"""
+    )
+    {
+        token node:type = "isaacsim.core.nodes.IsaacTimeSplitter"
+        int node:typeVersion = 1
+
+        # 1 attribute
+        custom token inputs:time (
+            docs="""Time (in seconds)"""
+        )
+
+        # 4 attributes
+        custom uint outputs:microseconds (
+            docs="""Microseconds [0, 1e6)"""
+        )
+        custom uint outputs:milliseconds (
+            docs="""Milliseconds [0, 1e3)"""
+        )
+        custom uint outputs:nanoseconds (
+            docs="""Nanoseconds [0, 1e9)"""
+        )
+        custom int outputs:seconds (
+            docs="""Seconds [INT_MIN, INT_MAX]"""
+        )
+    }
+}

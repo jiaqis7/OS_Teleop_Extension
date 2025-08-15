@@ -1,0 +1,60 @@
+[core]
+reloadable = true
+order = 0
+
+[package]
+version = "1.0.9"
+category = "Utility"
+title = "Jupyter notebook integration"
+description = "Jupyter notebook version of Omniverse's script editor"
+authors = ["NVIDIA"]
+repository = ""
+keywords = ["isaac", "python", "jupyter", "notebook"]
+changelog = "docs/CHANGELOG.md"
+readme = "docs/README.md"
+preview_image = "data/preview.png"
+icon = "data/icon.png"
+
+[dependencies]
+"omni.kit.uiapp" = { optional = true }
+"omni.kit.notification_manager" = { optional = true }
+"isaacsim.core.deprecation_manager" = {}
+
+[[python.module]]
+name = "isaacsim.code_editor.jupyter"
+
+[python.pipapi]
+requirements = ["jupyterlab", "notebook", "nbclassic", "chardet", "python-language-server", "jedi", "requests", "h11"]
+use_online_index = true
+ignore_import_check = true
+
+[settings]
+# IP address where the extension server will listen for connections.
+exts."isaacsim.code_editor.jupyter".host = "0.0.0.0"
+# Port number where the extension server will listen for connections.
+exts."isaacsim.code_editor.jupyter".port = 8227
+# Whether to kill applications/processes that use the same ports before enabling the extension.
+# Disable this option if you want to launch multiple applications with this extension enabled.
+exts."isaacsim.code_editor.jupyter".kill_processes_with_port_in_use = false
+
+# jupyter notebook settings
+
+# Whether to use the classic notebook interface. If false, the Jupyter Lab interface is used.
+exts."isaacsim.code_editor.jupyter".classic_notebook_interface = false
+# IP address where the Jupyter server is being started.
+exts."isaacsim.code_editor.jupyter".notebook_ip = "0.0.0.0"
+# Port number where the Jupyter server is being started.
+exts."isaacsim.code_editor.jupyter".notebook_port = 8228
+# Jupyter server token for token-based authentication. If empty, the server will start without authentication.
+exts."isaacsim.code_editor.jupyter".notebook_token = ""
+# The directory to use for notebooks. If empty, the directory is ``data/notebooks`` within the extension tree.
+exts."isaacsim.code_editor.jupyter".notebook_dir = ""
+# Jupyter server command line options other than ``--ip``, ``--port``, ``--token`` and ``--notebook-dir``.
+exts."isaacsim.code_editor.jupyter".command_line_options = "--allow-root --no-browser --JupyterApp.answer_yes=True"
+
+[[test]]
+name = "startup"
+enabled = false
+
+[[test]]
+enabled = true

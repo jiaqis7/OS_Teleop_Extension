@@ -1,0 +1,134 @@
+{
+    "total_demos": 20,
+    "total_success": 6,
+    "red_success": 17,
+    "green_success": 11,
+    "blue_success": 14,
+    "demo_results": {
+        "demo_01": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_02": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": false
+        },
+        "demo_03": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": true
+        },
+        "demo_04": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": true
+        },
+        "demo_05": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": false
+        },
+        "demo_06": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_07": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": false
+        },
+        "demo_08": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_09": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": true
+        },
+        "demo_10": {
+            "success": false,
+            "red_contact": false,
+            "green_contact": false,
+            "blue_contact": true
+        },
+        "demo_11": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": false
+        },
+        "demo_12": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_13": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": false
+        },
+        "demo_14": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": false
+        },
+        "demo_15": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": true
+        },
+        "demo_16": {
+            "success": false,
+            "red_contact": false,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_17": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_18": {
+            "success": false,
+            "red_contact": false,
+            "green_contact": false,
+            "blue_contact": true
+        },
+        "demo_19": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true
+        },
+        "demo_20": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": true
+        }
+    },
+    "success_percentage": 30.0,
+    "red_percentage": 85.0,
+    "green_percentage": 55.00000000000001,
+    "blue_percentage": 70.0,
+    "timestamp": "2025-08-05T19:49:23.895248"
+}

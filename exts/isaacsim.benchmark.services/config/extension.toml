@@ -1,0 +1,48 @@
+[core]
+reloadable = true
+order = 0
+
+[package]
+version = "2.6.3"
+category = "Simulation"
+title = "Benchmark Services"
+description = "This extension provides benchmarking utilities"
+authors = ["NVIDIA"]
+repository = ""
+keywords = ["isaac", "benchmark", "analyze"]
+changelog = "docs/CHANGELOG.md"
+readme = "docs/README.md"
+icon = "data/icon.png"
+preview_image = "data/preview.png"
+writeTarget.kit = true
+
+[dependencies]
+"isaacsim.core.api" = {}
+"isaacsim.storage.native" = {}
+"omni.kit.test" = {} # we derrive from the base test class and need this dependency
+
+[[python.module]]
+name = "isaacsim.benchmark.services"
+
+[[python.module]]
+name = "isaacsim.benchmark.services.tests"
+
+
+[settings]
+# Default test suite name.
+exts."isaacsim.benchmark.services".metrics.nvdataflow_default_test_suite_name = "Isaac Sim Benchmarks"
+
+# uncomment and set this to output metrics to a specific folder
+# exts."isaacsim.benchmark.services".metrics.metrics_output_folder=""
+
+# Whether to add a randomly generated string as a prefix to the output filename to distinguish runs.
+exts."isaacsim.benchmark.services".metrics.randomize_filename_prefix = false
+
+[[test]]
+dependencies = [
+    "omni.physx.ui",
+]
+args = [
+'--/persistent/isaac/asset_root/default = "https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/4.5"',
+"--/app/file/ignoreUnsavedOnExit=1",
+]

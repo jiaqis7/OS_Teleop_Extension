@@ -1,0 +1,70 @@
+Metadata-Version: 2.1
+Name: nvidia-srl-usd
+Version: 0.19.1
+Summary: SRL Python USD utils
+Author: NVIDIA Seattle Robotics Lab
+License: Copyright (c) 2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+        
+        NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+        property and proprietary rights in and to this material, related
+        documentation and any modifications thereto. Any use, reproduction,
+        disclosure or distribution of this material and related documentation
+        without an express license agreement from NVIDIA CORPORATION or
+        its affiliates is strictly prohibited.
+        
+Project-URL: Homepage, https://gitlab-master.nvidia.com/srl/py/usd/-/blob/main/README.md
+Project-URL: Documentation, https://srl.gitlab-master-pages.nvidia.com/py/usd
+Project-URL: Repository, https://gitlab-master.nvidia.com/srl/py/usd
+Project-URL: Issues, https://gitlab-master.nvidia.com/srl/py/usd/-/issues
+Project-URL: Changelog, https://gitlab-master.nvidia.com/srl/py/usd/-/blob/main/CHANGELOG.md
+Keywords: docker
+Platform: any
+Classifier: Operating System :: OS Independent
+Classifier: Intended Audience :: Developers
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Scientific/Engineering :: Robotics
+Requires-Python: >=3.7
+Description-Content-Type: text/x-rst
+License-File: LICENSE
+Requires-Dist: numpy >=1.21.5
+Requires-Dist: nvidia-srl-base >=0.10.0
+Requires-Dist: nvidia-srl-math >=0.9.0
+Requires-Dist: tqdm <5.0.0,>=4.63.0
+Requires-Dist: usd-core <24.00,>=21.11
+Requires-Dist: setuptools-scm <8.0,>=6.0 ; python_version == "3.7"
+Requires-Dist: setuptools-scm <9.0.0,>=8.0.0 ; python_version >= "3.8"
+Provides-Extra: ci
+Requires-Dist: black ==22.6.0 ; extra == 'ci'
+Requires-Dist: flake8 ==7.0.0 ; extra == 'ci'
+Requires-Dist: flake8-copyright ==0.2.4 ; extra == 'ci'
+Requires-Dist: flake8-docstrings ==1.7.0 ; extra == 'ci'
+Requires-Dist: flake8-isort ==6.1.1 ; extra == 'ci'
+Requires-Dist: flake8-rst-docstrings ==0.3.0 ; extra == 'ci'
+Requires-Dist: flake8-pyproject ==1.2.3 ; extra == 'ci'
+Requires-Dist: mypy ==1.7.0 ; extra == 'ci'
+Requires-Dist: pep8-naming ==0.13.2 ; extra == 'ci'
+Requires-Dist: pytest ==6.2.5 ; extra == 'ci'
+Requires-Dist: pytest-cov ==3.0.0 ; extra == 'ci'
+Requires-Dist: docutils ==0.20.1 ; extra == 'ci'
+Requires-Dist: graphviz ==0.19.1 ; extra == 'ci'
+Requires-Dist: sphinx ==7.2.6 ; extra == 'ci'
+Requires-Dist: sphinx-rtd-theme ==2.0.0 ; extra == 'ci'
+Requires-Dist: sphinx-copybutton ==0.5.2 ; extra == 'ci'
+Requires-Dist: usd-core ==23.8 ; extra == 'ci'
+Requires-Dist: anybadge ==1.8.0 ; extra == 'ci'
+Requires-Dist: build ==1.0.3 ; extra == 'ci'
+Requires-Dist: twine ==3.7.1 ; extra == 'ci'
+Requires-Dist: tqdm-stubs ==0.2.1 ; extra == 'ci'
+Requires-Dist: open3d ==0.13.0 ; (python_version < "3.9") and extra == 'ci'
+Requires-Dist: open3d ==0.17.0 ; (python_version >= "3.9") and extra == 'ci'
+Provides-Extra: dev
+Requires-Dist: ipdb ; extra == 'dev'
+Requires-Dist: ipython ; extra == 'dev'
+Requires-Dist: nvidia-srl-dock ; extra == 'dev'
+
+# SRL USD
+
+Project website is here: https://srl.gitlab-master-pages.nvidia.com/py/usd/
+
+SRL USD utility Python package.

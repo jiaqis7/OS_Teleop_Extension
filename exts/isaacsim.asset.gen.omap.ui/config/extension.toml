@@ -1,0 +1,29 @@
+[core]
+reloadable = true
+order = 0
+
+[package]
+version = "2.0.4"
+category = "Simulation"
+title = "UI components for the Isaac Sim Occupancy Map"
+description = "UI components for the Isaac Sim Occupancy Map provides UI for 2D Occupancy Map Generation"
+authors = ["NVIDIA"]
+repository = ""
+keywords = ["isaac", "occupancy map"]
+changelog = "docs/CHANGELOG.md"
+readme = "docs/README.md"
+icon = "data/icon.png"
+preview_image = "data/preview.png"
+writeTarget.kit = true
+
+[dependencies]
+"isaacsim.asset.gen.omap" = {}
+"isaacsim.core.api" = {}
+"isaacsim.core.deprecation_manager" = {}
+"isaacsim.gui.components" = {}
+
+[[python.module]]
+name = "isaacsim.asset.gen.omap.ui"
+
+[[python.module]]
+name = "isaacsim.asset.gen.omap.ui.tests"

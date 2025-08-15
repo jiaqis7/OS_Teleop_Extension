@@ -13,19 +13,27 @@ from scipy.spatial.transform import Rotation as R
 import shutil
 import re
 import glob
+from scripts.teleoperation.contact_detector_simple import ContactDetectorSimple
 
 
-def reset_cube_pose(env, log_dir, position, orientation, cube_key="cube_rigid_1"):
+def reset_cube_pose(env, log_dir, position, orientation, cube_key="cube_rigid_1", initial_state=None):
     cube = env.scene[cube_key]
     device = cube.data.root_state_w.device
 
-    root_state = cube.data.root_state_w.clone()
+    # Use initial clean state if provided, otherwise clone current (less ideal)
+    if initial_state is not None:
+        root_state = initial_state.clone()
+    else:
+        root_state = cube.data.root_state_w.clone()
+    
+    # Set the desired position and orientation
     root_state[:, 0:3] = torch.tensor(position, dtype=torch.float32, device=device)
     root_state[:, 3:7] = torch.tensor(orientation, dtype=torch.float32, device=device)
     root_state[:, 7:13] = 0.0  # zero velocities
+    
     cube.write_root_state_to_sim(root_state)
-
-    print(f"[RESET] Cube pose applied: pos={position}, ori={orientation}")
+    
+    print(f"[RESET] Cube '{cube_key}' pose applied: pos={position[:3]}, ori={orientation[:4]}")
 
 
 
@@ -170,6 +178,9 @@ class TeleopLogger:
         self.buffer = RingBuffer()
         self.logger_thread = threading.Thread(target=self._logger_loop, daemon=True)
         self.logger_thread.start()
+        
+        # Initialize contact detector
+        self.contact_detector = ContactDetectorSimple()
 
 
     def check_and_start_logging(self, env):
@@ -205,18 +216,45 @@ class TeleopLogger:
         self.frame_num = 0
 
         log_current_pose(env, self.log_dir)
+        
+        # Reset contact detector for new logging session
+        self.contact_detector.reset()
 
         os.remove(trigger_file)
 
 
-    def stop_logging(self):
+    def stop_logging(self, env=None):
         if self.enable_logging and (time.time() - self.start_time) > self.log_duration:
             print("[LOG] Logging duration ended. Stopping.")
+            
+            # Update contacts one final time before saving
+            if env and self.log_dir:
+                try:
+                    scene = env.unwrapped.scene if hasattr(env, 'unwrapped') else env.scene
+                    self.contact_detector.update_contacts(scene)
+                except Exception as e:
+                    print(f"[LOG] Warning: Could not update final contacts: {e}")
+            
+            # Save final contact state
+            if self.log_dir:
+                self.contact_detector.save_final_state(self.log_dir)
+            
             self.enable_logging = False
             self.logger = None
 
     def enqueue(self, frame_num, timestamp, robot_states, cam_l_img, cam_r_img):
         self.buffer.enqueue((frame_num, timestamp, robot_states, cam_l_img, cam_r_img))
+    
+    def check_contacts(self, env):
+        """Check contact states and log success if all blocks are in contact."""
+        if not self.enable_logging or not self.log_dir:
+            return
+        
+        # Get the scene object
+        scene = env.unwrapped.scene if hasattr(env, 'unwrapped') else env.scene
+        
+        # Update contact states
+        contact_info = self.contact_detector.update_contacts(scene)
 
     def _logger_loop(self):
         while True:

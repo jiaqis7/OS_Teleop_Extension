@@ -1,0 +1,45 @@
+[core]
+reloadable = true
+order = 0
+
+[package]
+version = "2.0.8"
+category = "Simulation"
+title = "Isaac Sim Occupancy Map"
+description = "The Isaac Sim Occupancy Map extension provides tools to generate occupancy maps for a Scene"
+authors = ["NVIDIA"]
+repository = ""
+keywords = ["isaac", "occupancy map"]
+changelog = "docs/CHANGELOG.md"
+readme = "docs/README.md"
+icon = "data/icon.png"
+preview_image = "data/preview.png"
+writeTarget.kit = true
+
+[dependencies]
+"isaacsim.core.deprecation_manager" = {}
+"isaacsim.util.debug_draw" = {}
+"omni.kit.pip_archive" = {}
+"omni.physx" = {}
+
+[[python.module]]
+name = "isaacsim.asset.gen.omap"
+
+[[python.module]]
+name = "isaacsim.asset.gen.omap.tests"
+
+[[native.plugin]]
+path = "bin/*.plugin"
+recursive = false
+
+[[test]]
+dependencies = [
+    "isaacsim.storage.native",
+    "isaacsim.core.utils"
+]
+
+args = [
+    '--/persistent/isaac/asset_root/default = "https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/4.5"',
+]
+
+timeout = 900

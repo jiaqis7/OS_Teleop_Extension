@@ -1,0 +1,32 @@
+[core]
+reloadable = true
+order = 0
+
+[package]
+version = "1.0.1"
+category = "SyntheticData"
+title = "Isaac Sim Replicator Behavior Scripts UI"
+description = "UI components for the Replicator Behavior Scripts exntension. It provides the UI Widget for the Property Panel for configuring the exposed variables of the scripts."
+authors = ["NVIDIA"]
+repository = ""
+keywords = ["isaac", "behavior scripts", "replicator", "ui"]
+changelog = "docs/CHANGELOG.md"
+readme  = "docs/README.md"
+icon = "data/icon.png"
+preview_image = "data/preview.png"
+
+
+[dependencies]
+"isaacsim.replicator.behavior" = {}
+"omni.kit.property.usd" = {}
+"omni.kit.window.property" = {}
+"omni.ui" = {}
+
+
+[[python.module]]
+name = "isaacsim.replicator.behavior.ui"
+
+[[test]]
+dependencies = [
+    "omni.kit.test"
+]

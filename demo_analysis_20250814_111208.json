@@ -1,0 +1,165 @@
+{
+    "total_demos": 7,
+    "total_success": 5,
+    "red_success": 6,
+    "green_success": 5,
+    "blue_success": 6,
+    "demos_with_errors": 1,
+    "timing_stats": {
+        "avg_duration": 60.02781434853872,
+        "avg_success_time": 42.832189400990806,
+        "min_success_time": 39.764392614364624,
+        "max_success_time": 44.71081781387329,
+        "demos_with_timing": 6
+    },
+    "demo_results": {
+        "demo_01": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true,
+            "timing": {
+                "total_duration": 60.0388662815094,
+                "success_time": 39.764392614364624,
+                "first_contact_times": {
+                    "red": 39.764392614364624,
+                    "green": 39.764392614364624,
+                    "blue": 37.65230441093445
+                }
+            },
+            "path": "demo_01/success.json",
+            "total_duration": 60.0388662815094,
+            "success_time": 39.764392614364624,
+            "first_contact_times": {
+                "red": 39.764392614364624,
+                "green": 39.764392614364624,
+                "blue": 37.65230441093445
+            }
+        },
+        "demo_02": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": true,
+            "timing": {
+                "total_duration": 60.02520751953125,
+                "success_time": 43.3283793926239,
+                "first_contact_times": {
+                    "red": 40.97294235229492,
+                    "green": null,
+                    "blue": 43.3283793926239
+                }
+            },
+            "path": "demo_02/success.json",
+            "total_duration": 60.02520751953125,
+            "success_time": 43.3283793926239,
+            "first_contact_times": {
+                "red": 40.97294235229492,
+                "green": null,
+                "blue": 43.3283793926239
+            }
+        },
+        "demo_03": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true,
+            "timing": {
+                "total_duration": 60.026450634002686,
+                "success_time": 43.16423225402832,
+                "first_contact_times": {
+                    "red": 42.27959442138672,
+                    "green": 43.16423225402832,
+                    "blue": 41.70720720291138
+                }
+            },
+            "path": "demo_03/success.json",
+            "total_duration": 60.026450634002686,
+            "success_time": 43.16423225402832,
+            "first_contact_times": {
+                "red": 42.27959442138672,
+                "green": 43.16423225402832,
+                "blue": 41.70720720291138
+            }
+        },
+        "demo_04": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true,
+            "timing": {
+                "total_duration": 59.997485637664795,
+                "success_time": 44.71081781387329,
+                "first_contact_times": {
+                    "red": 41.63320302963257,
+                    "green": 44.71081781387329,
+                    "blue": 41.0839409828186
+                }
+            },
+            "path": "demo_04/success.json",
+            "total_duration": 59.997485637664795,
+            "success_time": 44.71081781387329,
+            "first_contact_times": {
+                "red": 41.63320302963257,
+                "green": 44.71081781387329,
+                "blue": 41.0839409828186
+            }
+        },
+        "demo_05": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true,
+            "timing": {
+                "total_duration": 60.04358983039856,
+                "success_time": 43.4221875667572,
+                "first_contact_times": {
+                    "red": 41.11573147773743,
+                    "green": 43.4221875667572,
+                    "blue": 40.095739126205444
+                }
+            },
+            "path": "demo_05/success.json",
+            "total_duration": 60.04358983039856,
+            "success_time": 43.4221875667572,
+            "first_contact_times": {
+                "red": 41.11573147773743,
+                "green": 43.4221875667572,
+                "blue": 40.095739126205444
+            }
+        },
+        "demo_06": {
+            "success": true,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": true,
+            "timing": {
+                "total_duration": 60.03528618812561,
+                "success_time": 42.603126764297485,
+                "first_contact_times": {
+                    "red": 40.29062247276306,
+                    "green": 42.603126764297485,
+                    "blue": 40.696521282196045
+                }
+            },
+            "path": "demo_06/success.json",
+            "total_duration": 60.03528618812561,
+            "success_time": 42.603126764297485,
+            "first_contact_times": {
+                "red": 40.29062247276306,
+                "green": 42.603126764297485,
+                "blue": 40.696521282196045
+            }
+        },
+        "demo_07": {
+            "error": "success.json not found",
+            "path": "demo_07/success.json"
+        }
+    },
+    "success_percentage": 83.33333333333334,
+    "red_percentage": 100.0,
+    "green_percentage": 83.33333333333334,
+    "blue_percentage": 100.0,
+    "timestamp": "2025-08-14T11:12:08.947495",
+    "analysis_type": "post_processing"
+}

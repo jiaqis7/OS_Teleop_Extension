@@ -1,0 +1,49 @@
+[core]
+reloadable = true
+order = 0
+
+[package]
+version = "2.2.8"
+category = "Simulation"
+title = "Isaac Sim Utilities"
+description = "The Core Utils extension provides useful utilities for USD, physics, math, rendering and carb."
+authors = ["NVIDIA"]
+repository = ""
+keywords = ["isaac", "utils"]
+changelog = "docs/CHANGELOG.md"
+readme = "docs/README.md"
+icon = "data/icon.png"
+preview_image = "data/preview.png"
+writeTarget.kit = true
+writeTarget.platform = true
+
+[dependencies]
+"omni.physx" = {}
+"omni.usdphysics" = {}
+"omni.isaac.dynamic_control" = {}
+"isaacsim.storage.native" = {}
+"isaacsim.core.deprecation_manager" = {}
+"omni.usd.schema.semantics" = {}
+"omni.isaac.ml_archive" = {}
+"omni.warp.core" = {}
+
+[[python.module]]
+name = "isaacsim.core.utils"
+
+[[python.module]]
+name = "isaacsim.core.utils.tests"
+
+
+[[test]]
+dependencies = [
+    "omni.replicator.core",
+    "isaacsim.core.api",
+    "isaacsim.sensors.camera",
+]
+
+args = [
+    '--/app/settings/fabricDefaultStageFrameHistoryCount = 3',
+    '--/persistent/isaac/asset_root/default = "https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/4.5"',
+    '--/persistent/simulation/defaultMetersPerUnit = 1.0',
+    '--/persistent/app/stage/upAxis = "Z"'
+]

@@ -1,0 +1,52 @@
+[core]
+reloadable = true
+order = 0
+
+[package]
+version = "1.0.2"
+category = "SyntheticData"
+title = "Isaac Sim Replicator Domain Randomization"
+description="The extension provides various Domain Randomization scripts and OmniGraph nodes for randomizing simulation environments."
+authors = ["NVIDIA"]
+repository = ""
+keywords = ["Synthetic", "Data", "Randomization", "Generator", "Domain Randomization", "DR"]
+changelog = "docs/CHANGELOG.md"
+readme  = "docs/README.md"
+icon = "data/icon.png"
+preview_image = "data/preview.png"
+
+# Build separate extensions for Windows and Linux so appropriate libraries are bundled
+writeTarget.platform = true
+
+
+[dependencies]
+"omni.graph" = {}
+"omni.graph.core" = {}
+"omni.replicator.core" = {}
+"isaacsim.core.api" = {}
+"isaacsim.core.prims" = {}
+
+[[python.module]]
+name = "isaacsim.replicator.domain_randomization"
+
+# Watch the .ogn files for hot reloading (only works for Python files)
+[fswatcher.patterns]
+include = ["*.ogn", "*.py"]
+exclude = ["Ogn*Database.py"]
+
+[[test]]
+dependencies = [
+    "isaacsim.storage.native",
+    "omni.kit.test",
+    "omni.physics.tensors",
+]
+args = [
+'--/app/settings/fabricDefaultStageFrameHistoryCount = 3',
+'--/persistent/isaac/asset_root/default = "https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/4.5"',
+]
+
+[[test]]
+name = "startup"
+args = [
+    '--/app/settings/fabricDefaultStageFrameHistoryCount = 3',
+]

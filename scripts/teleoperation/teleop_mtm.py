@@ -433,22 +433,71 @@ def main():
 
             time.sleep(0.5)  # Give sim time to stabilize
 
-            # Random position
-            cube_pos_x = random.uniform(0.0, 0.1)
-            cube_pos_y = random.uniform(-0.05, 0.05)
-            cube_pos_z = 0.0  # slightly above table
+            # Check if this is a multi-cube environment
+            scene = env.unwrapped.scene if hasattr(env, 'unwrapped') else env.scene
+            scene_entities = list(scene.keys())
+            
+            if all(f"cube_rigid_{i}" in scene_entities for i in range(1, 5)):
+                # Multi-cube environment - reset all 4 cubes
+                print("[RESET-TRIGGER] Multi-cube environment detected. Resetting all 4 cubes...")
+                
+                # Reset colored blocks (1-3) to random positions
+                for i in range(1, 4):
+                    if i == 1:
+                        cube_pos = [np.random.uniform(-0.01, 0.01), np.random.uniform(-0.01, 0.01), 0.0]
+                    elif i == 2:
+                        cube_pos = [np.random.uniform(0.045, 0.055), np.random.uniform(0.0, 0.03), 0.0]
+                    else:  # i == 3
+                        cube_pos = [np.random.uniform(-0.055, -0.045), np.random.uniform(0.0, 0.03), 0.0]
+                    
+                    cube_yaw = np.random.uniform(-np.pi/2, np.pi/2)
+                    cube_quat = R.from_euler("z", cube_yaw).as_quat()
+                    cube_orientation = [cube_quat[3], cube_quat[0], cube_quat[1], cube_quat[2]]
+                    
+                    cube = scene[f"cube_rigid_{i}"]
+                    device = cube.data.root_state_w.device
+                    root_state = cube.data.root_state_w.clone()
+                    root_state[:, 0:3] = torch.tensor(cube_pos, dtype=torch.float32, device=device)
+                    root_state[:, 3:7] = torch.tensor(cube_orientation, dtype=torch.float32, device=device)
+                    root_state[:, 7:13] = 0.0
+                    cube.write_root_state_to_sim(root_state)
+                    print(f"[RESET-TRIGGER] Cube cube_rigid_{i} reset to pos={cube_pos}")
+                
+                # Reset white block (cube_rigid_4) to fixed position and orientation
+                cube_pos = [0.0, 0.055, 0.0]
+                cube_yaw = 0.0  # Fixed orientation
+                cube_quat = R.from_euler("z", cube_yaw).as_quat()
+                cube_orientation = [cube_quat[3], cube_quat[0], cube_quat[1], cube_quat[2]]
+                
+                cube = scene["cube_rigid_4"]
+                device = cube.data.root_state_w.device
+                root_state = cube.data.root_state_w.clone()
+                root_state[:, 0:3] = torch.tensor(cube_pos, dtype=torch.float32, device=device)
+                root_state[:, 3:7] = torch.tensor(cube_orientation, dtype=torch.float32, device=device)
+                root_state[:, 7:13] = 0.0
+                cube.write_root_state_to_sim(root_state)
+                print(f"[RESET-TRIGGER] White block (cube_rigid_4) reset to fixed pos={cube_pos}, ori={cube_orientation}")
+                
+            else:
+                # Single cube environment - reset as before
+                print("[RESET-TRIGGER] Single cube environment. Resetting single cube...")
+                
+                # Random position
+                cube_pos_x = random.uniform(0.0, 0.1)
+                cube_pos_y = random.uniform(-0.05, 0.05)
+                cube_pos_z = 0.0  # slightly above table
 
-            # Random yaw rotation (z-axis only)
-            cube_yaw = random.uniform(-math.pi, math.pi)
-            cube_quat = R.from_euler("z", cube_yaw).as_quat()  # (x, y, z, w)
-            cube_orientation = [cube_quat[3], cube_quat[0], cube_quat[1], cube_quat[2]]  # (w, x, y, z)
+                # Random yaw rotation (z-axis only)
+                cube_yaw = random.uniform(-math.pi, math.pi)
+                cube_quat = R.from_euler("z", cube_yaw).as_quat()  # (x, y, z, w)
+                cube_orientation = [cube_quat[3], cube_quat[0], cube_quat[1], cube_quat[2]]  # (w, x, y, z)
 
-            reset_cube_pose(
-                env,
-                log_dir="teleop_logs/cube_latest",
-                position=[cube_pos_x, cube_pos_y, cube_pos_z],
-                orientation=cube_orientation,
-            )
+                reset_cube_pose(
+                    env,
+                    log_dir="teleop_logs/cube_latest",
+                    position=[cube_pos_x, cube_pos_y, cube_pos_z],
+                    orientation=cube_orientation,
+                )
 
             was_in_clutch = True
             has_synced_psms = False

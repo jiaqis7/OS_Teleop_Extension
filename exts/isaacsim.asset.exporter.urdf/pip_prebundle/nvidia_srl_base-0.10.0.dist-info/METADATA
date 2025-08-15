@@ -1,0 +1,89 @@
+Metadata-Version: 2.1
+Name: nvidia_srl_base
+Version: 0.10.0
+Summary: SRL Python base package. Contains base classes, basic types, general tools, and developer utilities.
+Author: NVIDIA Seattle Robotics Lab
+License: Copyright (c) 2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+        
+        NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+        property and proprietary rights in and to this material, related
+        documentation and any modifications thereto. Any use, reproduction,
+        disclosure or distribution of this material and related documentation
+        without an express license agreement from NVIDIA CORPORATION or
+        its affiliates is strictly prohibited.
+        
+Project-URL: Homepage, https://gitlab-master.nvidia.com/srl/py/base/-/blob/main/README.md
+Project-URL: Documentation, https://srl.gitlab-master-pages.nvidia.com/py/base
+Project-URL: Repository, https://gitlab-master.nvidia.com/srl/base
+Project-URL: Issues, https://gitlab-master.nvidia.com/srl/py/base/-/issues
+Project-URL: Changelog, https://gitlab-master.nvidia.com/srl/py/base/-/blob/main/CHANGELOG.md
+Keywords: docker
+Platform: any
+Classifier: Operating System :: OS Independent
+Classifier: Intended Audience :: Developers
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Scientific/Engineering :: Robotics
+Requires-Python: >=3.8
+Description-Content-Type: text/x-rst
+License-File: LICENSE
+Requires-Dist: numpy >=1.21.5
+Requires-Dist: setuptools-scm >=8.0.0
+Requires-Dist: importlib-metadata ; python_version < "3.10"
+Provides-Extra: ci
+Requires-Dist: anybadge ==1.8.0 ; extra == 'ci'
+Requires-Dist: black[jupyter] ==22.6.0 ; extra == 'ci'
+Requires-Dist: build ==1.0.3 ; extra == 'ci'
+Requires-Dist: docutils ==0.20.1 ; extra == 'ci'
+Requires-Dist: graphviz ==0.19.1 ; extra == 'ci'
+Requires-Dist: flake8 ==7.0.0 ; extra == 'ci'
+Requires-Dist: flake8-copyright ==0.2.4 ; extra == 'ci'
+Requires-Dist: flake8-docstrings ==1.7.0 ; extra == 'ci'
+Requires-Dist: flake8-isort ==6.1.1 ; extra == 'ci'
+Requires-Dist: flake8-rst-docstrings ==0.3.0 ; extra == 'ci'
+Requires-Dist: Flake8-pyproject ==1.2.3 ; extra == 'ci'
+Requires-Dist: ipykernel ==6.26.0 ; extra == 'ci'
+Requires-Dist: mypy ==1.7.0 ; extra == 'ci'
+Requires-Dist: nbclient ==0.7.4 ; extra == 'ci'
+Requires-Dist: nbconvert ==7.9.2 ; extra == 'ci'
+Requires-Dist: nbformat ==5.9.2 ; extra == 'ci'
+Requires-Dist: nvidia-srl-jupyter-clear-output ==0.4.0 ; extra == 'ci'
+Requires-Dist: pep8-naming ==0.13.2 ; extra == 'ci'
+Requires-Dist: pytest ==6.2.5 ; extra == 'ci'
+Requires-Dist: pytest-cov ==3.0.0 ; extra == 'ci'
+Requires-Dist: sphinx ==7.2.6 ; extra == 'ci'
+Requires-Dist: sphinx-rtd-theme ==2.0.0 ; extra == 'ci'
+Requires-Dist: sphinx-copybutton ==0.5.2 ; extra == 'ci'
+Requires-Dist: twine ==3.7.1 ; extra == 'ci'
+Requires-Dist: usd-core ==23.8 ; extra == 'ci'
+Provides-Extra: dev
+Requires-Dist: black[jupyter] ; extra == 'dev'
+Requires-Dist: ipdb ; extra == 'dev'
+Requires-Dist: ipykernel ; extra == 'dev'
+Requires-Dist: ipython ; extra == 'dev'
+Requires-Dist: jupyter ; extra == 'dev'
+
+# SRL Python Base Package
+
+<h4>
+    <a href="https://srl.gitlab-master-pages.nvidia.com/py/base/">Homepage</a> (
+    <a href="https://srl.gitlab-master-pages.nvidia.com/py/base/getting_started.html">Getting Started</a> |
+    <a href="https://srl.gitlab-master-pages.nvidia.com/py/base/package_info.html">Package Info</a> |
+    <a href="https://srl.gitlab-master-pages.nvidia.com/py/base/contributing.html">Contributing</a> |
+    <a href="https://srl.gitlab-master-pages.nvidia.com/py/base/api.html">API Reference</a> )
+</h4>
+
+This package provides abstract base classes (ABCs), a standard SRL base class that includes logger functionality, common types & enums, and basic helper tools.
+
+See the [documentation](https://srl.gitlab-master-pages.nvidia.com/py/base/) for detailed information.
+
+## Quick Start
+
+**Installation**
+
+Use pip to install this Python distribution from the projects Python package registry.
+
+NOTE: `username` is your Gitlab username, and `token` is a [Gitlab personal access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) with at least api and read_api scope.
+```
+pip install --extra-index-url https://<username>:<token>@gitlab-master.nvidia.com/api/v4/groups/4131/-/packages/pypi/simple nvidia-srl-base
+```

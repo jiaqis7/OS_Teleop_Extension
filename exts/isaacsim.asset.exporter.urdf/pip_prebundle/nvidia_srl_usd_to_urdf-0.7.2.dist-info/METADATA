@@ -1,0 +1,128 @@
+Metadata-Version: 2.1
+Name: nvidia-srl-usd-to-urdf
+Version: 0.7.2
+Summary: A tool to convert from USD to URDF.
+Author: NVIDIA Seattle Robotics Lab
+License: Copyright (c) 2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+        
+        NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+        property and proprietary rights in and to this material, related
+        documentation and any modifications thereto. Any use, reproduction,
+        disclosure or distribution of this material and related documentation
+        without an express license agreement from NVIDIA CORPORATION or
+        its affiliates is strictly prohibited.
+        
+Project-URL: Homepage, https://gitlab-master.nvidia.com/srl/py/usd_to_urdf/-/blob/main/README.md
+Project-URL: Documentation, https://srl.gitlab-master-pages.nvidia.com/py/usd_to_urdf
+Project-URL: Repository, https://gitlab-master.nvidia.com/srl/py/usd_to_urdf
+Project-URL: Issues, https://gitlab-master.nvidia.com/srl/py/usd_to_urdf/-/issues
+Project-URL: Changelog, https://gitlab-master.nvidia.com/srl/py/usd_to_urdf/-/blob/main/CHANGELOG.md
+Keywords: docker
+Platform: any
+Classifier: Operating System :: OS Independent
+Classifier: Intended Audience :: Developers
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Scientific/Engineering :: Robotics
+Requires-Python: >=3.8
+Description-Content-Type: text/x-rst
+License-File: LICENSE
+Requires-Dist: lxml <5.0.0,>=4.9.2
+Requires-Dist: nvidia-srl-base >=0.10.0
+Requires-Dist: nvidia-srl-math >=0.14.0
+Requires-Dist: nvidia-srl-usd >=0.19.1
+Requires-Dist: numpy >=1.21.5
+Requires-Dist: setuptools-scm <9.0.0,>=8.0.0
+Requires-Dist: usd-core <24.00,>=21.11
+Provides-Extra: ci
+Requires-Dist: anybadge ==1.8.0 ; extra == 'ci'
+Requires-Dist: black ==22.6.0 ; extra == 'ci'
+Requires-Dist: build ==1.0.3 ; extra == 'ci'
+Requires-Dist: docutils ==0.20.1 ; extra == 'ci'
+Requires-Dist: graphviz ==0.19.1 ; extra == 'ci'
+Requires-Dist: flake8 ==7.0.0 ; extra == 'ci'
+Requires-Dist: flake8-copyright ==0.2.4 ; extra == 'ci'
+Requires-Dist: flake8-docstrings ==1.7.0 ; extra == 'ci'
+Requires-Dist: flake8-isort ==6.1.1 ; extra == 'ci'
+Requires-Dist: flake8-rst-docstrings ==0.3.0 ; extra == 'ci'
+Requires-Dist: flake8-pyproject ==1.2.3 ; extra == 'ci'
+Requires-Dist: mypy ==1.7.0 ; extra == 'ci'
+Requires-Dist: pep8-naming ==0.13.2 ; extra == 'ci'
+Requires-Dist: pytest ==6.2.5 ; extra == 'ci'
+Requires-Dist: pytest-cov ==3.0.0 ; extra == 'ci'
+Requires-Dist: sphinx ==7.2.6 ; extra == 'ci'
+Requires-Dist: sphinx-rtd-theme ==2.0.0 ; extra == 'ci'
+Requires-Dist: sphinx-copybutton ==0.5.2 ; extra == 'ci'
+Requires-Dist: twine ==3.7.1 ; extra == 'ci'
+Provides-Extra: dev
+Requires-Dist: ipdb ; extra == 'dev'
+Requires-Dist: ipython ; extra == 'dev'
+Requires-Dist: nvidia-srl-dock ; extra == 'dev'
+
+# USD To URDF Converter
+
+<h4>
+    <a href="https://srl.gitlab-master-pages.nvidia.com/py/usd_to_urdf/">Homepage</a> (
+    <a href="https://srl.gitlab-master-pages.nvidia.com/py/usd_to_urdf/getting_started.html">Getting Started</a> |
+    <a href="https://srl.gitlab-master-pages.nvidia.com/py/usd_to_urdf/cli.html">CLI</a> |
+    <a href="https://srl.gitlab-master-pages.nvidia.com/py/usd_to_urdf/examples.html">Examples</a> |
+    <a href="https://srl.gitlab-master-pages.nvidia.com/py/usd_to_urdf/contributing.html">Contributing</a> |
+    <a href="https://srl.gitlab-master-pages.nvidia.com/py/usd_to_urdf/api.html">API Reference</a> )
+</h4>
+
+A tool for converting USD files to URDF.
+
+Convert this
+![UR10 USD](docs/media/ur10_usd.png "Screenshot of UR10 USD"){height=500px}
+to this
+![UR10 URDF](docs/media/ur10_urdf.png "Screenshot of UR10 URDF"){height=500px}
+
+See the [documentation](https://srl.gitlab-master-pages.nvidia.com/py/usd_to_urdf/) for detailed information.
+
+## Quick Start
+
+**Installation**
+
+Use pip to install the Python distribution from the project's Python package registry.
+
+NOTE: `username` is your Gitlab username, and `token` is a [Gitlab personal access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) with at least api and read_api scope.
+```
+pip install --extra-index-url https://<username>:<token>@gitlab-master.nvidia.com/api/v4/groups/4131/-/packages/pypi/simple nvidia-srl-usd-to-urdf
+```
+
+**USD To URDF Command Line Interface (CLI)**
+
+Use the `usd_to_urdf` CLI to convert USD files to URDF from the command line.
+
+```
+usd_to_urdf -o <path to output URDF file> <path to input USD file>
+```
+
+For example to convert the UR10 USD file in the current directory to URDF do the following.
+
+```
+usd_to_urdf -o ur10.urdf ur10.usd
+```
+
+For a quick reference on the on the CLI options see the help print out.
+```
+usd_to_urdf -h
+```
+
+**USD To URDF Python API**
+
+Use the USD to URDF Python API to convert USD files to URDF using Python.
+
+```python
+from nvidia.sr.from_usd.to_urdf import UsdToURDF
+UsdToUrdf.init_from_file("<path to USD file>").save_to_file("<path to URDF file>")
+```
+
+For example to convert the UR10 USD file in the current directory the URDF do the following.
+
+```python
+from nvidia.sr.from_usd.to_urdf import UsdToURDF
+UsdToUrdf.init_from_file("ur10.usd").save_to_file("ur10.urdf")
+```
+
+Complete API reference can be found in the documentation [here](https://srl.gitlab-master-pages.nvidia.com/py/usd_to_urdf/api.html).

@@ -1,0 +1,53 @@
+[package]
+version = "1.0.4"
+category = "Simulation"
+title = "Isaac Sim Conveyor belt utility"
+description="The Conveyor Belt Utility Extension provides an utility to turn Rigid bodies into conveyors in Omniverse Isaac Sim. It provides an Omnigraph Node that support configuring a mesh asset into a conveyor belt Rigid Body in simulation, and commands to create the conveyor belt Omnigraph programatically."
+changelog = "docs/CHANGELOG.md"
+readme = "docs/README.md"
+icon = "data/icon.png"
+preview_image = "data/preview.png"
+repository = ""
+
+keywords = ["kit", "example"]
+
+
+
+[dependencies]
+"isaacsim.core.deprecation_manager" = {}
+"omni.physx"={}
+"omni.graph" = {}
+"omni.graph.core" = {}
+"omni.graph.action" = {}
+"omni.graph.nodes" = {}
+"omni.usd" = {}
+
+# Main module for the Python interface
+[[python.module]]
+name = "isaacsim.asset.gen.conveyor"
+
+[[python.module]]
+name = "isaacsim.asset.gen.conveyor.tests"
+
+
+[[native.plugin]]
+path = "bin/*.plugin"
+recursive = false
+
+# Watch the .ogn files for hot reloading (only works for Python files)
+[fswatcher.patterns]
+include = ["*.ogn", "*.py"]
+exclude = ["Ogn*Database.py"]
+
+[[test]]
+dependencies=[
+"omni.physx.stageupdate",
+"usdrt.scenegraph",
+"omni.timeline",
+]
+
+stdoutFailPatterns.exclude = [
+    "*[Error] [omni.graph.core.plugin] /TestGraph/Template_isaacsim_asset_gen_conveyor_IsaacConveyor: [/TestGraph] no prim path found for the conveyor*",
+    "*[Error] [carb.glinterop.plugin] GLInteropContext::init: carb::windowing is not available*",
+]
+    

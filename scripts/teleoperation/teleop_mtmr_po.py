@@ -391,14 +391,45 @@ def main():
 
         # Check for RESET TRIGGER to randomize cube pose
         if os.path.exists("reset_trigger.txt"):
-            print("[RESET] Detected reset trigger. Resetting cube and both PSMs...")
+            print("[RESET] Detected reset trigger. Resetting environment...")
 
-            # Reset cube
-            cube_pos = [np.random.uniform(0.0, 0.1), np.random.uniform(-0.05, 0.05), 0.0]
-            cube_yaw = np.random.uniform(-np.pi, np.pi)
-            cube_quat = R.from_euler("z", cube_yaw).as_quat()
-            cube_ori = [cube_quat[3], cube_quat[0], cube_quat[1], cube_quat[2]]
-            reset_cube_pose(env, "teleop_logs/cube_latest", cube_pos, cube_ori)
+            # Check if this is a multi-cube environment
+            scene = env.unwrapped.scene if hasattr(env, 'unwrapped') else env.scene
+            scene_entities = list(scene.keys())
+            
+            if all(f"cube_rigid_{i}" in scene_entities for i in range(1, 5)):
+                # Multi-cube environment - reset all 4 cubes
+                print("[RESET] Multi-cube environment detected. Resetting all 4 cubes...")
+                
+                # Import the proper reset function for multi-cube
+                from scripts.teleoperation.teleop_logger_3_arm import reset_cube_pose as reset_cube_pose_3arm
+                
+                # Reset colored blocks (1-3) to random positions
+                cube_configs = [
+                    ([np.random.uniform(-0.01, 0.01), np.random.uniform(-0.01, 0.01), 0.0], "cube_rigid_1"),
+                    ([np.random.uniform(0.045, 0.055), np.random.uniform(0.0, 0.03), 0.0], "cube_rigid_2"),
+                    ([np.random.uniform(-0.055, -0.045), np.random.uniform(0.0, 0.03), 0.0], "cube_rigid_3"),
+                    ([0.0, 0.055, 0.0], "cube_rigid_4")  # White block - fixed position
+                ]
+                
+                for i, (cube_pos, cube_key) in enumerate(cube_configs):
+                    if i < 3:  # Colored blocks - random orientation
+                        cube_yaw = np.random.uniform(-np.pi/2, np.pi/2)
+                    else:  # White block - fixed orientation
+                        cube_yaw = 0.0
+                    
+                    cube_quat = R.from_euler("z", cube_yaw).as_quat()
+                    cube_ori = [cube_quat[3], cube_quat[0], cube_quat[1], cube_quat[2]]
+                    reset_cube_pose_3arm(env, f"teleop_logs/cube_latest_{i+1}", cube_pos, cube_ori, cube_key=cube_key)
+                
+            else:
+                # Single cube environment - reset as before
+                print("[RESET] Single cube environment. Resetting single cube...")
+                cube_pos = [np.random.uniform(0.0, 0.1), np.random.uniform(-0.05, 0.05), 0.0]
+                cube_yaw = np.random.uniform(-np.pi, np.pi)
+                cube_quat = R.from_euler("z", cube_yaw).as_quat()
+                cube_ori = [cube_quat[3], cube_quat[0], cube_quat[1], cube_quat[2]]
+                reset_cube_pose(env, "teleop_logs/cube_latest", cube_pos, cube_ori)
 
             # Recompute cam_T_world and base transforms
             cam_pos = (camera_l.data.pos_w + camera_r.data.pos_w) / 2
@@ -478,6 +509,9 @@ def main():
 
             teleop_logger.enqueue(frame_num, timestamp, robot_states, cam_l_img, cam_r_img)
             teleop_logger.frame_num = frame_num
+            
+            # Check contacts and log success if all blocks are in contact
+            teleop_logger.check_contacts(env)
 
         # Sim loop rate control
         elapsed = time.time() - start_time

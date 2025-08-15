@@ -1,0 +1,84 @@
+Metadata-Version: 2.1
+Name: nvidia-srl-math
+Version: 0.14.0
+Summary: SRL Python common math functions related to robotics
+Author: NVIDIA Seattle Robotics Lab
+License: Copyright (c) 2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+        
+        NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+        property and proprietary rights in and to this material, related
+        documentation and any modifications thereto. Any use, reproduction,
+        disclosure or distribution of this material and related documentation
+        without an express license agreement from NVIDIA CORPORATION or
+        its affiliates is strictly prohibited.
+        
+Project-URL: Homepage, https://gitlab-master.nvidia.com/srl/py/math/-/blob/main/README.md
+Project-URL: Documentation, https://srl.gitlab-master-pages.nvidia.com/py/math
+Project-URL: Repository, https://gitlab-master.nvidia.com/srl/py/math
+Project-URL: Issues, https://gitlab-master.nvidia.com/srl/py/math/-/issues
+Project-URL: Changelog, https://gitlab-master.nvidia.com/srl/py/math/-/blob/main/CHANGELOG.md
+Keywords: docker
+Platform: any
+Classifier: Operating System :: OS Independent
+Classifier: Intended Audience :: Developers
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Scientific/Engineering :: Robotics
+Requires-Python: >=3.7
+Description-Content-Type: text/x-rst
+License-File: LICENSE
+Requires-Dist: numpy >=1.21.5
+Requires-Dist: nvidia-srl-base >=0.10.0
+Requires-Dist: scipy <2.0.0,>=1.7.2
+Requires-Dist: setuptools-scm <8.0,>=6.0 ; python_version == "3.7"
+Requires-Dist: setuptools-scm <9.0.0,>=8.0.0 ; python_version >= "3.8"
+Provides-Extra: ci
+Requires-Dist: black ==22.6.0 ; extra == 'ci'
+Requires-Dist: flake8 ==7.0.0 ; extra == 'ci'
+Requires-Dist: flake8-copyright ==0.2.4 ; extra == 'ci'
+Requires-Dist: flake8-docstrings ==1.7.0 ; extra == 'ci'
+Requires-Dist: flake8-isort ==6.1.1 ; extra == 'ci'
+Requires-Dist: flake8-rst-docstrings ==0.3.0 ; extra == 'ci'
+Requires-Dist: flake8-pyproject ==1.2.3 ; extra == 'ci'
+Requires-Dist: mypy ==1.7.0 ; extra == 'ci'
+Requires-Dist: pep8-naming ==0.13.2 ; extra == 'ci'
+Requires-Dist: pytest ==6.2.5 ; extra == 'ci'
+Requires-Dist: pytest-cov ==3.0.0 ; extra == 'ci'
+Requires-Dist: docutils ==0.20.1 ; extra == 'ci'
+Requires-Dist: graphviz ==0.19.1 ; extra == 'ci'
+Requires-Dist: sphinx ==7.2.6 ; extra == 'ci'
+Requires-Dist: sphinx-rtd-theme ==2.0.0 ; extra == 'ci'
+Requires-Dist: sphinx-copybutton ==0.5.2 ; extra == 'ci'
+Requires-Dist: anybadge ==1.8.0 ; extra == 'ci'
+Requires-Dist: build ==1.0.3 ; extra == 'ci'
+Requires-Dist: twine ==3.7.1 ; extra == 'ci'
+Provides-Extra: dev
+Requires-Dist: ipdb ; extra == 'dev'
+Requires-Dist: ipython ; extra == 'dev'
+Requires-Dist: nvidia-srl-dock ; extra == 'dev'
+
+# SRL Python Math Package
+
+<h4>
+    <a href="https://srl.gitlab-master-pages.nvidia.com/py/math/">Homepage</a> (
+    <a href="https://srl.gitlab-master-pages.nvidia.com/py/math/getting_started.html">Getting Started</a> |
+    <a href="https://srl.gitlab-master-pages.nvidia.com/py/math/cli.html">CLI</a> |
+    <a href="https://srl.gitlab-master-pages.nvidia.com/py/math/examples.html">Examples</a> |
+    <a href="https://srl.gitlab-master-pages.nvidia.com/py/math/contributing.html">Contributing</a> |
+    <a href="https://srl.gitlab-master-pages.nvidia.com/py/math/api.html">API Reference</a> )
+</h4>
+
+This package provides basic and common math functions.
+
+See the [documentation](https://srl.gitlab-master-pages.nvidia.com/py/math/) for detailed information.
+
+## Quick Start
+
+**Installation**
+
+Use pip to install this Python distribution from the projects Python package registry.
+
+NOTE: `username` is your Gitlab username, and `token` is a [Gitlab personal access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) with at least api and read_api scope.
+```
+pip install --extra-index-url https://<username>:<token>@gitlab-master.nvidia.com/api/v4/groups/4131/-/packages/pypi/simple nvidia-srl-math
+```

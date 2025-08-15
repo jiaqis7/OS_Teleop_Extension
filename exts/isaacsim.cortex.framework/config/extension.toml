@@ -1,0 +1,32 @@
+[core]
+reloadable = true
+order = 0
+
+[package]
+version = "1.0.2"
+category = "Robotics"
+title = "Omni Isaac Cortex"
+description = "Isaac Cortex is a framework within NVIDIA's Isaac Sim that integrates various robotics tools into a unified system, facilitating the development of collaborative robotic applications. It emphasizes reactivity and adaptability, enabling robots to operate safely alongside humans without the need for physical barriers."
+authors = ["NVIDIA"]
+repository = ""
+keywords = ["isaac", "robotics", "collaborative robotics", "digital twins"]
+changelog = "docs/CHANGELOG.md"
+readme = "docs/README.md"
+icon = "data/icon.png"
+preview_image = "data/preview.png"
+writeTarget.kit = true
+
+[dependencies]
+"isaacsim.core.deprecation_manager" = {}
+"isaacsim.core.api" = {}
+"isaacsim.robot.manipulators.examples" = {}
+"isaacsim.robot_motion.motion_generation" = {}
+"isaacsim.storage.native" = {}
+
+[[python.module]]
+name = "isaacsim.cortex.framework"
+
+[[test]]
+stdoutFailPatterns.exclude = [
+    "*WARNING: cannot load logging configuration file*", # exclude warning as failure
+]

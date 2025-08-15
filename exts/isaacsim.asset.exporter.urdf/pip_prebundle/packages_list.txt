@@ -1,0 +1,7 @@
+lxml-5.3.0
+nvidia-srl-base-0.10.0
+nvidia-srl-math-0.14.0
+nvidia-srl-usd-to-urdf-0.7.2
+nvidia-srl-usd-0.19.1
+setuptools_scm-8.0.4
+tomli-2.0.1

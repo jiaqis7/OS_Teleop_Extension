@@ -1,0 +1,27 @@
+[core]
+reloadable = true
+order = 0
+
+[package]
+version = "2.0.6"
+category = "Simulation"
+title = "Generate Extension"
+description = "UI tool for generating extension templates for different common workflows"
+authors = ["NVIDIA"]
+repository = ""
+keywords = []
+changelog = "docs/CHANGELOG.md"
+readme = "docs/README.md"
+icon = "data/icon.png"
+preview_image = "data/preview.png"
+
+
+[dependencies]
+"omni.kit.uiapp" = {}
+"isaacsim.gui.components" = {}
+"isaacsim.core.api" = {}
+"isaacsim.storage.native" = {}
+"isaacsim.core.deprecation_manager" = {}
+
+[[python.module]]
+name = "isaacsim.examples.extension"

@@ -1,0 +1,46 @@
+[package]
+version = "1.3.5"
+category = "Setup"
+title = "Isaac Sim Setup"
+description = "This Extension does the setup of the Isaac Sim App"
+authors = ["NVIDIA"]
+repository = ""
+keywords = ["isaac"]
+changelog = "docs/CHANGELOG.md"
+readme = "docs/README.md"
+icon = "data/omni.isaac.sim.png"
+preview_image = "data/preview.png"
+toggleable = false
+
+[dependencies]
+"omni.usd" = {}
+"omni.ui" = {}
+"omni.client" = {}
+"omni.kit.stage_templates" = {}
+"omni.kit.window.title" = {}
+"isaacsim.core.version" = {}
+"omni.kit.quicklayout" = {}
+"omni.kit.viewport.utility" = {}
+"omni.kit.window.property" = {}
+"omni.kit.menu.common" = {}
+
+[[python.module]]
+name = "isaacsim.app.setup"
+
+[settings]
+isaac.startup.create_new_stage = true # create a new stage on startup
+[settings."filter:platform"."windows-x86_64"]
+isaac.startup.ros_bridge_extension = ""
+[settings."filter:platform"."linux-x86_64"]
+isaac.startup.ros_bridge_extension = ""
+
+[[test]]
+dependencies = [
+   "omni.rtx.settings.core", "omni.pip.cloud"
+]
+
+stdoutFailPatterns.exclude = [
+    "*[isaacsim.ros2.bridge.plugin]*",
+    "*[isaacsim.ros2.bridge.scripts.extension]*",
+    "*[Error] [carb.glinterop.plugin] GLInteropContext::init: carb::windowing is not available*",
+]

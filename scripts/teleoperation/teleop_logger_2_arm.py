@@ -13,6 +13,7 @@ from scipy.spatial.transform import Rotation as R
 import shutil
 import re
 import glob
+from scripts.teleoperation.contact_detector_simple import ContactDetectorSimple
 
 
 def reset_cube_pose(env, log_dir, position, orientation, cube_key="cube_rigid"):
@@ -160,6 +161,9 @@ class TeleopLogger:
         self.buffer = RingBuffer()
         self.logger_thread = threading.Thread(target=self._logger_loop, daemon=True)
         self.logger_thread.start()
+        
+        # Initialize contact detector
+        self.contact_detector = ContactDetectorSimple()
 
 
     def check_and_start_logging(self, env):
@@ -195,6 +199,9 @@ class TeleopLogger:
         self.frame_num = 0
 
         log_current_pose(env, self.log_dir)
+        
+        # Reset contact detector for new logging session
+        self.contact_detector.reset()
 
         os.remove(trigger_file)
 
@@ -202,11 +209,40 @@ class TeleopLogger:
     def stop_logging(self):
         if self.enable_logging and (time.time() - self.start_time) > self.log_duration:
             print("[LOG] Logging duration ended. Stopping.")
+            
+            # Save final contact state before stopping (only if scene has colored blocks)
+            if self.log_dir:
+                scene = getattr(self, '_last_env_scene', None)
+                if scene:
+                    scene_entities = list(scene.keys())
+                    required_cubes = ["cube_rigid_1", "cube_rigid_2", "cube_rigid_3", "cube_rigid_4"]
+                    if all(cube in scene_entities for cube in required_cubes):
+                        self.contact_detector.save_final_state(self.log_dir)
+            
             self.enable_logging = False
             self.logger = None
 
     def enqueue(self, frame_num, timestamp, robot_states, cam_l_img, cam_r_img):
         self.buffer.enqueue((frame_num, timestamp, robot_states, cam_l_img, cam_r_img))
+    
+    def check_contacts(self, env):
+        """Check contact states and log success if all blocks are in contact."""
+        if not self.enable_logging or not self.log_dir:
+            return
+        
+        # Get the scene object
+        scene = env.unwrapped.scene if hasattr(env, 'unwrapped') else env.scene
+        self._last_env_scene = scene  # Store for use in stop_logging
+        
+        # Check if the colored blocks exist in the scene
+        scene_entities = list(scene.keys())
+        required_cubes = ["cube_rigid_1", "cube_rigid_2", "cube_rigid_3", "cube_rigid_4"]
+        if not all(cube in scene_entities for cube in required_cubes):
+            # This scene doesn't have the colored blocks, skip contact detection
+            return
+        
+        # Update contact states
+        contact_info = self.contact_detector.update_contacts(scene)
 
     def _logger_loop(self):
         while True:

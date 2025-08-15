@@ -1,0 +1,46 @@
+#usda 1.0
+(
+    doc ="""Generated from node description file OgnIsaacJointNameResolver.ogn
+Contains templates for node types found in that file."""
+)
+
+def OmniGraph "TestGraph"
+{
+    token evaluator:type = "push"
+    int2 fileFormatVersion = (1, 3)
+    token flatCacheBacking = "Shared"
+    token pipelineStage = "pipelineStageSimulation"
+
+    def OmniGraphNode "Template_isaacsim_core_nodes_IsaacJointNameResolver" (
+        docs="""Checks for any joint prims with isaac:nameOverride attributes that match the provided names and updates those names to their corresponding original prim names."""
+    )
+    {
+        token node:type = "isaacsim.core.nodes.IsaacJointNameResolver"
+        int node:typeVersion = 1
+
+        # 4 attributes
+        custom uint inputs:execIn (
+            docs="""The input execution port"""
+        )
+        custom token[] inputs:jointNames = [] (
+            docs="""list of prim names in the given articulation"""
+        )
+        custom string inputs:robotPath = "" (
+            docs="""path to the robot articulation root. If this is populated, targetPrim is ignored."""
+        )
+        custom rel inputs:targetPrim (
+            docs="""The target robot prim with robot articulation root. Ensure robotPath is empty for this to be considered."""
+        )
+
+        # 3 attributes
+        custom uint outputs:execOut (
+            docs="""The output execution port"""
+        )
+        custom token[] outputs:jointNames (
+            docs="""A list of prim names in the given articulation, where prims with isaac:nameOverride attributes have been replaced with their real names."""
+        )
+        custom string outputs:robotPath (
+            docs="""path to the robot articulation root."""
+        )
+    }
+}

@@ -1,0 +1,9 @@
+{
+    "persistent": {
+        "exts": {
+            "omni.kit.registry.nucleus": {
+                "userRegistries": {}
+            }
+        }
+    }
+}

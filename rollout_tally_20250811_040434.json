@@ -1,0 +1,26 @@
+{
+    "total_demos": 2,
+    "total_success": 0,
+    "red_success": 2,
+    "green_success": 1,
+    "blue_success": 1,
+    "demo_results": {
+        "demo_24": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": false,
+            "blue_contact": true
+        },
+        "demo_25": {
+            "success": false,
+            "red_contact": true,
+            "green_contact": true,
+            "blue_contact": false
+        }
+    },
+    "success_percentage": 0.0,
+    "red_percentage": 100.0,
+    "green_percentage": 50.0,
+    "blue_percentage": 50.0,
+    "timestamp": "2025-08-11T04:04:34.454567"
+}

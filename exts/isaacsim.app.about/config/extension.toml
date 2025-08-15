@@ -1,0 +1,23 @@
+[package]
+version = "2.0.7"
+category = "Internal"
+title = "Isaac Sim About Window"
+description="Show application/build information."
+authors = ["NVIDIA"]
+repository = ""
+keywords = ["isaac", "about"]
+changelog = "docs/CHANGELOG.md"
+readme = "docs/README.md"
+preview_image = "data/preview.png"
+icon = "data/icon.png"
+
+[dependencies]
+"omni.client" = {}
+"omni.kit.uiapp" = {}
+"omni.kit.menu.utils" = {}
+"isaacsim.core.version" = {}
+
+[[python.module]]
+name = "isaacsim.app.about"
+
+

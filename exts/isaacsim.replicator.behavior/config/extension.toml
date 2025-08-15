@@ -1,0 +1,48 @@
+[core]
+reloadable = true
+order = 0
+
+[package]
+version = "1.0.8"
+category = "SyntheticData"
+title = "Isaac Sim Replicator Behavior Scripts"
+description = "The extension provides various randomization and event scripts for Synthetic Data Generation (SDG) workflows. The scripts can be attached to prims providing modular, persitent, and shareable behaviors. The scripts use exposed variables as custom USD properties which can be modified throught the UI or programmatically."
+authors = ["NVIDIA"]
+repository = ""
+keywords = ["isaac", "behavior scripts", "replicator", "sdg", "randomization"]
+changelog = "docs/CHANGELOG.md"
+readme  = "docs/README.md"
+icon = "data/icon.png"
+preview_image = "data/preview.png"
+
+
+[dependencies]
+"isaacsim.storage.native" = {}
+"omni.kit.scripting" = {}
+"omni.physx" = {}
+"omni.usd" = {}
+
+
+[[python.module]]
+name = "isaacsim.replicator.behavior"
+
+[[test]]
+dependencies = [
+    "omni.kit.test",
+    "omni.replicator.core",
+    "isaacsim.core.api",
+]
+
+args = [
+'--/app/settings/fabricDefaultStageFrameHistoryCount = 3',
+'--/persistent/omni/replicator/captureOnPlay = true',
+'--/persistent/isaac/asset_root/default = "https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/4.5"',
+'--/omni/replicator/asyncRendering = false',
+'--/app/file/ignoreUnsavedOnExit = true'
+]
+
+[[test]]
+name = "startup"
+args = [
+    '--/app/settings/fabricDefaultStageFrameHistoryCount = 3',
+]

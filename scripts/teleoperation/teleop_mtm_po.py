@@ -335,8 +335,9 @@ def main():
             reset_cube_pose(env, "teleop_logs/cube_latest_3", cube_pos3, cube_ori3, cube_key="cube_rigid_3")
 
 
-            cube_pos4 = [np.random.uniform(0.0, 0.0), np.random.uniform(0.055, 0.055), 0.0]
-            cube_yaw4 = np.random.uniform(0, 0)
+            # White block - fixed position and orientation
+            cube_pos4 = [0.0, 0.055, 0.0]
+            cube_yaw4 = 0.0  # Fixed orientation (no rotation)
             cube_quat4 = R.from_euler("z", cube_yaw4).as_quat()
             cube_ori4 = [cube_quat4[3], cube_quat4[0], cube_quat4[1], cube_quat4[2]]
             reset_cube_pose(env, "teleop_logs/cube_latest_4", cube_pos4, cube_ori4, cube_key="cube_rigid_4")
@@ -392,6 +393,9 @@ def main():
 
             teleop_logger.enqueue(frame_num, timestamp, robot_states, cam_l_img, cam_r_img)
             teleop_logger.frame_num = frame_num
+            
+            # Check contacts and log success if all blocks are in contact
+            teleop_logger.check_contacts(env)
 
 
         time.sleep(max(0.0, 1/30.0 - time.time() + start))
